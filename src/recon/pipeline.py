@@ -108,7 +108,7 @@ def _extract_base_domains(in_scope: list[dict]) -> set[str]:
         asset = entry.get("asset_identifier", "").strip().lower()
         asset_type = entry.get("asset_type", "")
 
-        if asset_type not in ("URL", "Domain"):
+        if asset_type not in ("URL", "Domain", "WILDCARD"):
             continue
 
         # Strip protocol and path

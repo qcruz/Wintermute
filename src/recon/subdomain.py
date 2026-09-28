@@ -59,7 +59,8 @@ def _query_crtsh(domain: str) -> set[str]:
         response = httpx.get(
             url,
             params={"q": f"%.{domain}", "output": "json"},
-            timeout=30.0,
+            timeout=60.0,
+            headers={"User-Agent": "Wintermute/0.1 (Security Research)"},
         )
         response.raise_for_status()
         entries = response.json()

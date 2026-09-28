@@ -27,14 +27,15 @@ Active scanning, program management, and operational improvements. This is the c
 
 ### Queue
 
-1. Kiwi.com — deep scan remaining targets with new checks (IDOR, path traversal, GraphQL)
-2. Scout for new programs — run `scout`, evaluate 2-3 new candidates, quick-scan the best
-3. CLEAR — re-scan with IDOR and path traversal checks on interesting hosts (corpsupport, api)
-4. Deriv — scan remaining 8 targets with full checks
-5. Scan a fresh program from scout results — pick one never scanned, full pipeline
-6. Review submission candidates — verify any high-confidence findings, submit if reproducible
-7. Multi-program batch run — scan 3 programs in sequence with `--quick`
-8. Hyatt — slice recon by domain subsets across sessions (61 base domains, 805 subdomains), then scan with `--limit 5 --filter`
+1. Wealthsimple — deep scan API targets with `--scan-only --limit 3 --filter api` (6 API endpoints, fintech)
+2. CLEAR — re-scan with IDOR and path traversal checks on interesting hosts (corpsupport, api)
+3. Deriv — scan remaining 8 targets with full checks in `--limit 3` batches
+4. Wealthsimple — deep scan remaining targets by keyword (staging, crypto, trade, cdn)
+5. Review submission candidates — verify any high-confidence findings, submit if reproducible
+6. Multi-program batch run — scan 3 programs in sequence with `--quick`
+7. Hyatt — slice recon by domain subsets across sessions (61 base domains, 805 subdomains), then scan with `--limit 5 --filter`
+8. Scout for new programs — run `scout`, evaluate 2-3 new candidates, quick-scan the best
+9. Scan a fresh program from scout results — pick one never scanned, full pipeline
 
 **Continuous items** (rotate to bottom after working):
 - Scout for new programs

@@ -4,6 +4,32 @@ Track what each session accomplished, what was found, and what's queued for next
 
 ---
 
+## Session 8 — 2026-09-28 (Scanning — Cycle 1)
+
+**Cycle step:** Scanning & Operations — Scout + scan fresh program
+
+**What was done:**
+- Scouted 74 programs (69 new), evaluated goodrx, wealthsimple, matomo, grab, att
+- Selected Wealthsimple (fintech, wildcard scope `*.wealthsimple.com` + `*.simpletax.ca`)
+- Fixed recon pipeline bug: `_extract_base_domains()` only accepted `URL`/`Domain` asset types, skipping `WILDCARD` — added `WILDCARD` support
+- Fixed crt.sh query failures: added User-Agent header (crt.sh blocks default httpx UA), increased timeout 30s→60s for large result sets
+- Quick scan on Wealthsimple: 159 subdomains, 95 alive, 81 in-scope targets, 28 findings (all missing HSTS — low value, likely dups)
+- Identified high-value targets for deep scanning: 6 API endpoints, trade-service, transfers, secureshare, crypto-trust, cs-tools, qa-dashboard
+
+**Bugs fixed:**
+- `_extract_base_domains()` ignored WILDCARD scope entries → 0 targets for wildcard-only programs (Wealthsimple, Grab, etc.)
+- crt.sh returning 404/502 for httpx default User-Agent → added `Wintermute/0.1 (Security Research)` header
+- crt.sh timeout on large domains (3,805 entries for wealthsimple.com) → increased timeout to 60s
+
+**Findings:** 28 missing HSTS headers across Wealthsimple targets — informational, not submittable.
+
+**Queued for next session:**
+- Cycle 1: Deep scan Wealthsimple API targets with `--scan-only --limit 3 --filter api`
+- Wealthsimple is a large program (81 targets) — slice deep checks by keyword across sessions
+- Deriv still needs deep checks in `--limit 3` batches
+
+---
+
 ## Session 7 — 2026-09-28 (Scanning — Cycle 1)
 
 **Cycle step:** Scanning & Operations
