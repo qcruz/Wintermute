@@ -12,66 +12,43 @@ Wintermute is an automated bug bounty hunting pipeline. It discovers programs on
 
 ## Session Continuation Protocol
 
-**Every new session must start by reading `docs/ROADMAP.md` and checking the Operating Cycle below to determine what to do next.** Do not ask the user "what would you like to do?" — check the cycle, pick up where we left off, and go.
+**Every new session must start by reading `docs/ROADMAP.md` and picking up the first item in the next cycle due for rotation.** Do not ask the user "what would you like to do?" — check the cycles, pick up where we left off, and go.
 
-### Operating Cycle
+### How It Works
 
-Wintermute follows a rotating cycle to maintain balanced progress across scanning, scouting, R&D, and review. Each session should advance one or more steps. Track progress in the cycle by checking what was done last (DB status, git log, roadmap checkboxes).
+The roadmap has 4 work cycles, each with a queue of items:
+1. **Scanning & Operations** — active scanning, program management
+2. **Scanner R&D & Buildout** — new detection capabilities
+3. **Research & Strategic Planning** — market research, competitive analysis
+4. **Project Organization & Docs** — code quality, testing, documentation
 
-```
-┌─────────────────────────────────────────────────────┐
-│                 WINTERMUTE OPERATING CYCLE           │
-│                                                     │
-│  1. SCAN (active program)                           │
-│     - Quick scan a current target: --quick          │
-│     - Or deep scan with new checks: --scan-only     │
-│     - Review findings, submit strong reports        │
-│                                                     │
-│  2. SCOUT (every 2-3 sessions)                      │
-│     - Run: python -m scripts.wintermute scout       │
-│     - Pick 1-2 new programs to quick-scan           │
-│     - Broaden coverage, avoid tunnel vision          │
-│                                                     │
-│  3. R&D (every 3-4 sessions)                        │
-│     - Check Phase 6 candidate list in ROADMAP.md    │
-│     - Pick one bug class to prototype               │
-│     - Build, test, integrate into pipeline           │
-│                                                     │
-│  4. REVIEW & MAINTAIN (as needed)                   │
-│     - Check submission outcomes on HackerOne        │
-│     - Update docs with lessons learned              │
-│     - Fix false positives, tune confidence scores   │
-│     - Commit and push updates to GitHub             │
-│                                                     │
-│  Repeat. Vary the mix. Don't do the same step       │
-│  three sessions in a row.                           │
-└─────────────────────────────────────────────────────┘
-```
-
-### How to determine what's next
-
-1. Read `docs/ROADMAP.md` — check what's marked done, what's in progress
-2. Run `python -m scripts.wintermute status` — see what programs/findings exist
-3. Check recent git history — `git log --oneline -10`
-4. Based on the above, pick the next cycle step:
-   - If last session was a scan → scout or R&D this session
-   - If last session was R&D → scan with the new capability
-   - If last session was scout → scan one of the new programs found
-   - If we haven't reviewed reports in a while → do that
-5. Tell the user what you're picking up and why, then execute
+Each session:
+1. Check which cycle has been idle longest (via session log)
+2. **Work the FIRST item** in that cycle's queue
+3. When done: **remove completed items**, **rotate continuous items to the bottom**
+4. This ensures the project naturally covers its full scope with no blind spots
 
 ### Session startup checklist
 
 ```
-□ Read docs/ROADMAP.md
-□ Read docs/SESSION_LOG.md (check last session's findings and queued work)
+□ Read docs/ROADMAP.md (check cycle queues — first item in each)
+□ Read docs/SESSION_LOG.md (what was done last, what's queued)
 □ Run: python -m scripts.wintermute status
 □ Check: git log --oneline -5
-□ Determine cycle step (scan / scout / R&D / review)
-□ Brief the user on plan (1-2 sentences)
-□ Execute
-□ At end of session: append entry to docs/SESSION_LOG.md
+□ Identify which cycle has been idle longest
+□ Work the FIRST item in that cycle's queue
+□ Brief the user on plan (1-2 sentences), then execute
+□ At end of session:
+  □ Update the cycle queue (remove completed, rotate continuous)
+  □ Append entry to docs/SESSION_LOG.md
+  □ Commit and push
 ```
+
+### Rules
+- Don't work the same cycle 3 sessions in a row
+- Scanning (Cycle 1) should happen most often — it's the core activity
+- R&D (Cycle 2) feeds Scanning — build then scan with the new capability
+- Combine Docs (Cycle 4) with other cycles as a secondary task when natural
 
 ## Scan Sizing Guidelines
 
@@ -124,11 +101,11 @@ src/
   core/         config, db models, scope checker, pipeline runner
   platforms/    HackerOne API client
   recon/        subdomain enum, header fingerprinting, recon pipeline
-  scanner/      9 check modules + pipeline orchestrator
-  reporting/    templates, dedup, reporting pipeline
+  scanner/      10 check modules + pipeline orchestrator
+  reporting/    20 templates, dedup, reporting pipeline
 scripts/        CLI entry points (wintermute, h1_explore, run_*)
-tests/          51 tests (pytest)
-docs/           educational docs, roadmap, ethics, glossary
+tests/          61 tests (pytest)
+docs/           educational docs, roadmap, strategy, ethics, glossary
 ```
 
 ## Submission Criteria
