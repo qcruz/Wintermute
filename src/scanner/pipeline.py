@@ -431,11 +431,28 @@ def _business_remediation(vuln_type: str) -> str:
 def _store_findings(
     session, target_map: dict[str, Target], findings: list[ScanFinding]
 ) -> None:
-    """Persist scan findings to the database."""
+    """Persist scan findings to the database, skipping duplicates."""
+    stored = 0
+    skipped = 0
+
     try:
         for f in findings:
             target = target_map.get(f.hostname)
             if not target:
+                continue
+
+            # Skip if we already have this exact finding
+            existing = (
+                session.query(Finding)
+                .filter_by(
+                    target_id=target.id,
+                    vuln_type=f.vuln_type,
+                    title=f.title,
+                )
+                .first()
+            )
+            if existing:
+                skipped += 1
                 continue
 
             db_finding = Finding(
@@ -449,9 +466,10 @@ def _store_findings(
                 status="new",
             )
             session.add(db_finding)
+            stored += 1
 
         session.commit()
-        logger.info("Stored %d findings in database", len(findings))
+        logger.info("Stored %d findings in database (%d duplicates skipped)", stored, skipped)
     except Exception:
         session.rollback()
         raise

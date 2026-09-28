@@ -84,6 +84,15 @@ SENSITIVE_ENDPOINTS = [
 ]
 
 
+THIRD_PARTY_REDIRECTS = [
+    "accounts.google.com",
+    "login.microsoftonline.com",
+    "auth0.com",
+    "okta.com",
+    "login.salesforce.com",
+]
+
+
 def check_auth(hostname: str) -> AuthResult:
     """Run authentication and authorization checks on a hostname.
 
@@ -91,6 +100,19 @@ def check_auth(hostname: str) -> AuthResult:
     """
     result = AuthResult(hostname=hostname)
     base_url = f"https://{hostname}"
+
+    # Early exit: skip third-party hosted sites
+    try:
+        probe = httpx.get(
+            base_url, timeout=8.0, follow_redirects=False,
+            headers={"User-Agent": "Wintermute/0.1 (Security Research)"},
+        )
+        if probe.status_code in (301, 302, 303, 307, 308):
+            location = probe.headers.get("location", "").lower()
+            if any(d in location for d in THIRD_PARTY_REDIRECTS):
+                return result
+    except Exception:
+        pass
 
     # Step 1: Analyze cookies from homepage
     _check_cookies(base_url, result)

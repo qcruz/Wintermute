@@ -150,10 +150,14 @@ DISCOVERY_PATHS = [
 ]
 
 
-def discover_content(hostname: str) -> ContentDiscoveryResult:
+def discover_content(hostname: str, max_paths: int = 30) -> ContentDiscoveryResult:
     """Actively discover hidden endpoints and API paths on a hostname.
 
     Safe: only sends GET requests with standard headers.
+
+    Args:
+        max_paths: Maximum number of paths to probe (default 30 for speed).
+                   High-value paths are checked first.
     """
     result = ContentDiscoveryResult(hostname=hostname)
     base_url = f"https://{hostname}"
@@ -161,21 +165,30 @@ def discover_content(hostname: str) -> ContentDiscoveryResult:
     # Step 1: Get custom 404 baseline
     not_found_body, not_found_length = _get_404_baseline(base_url)
 
-    # Step 2: Parse robots.txt for additional paths
+    # Step 2: Early exit — detect third-party hosted sites
+    # If the first probe redirects to a known third-party login, skip this host
+    third_party = _detect_third_party(base_url)
+    if third_party:
+        logger.debug("Skipping content discovery on %s — third-party hosted (%s)", hostname, third_party)
+        return result
+
+    # Step 3: Parse robots.txt for additional paths
     robots_paths = _parse_robots_disallow(base_url)
     result.robots_paths = robots_paths
 
-    # Step 3: Build full path list (curated + robots.txt discoveries)
-    all_checks = list(DISCOVERY_PATHS)
+    # Step 4: Build prioritized path list (high-severity first)
+    severity_rank = {"critical": 0, "high": 1, "medium": 2, "low": 3, "info": 4}
+    all_checks = sorted(DISCOVERY_PATHS, key=lambda p: severity_rank.get(p[4], 5))
+
+    # Add robots.txt paths at the end
     for rpath in robots_paths:
-        # Add robots.txt disallowed paths as discovery targets
         if rpath not in {p[0] for p in DISCOVERY_PATHS}:
             all_checks.append(
                 (rpath, "robots_hidden", f"Path hidden in robots.txt: {rpath}", [], "low")
             )
 
-    # Step 4: Probe each path
-    for path, category, description, fingerprints, severity in all_checks:
+    # Step 5: Probe paths (capped at max_paths for speed)
+    for path, category, description, fingerprints, severity in all_checks[:max_paths]:
         endpoint = _probe_path(
             base_url, path, category, description, fingerprints, severity,
             not_found_body, not_found_length,
@@ -190,6 +203,39 @@ def discover_content(hostname: str) -> ContentDiscoveryResult:
         )
 
     return result
+
+
+THIRD_PARTY_REDIRECTS = [
+    "accounts.google.com",
+    "login.microsoftonline.com",
+    "auth0.com",
+    "okta.com",
+    "login.salesforce.com",
+    "idp.secureworks.com",
+]
+
+
+def _detect_third_party(base_url: str) -> str:
+    """Check if this host redirects everything to a third-party login.
+
+    If so, content discovery is pointless — every path will just redirect.
+    Returns the third-party domain name, or empty string if not detected.
+    """
+    try:
+        resp = httpx.get(
+            f"{base_url}/wintermute-third-party-check",
+            timeout=8.0,
+            follow_redirects=False,
+            headers={"User-Agent": "Wintermute/0.1 (Security Research)"},
+        )
+        if resp.status_code in (301, 302, 303, 307, 308):
+            location = resp.headers.get("location", "").lower()
+            for domain in THIRD_PARTY_REDIRECTS:
+                if domain in location:
+                    return domain
+    except Exception:
+        pass
+    return ""
 
 
 def _get_404_baseline(base_url: str) -> tuple[str, int]:

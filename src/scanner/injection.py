@@ -94,19 +94,24 @@ REDIRECT_CANARY = "https://wintermute-redirect-test.example.com"
 SSTI_CANARY = "{{7*7}}"
 SSTI_RESULT = "49"
 
-# Common parameter names worth testing (when we can't discover them from forms)
+# Common parameter names worth testing (when we can't discover them from forms).
+# Keep this short — each param generates multiple HTTP requests.
 COMMON_PARAMS = [
-    "q", "search", "query", "s", "keyword",    # Search
+    "q", "search", "query", "s",                # Search
     "url", "next", "redirect", "return",        # Redirect
-    "returnUrl", "return_url", "redirect_uri",  # Redirect (cont.)
-    "callback", "continue", "dest", "go",       # Redirect (cont.)
-    "page", "id", "cat", "category",            # Data retrieval
-    "name", "user", "username", "email",        # User input
-    "lang", "language", "locale",               # Locale
-    "template", "view", "layout",               # Template
-    "file", "path", "doc",                      # Path
-    "action", "type", "sort", "order",          # Control
-    "debug", "test", "verbose",                 # Debug
+    "id", "page",                               # Data retrieval
+    "name", "email",                            # User input
+    "template", "lang",                         # Template/locale
+    "file", "path",                             # Path
+]
+
+
+THIRD_PARTY_REDIRECTS = [
+    "accounts.google.com",
+    "login.microsoftonline.com",
+    "auth0.com",
+    "okta.com",
+    "login.salesforce.com",
 ]
 
 
@@ -117,6 +122,20 @@ def test_injection(hostname: str) -> InjectionResult:
     """
     result = InjectionResult(hostname=hostname)
     base_url = f"https://{hostname}"
+
+    # Early exit: skip third-party hosted sites (everything redirects)
+    try:
+        probe = httpx.get(
+            base_url, timeout=8.0, follow_redirects=False,
+            headers={"User-Agent": "Wintermute/0.1 (Security Research)"},
+        )
+        if probe.status_code in (301, 302, 303, 307, 308):
+            location = probe.headers.get("location", "").lower()
+            if any(d in location for d in THIRD_PARTY_REDIRECTS):
+                logger.debug("Skipping injection on %s — third-party redirect", hostname)
+                return result
+    except Exception:
+        pass
 
     # Step 1: Discover parameters from the homepage and linked pages
     discovered_params = _discover_parameters(base_url)
@@ -339,19 +358,22 @@ def _test_open_redirect(base_url: str, param: str) -> InjectionFinding | None:
         if resp.status_code in (301, 302, 303, 307, 308):
             location = resp.headers.get("location", "")
             if REDIRECT_CANARY in location:
-                return InjectionFinding(
-                    url=url,
-                    parameter=param,
-                    vuln_type="open_redirect",
-                    severity="medium",
-                    confidence=0.9,
-                    description=(
-                        f"Open redirect via parameter '{param}' — "
-                        f"server redirects to attacker-controlled URL"
-                    ),
-                    evidence=f"Redirect Location: {location}",
-                    payload_used=REDIRECT_CANARY,
-                )
+                # Verify this is a real open redirect, not a third-party
+                # login flow that appends our input to a "continue" param
+                if location.startswith(REDIRECT_CANARY) or location.startswith("http://" + REDIRECT_CANARY.split("//")[1]):
+                    return InjectionFinding(
+                        url=url,
+                        parameter=param,
+                        vuln_type="open_redirect",
+                        severity="medium",
+                        confidence=0.9,
+                        description=(
+                            f"Open redirect via parameter '{param}' — "
+                            f"server redirects to attacker-controlled URL"
+                        ),
+                        evidence=f"Redirect Location: {location}",
+                        payload_used=REDIRECT_CANARY,
+                    )
 
         # Also check for meta refresh or javascript redirect in body
         if resp.status_code == 200:
