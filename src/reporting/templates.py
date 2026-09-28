@@ -627,6 +627,54 @@ A path traversal (Local File Inclusion) vulnerability was identified on `{findin
     )
 
 
+def graphql_introspection_report(finding) -> Report:
+    """Generate a report for a GraphQL introspection finding."""
+    return Report(
+        title=finding.title,
+        severity_rating=finding.severity,
+        weakness_id=200,  # CWE-200: Exposure of Sensitive Information
+        vulnerability_information=f"""## Summary
+
+GraphQL introspection is enabled in production on `{finding.hostname}`, exposing the complete API schema to unauthenticated users.
+
+## Description
+
+{finding.description}
+
+## Steps to Reproduce
+
+1. Send a POST request to the GraphQL endpoint:
+   ```
+   curl -s -X POST https://{finding.hostname}/graphql \\
+     -H "Content-Type: application/json" \\
+     -d '{{"query": "{{ __schema {{ queryType {{ name }} mutationType {{ name }} types {{ name kind fields {{ name }} }} }} }}"}}'
+   ```
+
+2. Observe that the full schema is returned, including all types, queries, and mutations.
+
+## Evidence
+
+```
+{finding.evidence}
+```
+
+## Remediation
+
+- Disable introspection in production (most GraphQL frameworks support this)
+- Implement authentication on the GraphQL endpoint
+- Add authorization checks to all queries and mutations
+- Consider query depth and complexity limits
+- Use a schema allowlist (persisted queries) in production
+
+## References
+
+- [CWE-200: Exposure of Sensitive Information](https://cwe.mitre.org/data/definitions/200.html)
+- [OWASP GraphQL Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/GraphQL_Cheat_Sheet.html)
+- [GraphQL Introspection Security](https://www.apollographql.com/blog/graphql/security/why-you-should-disable-graphql-introspection-in-production/)""",
+        impact=f"""Exposing the full GraphQL schema gives attackers a complete map of the API, including internal types, admin mutations, and sensitive data queries. This information accelerates attack planning and can reveal operations that were not intended to be publicly known. If sensitive mutations lack proper authorization, this finding enables direct exploitation.""",
+    )
+
+
 # ── Template dispatcher ─────────────────────────────────────────────
 
 TEMPLATE_MAP = {
@@ -651,4 +699,5 @@ TEMPLATE_MAP = {
     "cache_issue": business_logic_report,
     "idor": idor_report,
     "path_traversal": path_traversal_report,
+    "graphql_introspection": graphql_introspection_report,
 }

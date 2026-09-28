@@ -15,7 +15,7 @@ Built to explore whether an individual equipped with AI agents and open-source t
 │  │  CHECK  │    │         │    │         │    │         │      │
 │  └─────────┘    └─────────┘    └─────────┘    └─────────┘      │
 │                                                                 │
-│  Fetch program   Enumerate     Run 11 check    Generate          │
+│  Fetch program   Enumerate     Run 12 check    Generate          │
 │  scope from      subdomains,   modules        professional      │
 │  HackerOne API,  validate      against each   reports, dedup,   │
 │  build allow/    DNS, finger-  target         submit via API    │
@@ -27,7 +27,7 @@ Built to explore whether an individual equipped with AI agents and open-source t
 
 ## Scanner Architecture
 
-Wintermute runs 11 vulnerability check modules against discovered targets. Each module is independent, safe (read-only / GET-only), and produces findings with confidence scores.
+Wintermute runs 12 vulnerability check modules against discovered targets. Each module is independent, safe (read-only / GET-only), and produces findings with confidence scores.
 
 ### Quick Checks (fast, low request count)
 
@@ -48,6 +48,7 @@ Wintermute runs 11 vulnerability check modules against discovered targets. Each 
 | **Business Logic** | Stack trace / error leaks, version disclosure, dangerous HTTP methods, clickjacking, missing HTTPS redirect, cache issues | Triggers error pages and inspects for debug info (15 patterns across Python/Java/.NET/PHP/Node), checks OPTIONS response, tests X-Frame-Options/CSP frame-ancestors |
 | **IDOR Detection** | Insecure Direct Object References — unauthenticated access to user data via sequential API IDs | Probes 30 common REST API patterns (`/api/users/{id}`, `/api/orders/{id}`, etc.), tests sequential IDs, compares responses for different data objects, checks for sensitive fields (email, phone, PII) |
 | **Path Traversal / LFI** | Local file inclusion via directory traversal in file parameters | Tests file/path/template parameters with traversal payloads (`../../../etc/passwd`), multiple encoding bypasses (URL-encoded, double-encoded, filter bypass), validates via file content signatures, baseline comparison to eliminate false positives |
+| **GraphQL Introspection** | Exposed GraphQL schemas with sensitive mutations and queries | Probes 8 common GraphQL paths, sends introspection query via POST and GET, analyzes schema for sensitive operations (deleteUser, resetPassword, payments, admin), classifies severity by exposed operation type |
 | **Exposed Files** | `.git/`, `.env`, `.DS_Store`, backup files, admin panels, config files | Checks for known sensitive file paths with content validation to reduce false positives |
 
 ### False Positive Reduction
@@ -77,7 +78,7 @@ Every finding includes a confidence score (0.0 - 1.0):
 
 Findings that pass confidence thresholds are turned into professional reports:
 
-- **21 report templates** covering all vulnerability classes
+- **22 report templates** covering all vulnerability classes
 - **Duplicate detection** — checks internal DB and HackerOne API for prior submissions
 - **Duplicate probability scoring** — flags common/low-value findings (e.g., missing HSTS: 95% likely duplicate)
 - **Interactive review** — human always previews and approves before submission
@@ -116,10 +117,10 @@ src/
   core/         Config, DB models (SQLAlchemy/SQLite), scope checker, pipeline runner
   platforms/    HackerOne API client (auth, scope, submissions)
   recon/        Subdomain enumeration (crt.sh), DNS validation, header fingerprinting
-  scanner/      11 vulnerability check modules + scan pipeline orchestrator
-  reporting/    21 report templates, duplicate detection, submission pipeline
+  scanner/      12 vulnerability check modules + scan pipeline orchestrator
+  reporting/    22 report templates, duplicate detection, submission pipeline
 scripts/        CLI entry points
-tests/          71 tests (pytest)
+tests/          83 tests (pytest)
 docs/           Educational documentation, roadmap, ethics guidelines
 ```
 

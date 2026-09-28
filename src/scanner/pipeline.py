@@ -29,6 +29,7 @@ from src.scanner.cors import CORSCheck, check_cors
 from src.scanner.exposed_files import ExposedFilesResult, check_exposed_files
 from src.scanner.idor import check_idor
 from src.scanner.injection import test_injection
+from src.scanner.graphql_introspection import check_graphql
 from src.scanner.path_traversal import check_path_traversal
 from src.scanner.security_headers import (
     HeaderAnalysisResult,
@@ -76,6 +77,7 @@ ALL_CHECKS = [
     "subdomain_takeover", "cors", "ssl_tls", "exposed_files",
     "security_headers", "content_discovery", "injection",
     "auth_checks", "business_logic", "idor", "path_traversal",
+    "graphql",
 ]
 
 # Lighter check set for quick scans (fast, low request count per target)
@@ -365,6 +367,27 @@ def run_scan(
                         "permitted files, resolve paths with realpath() and verify they stay "
                         "within the intended directory, and strip or reject directory traversal "
                         "sequences (../, ..\\, URL-encoded variants)."
+                    ),
+                ))
+
+        # ── GraphQL Introspection ──
+        if "graphql" in enabled_checks:
+            gql_result = check_graphql(hostname)
+            result.checks_run["graphql"] = result.checks_run.get("graphql", 0) + 1
+            for finding in gql_result.findings:
+                result.findings.append(ScanFinding(
+                    hostname=hostname,
+                    vuln_type=finding.vuln_type,
+                    title=finding.title,
+                    severity=finding.severity,
+                    confidence=finding.confidence,
+                    description=finding.description,
+                    evidence=finding.evidence,
+                    remediation=(
+                        "Disable GraphQL introspection in production. Most GraphQL "
+                        "servers support a configuration flag to disable it. Additionally, "
+                        "implement authentication and authorization on all queries and "
+                        "mutations, and consider query complexity limits to prevent abuse."
                     ),
                 ))
 

@@ -17,6 +17,16 @@ from src.scanner.path_traversal import (
     WINDOWS_SIGNATURES,
     FILE_PARAMS,
 )
+from src.scanner.graphql_introspection import (
+    GRAPHQL_PATHS,
+    INTROSPECTION_QUERY,
+    SENSITIVE_MUTATION_PATTERNS,
+    SENSITIVE_QUERY_PATTERNS,
+    _analyze_schema,
+    _determine_severity,
+    _determine_confidence,
+    _extract_schema,
+)
 
 
 # ── Security Headers ─────────────────────────────────────────────────
@@ -240,3 +250,113 @@ def test_unix_payloads_have_descriptions():
 def test_windows_payloads_have_descriptions():
     for payload, target, desc in WINDOWS_PAYLOADS:
         assert len(desc) > 0, f"Missing description for payload: {payload}"
+
+
+# ── GraphQL Introspection ───────────────────────────────────────────
+
+
+def test_graphql_paths_start_with_slash():
+    for path in GRAPHQL_PATHS:
+        assert path.startswith("/"), f"Path missing leading slash: {path}"
+
+
+def test_introspection_query_contains_schema():
+    assert "__schema" in INTROSPECTION_QUERY
+
+
+def test_sensitive_mutation_patterns_are_valid_regex():
+    import re
+    for pattern, category in SENSITIVE_MUTATION_PATTERNS:
+        re.compile(pattern)  # Should not raise
+
+
+def test_sensitive_query_patterns_are_valid_regex():
+    import re
+    for pattern, category in SENSITIVE_QUERY_PATTERNS:
+        re.compile(pattern)  # Should not raise
+
+
+def test_sensitive_mutation_pattern_matches():
+    import re
+    # "deleteUser" should match user deletion
+    matched = any(
+        re.search(p, "deleteUser") for p, _ in SENSITIVE_MUTATION_PATTERNS
+    )
+    assert matched, "deleteUser should match a sensitive mutation pattern"
+
+
+def test_sensitive_query_pattern_matches():
+    import re
+    matched = any(
+        re.search(p, "users") for p, _ in SENSITIVE_QUERY_PATTERNS
+    )
+    assert matched, "'users' should match a sensitive query pattern"
+
+
+def test_analyze_schema_counts():
+    schema = {
+        "queryType": {"name": "Query"},
+        "mutationType": {"name": "Mutation"},
+        "types": [
+            {"name": "Query", "kind": "OBJECT", "fields": [
+                {"name": "user", "type": {"name": "User", "kind": "OBJECT", "ofType": None}},
+                {"name": "posts", "type": {"name": "Post", "kind": "OBJECT", "ofType": None}},
+            ]},
+            {"name": "Mutation", "kind": "OBJECT", "fields": [
+                {"name": "deleteUser", "type": {"name": "Boolean", "kind": "SCALAR", "ofType": None}},
+            ]},
+            {"name": "User", "kind": "OBJECT", "fields": [
+                {"name": "id", "type": {"name": "ID", "kind": "SCALAR", "ofType": None}},
+                {"name": "email", "type": {"name": "String", "kind": "SCALAR", "ofType": None}},
+            ]},
+            {"name": "__Schema", "kind": "OBJECT", "fields": []},
+        ],
+    }
+    analysis = _analyze_schema(schema)
+    assert analysis["query_count"] == 2
+    assert analysis["mutation_count"] == 1
+    assert analysis["type_count"] == 3  # excludes __Schema
+    assert len(analysis["sensitive_mutations"]) == 1
+    assert analysis["sensitive_mutations"][0][1] == "User deletion"
+
+
+def test_determine_severity_with_sensitive_mutations():
+    analysis = {
+        "sensitive_mutations": [("deleteUser", "User deletion")],
+        "sensitive_queries": [],
+        "mutation_count": 1,
+    }
+    assert _determine_severity(analysis) == "high"
+
+
+def test_determine_severity_queries_only():
+    analysis = {
+        "sensitive_mutations": [],
+        "sensitive_queries": [("users", "User listing")],
+        "mutation_count": 0,
+    }
+    assert _determine_severity(analysis) == "medium"
+
+
+def test_determine_severity_no_sensitive():
+    analysis = {
+        "sensitive_mutations": [],
+        "sensitive_queries": [],
+        "mutation_count": 0,
+    }
+    assert _determine_severity(analysis) == "low"
+
+
+def test_determine_confidence_base():
+    analysis = {
+        "sensitive_mutations": [],
+        "sensitive_queries": [],
+    }
+    assert _determine_confidence(analysis) == 0.85
+
+
+def test_extract_schema_rejects_non_json():
+    """Mock-like test: _extract_schema should return None for non-JSON."""
+    import httpx
+    resp = httpx.Response(200, headers={"content-type": "text/html"}, text="<html></html>")
+    assert _extract_schema(resp) is None
