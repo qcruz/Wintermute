@@ -1,10 +1,11 @@
 # Secrets and credentials
 .env
-.env.*
+!.env.example
 *.key
 *.pem
 credentials.json
 secrets.yaml
+Keys/
 
 # Scan results (may contain sensitive target data)
 results/
