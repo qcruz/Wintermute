@@ -162,27 +162,39 @@ This project is educational and ethical by design. Every component respects prog
 
 ---
 
-## Phase 5: Operations & Monitoring
+## Phase 5: Operations & Monitoring (Current)
 
 **Goal:** Run the system continuously and monitor its effectiveness.
 
-- [ ] Cron-based pipeline scheduling
-- [ ] New program monitoring
-- [ ] Web dashboard (Streamlit)
-- [ ] Feedback loop: track what gets accepted vs rejected
+### 5.1 Scheduling & Automation
+- [ ] Single command to run full pipeline (recon → scan → report)
+- [ ] Cron-based scheduling for recurring scans
+- [ ] New program monitoring (alert when new programs appear)
+- [ ] Scope change detection (re-scan when scope expands)
+
+### 5.2 Dashboard & Metrics
+- [ ] CLI dashboard showing pipeline status
+- [ ] Program coverage stats
+- [ ] Findings by severity and status
+- [ ] Submission outcomes tracking
+
+### 5.3 Feedback Loop
+- [ ] Track which finding types get accepted vs rejected
+- [ ] Adjust scanning priorities based on success rates
+- [ ] Log reasons for rejected reports to improve detection
 
 ---
 
-## Phase 6: Education & Public Release
+## Education & Documentation (Ongoing)
 
-**Goal:** Package the project for others to learn from and use responsibly.
+Documentation grows organically as we work through cases and learn.
+GitHub repo is the public-facing project — docs live alongside code.
 
 - [x] Glossary of terms (`docs/GLOSSARY.md`)
 - [x] How It Works guide (`docs/how-it-works.md`)
-- [ ] Comprehensive setup guide
-- [ ] Video walkthroughs or blog posts
-- [ ] Security audit before public release
-- [ ] CONTRIBUTING.md, CODE_OF_CONDUCT.md
+- [x] Vulnerability detection guide (`docs/vulnerability-detection.md`)
+- [x] Reporting engine guide (`docs/reporting-engine.md`)
+- [ ] Case study docs as we work real bounties
 
 ---
 
@@ -195,6 +207,7 @@ This project is educational and ethical by design. Every component respects prog
 | 2026-09-27 | Start with HackerOne only | Largest platform, good API, defer Bugcrowd |
 | 2026-09-27 | Passive recon only in v1 | Safety first — CT logs and DNS are public data |
 | 2026-09-27 | SQLite for storage | Simple, no server needed, good enough for v1 |
+| 2026-09-27 | GitHub IS the public release | No separate Phase 6 — docs grow with the project |
 
 ---
 
@@ -203,5 +216,6 @@ This project is educational and ethical by design. Every component respects prog
 - `docs/GLOSSARY.md` — Plain-language definitions of all technical terms
 - `docs/how-it-works.md` — Step-by-step explanation of the full pipeline
 - `docs/ETHICS.md` — Mandatory rules of engagement
-- `docs/vulnerability-detection.md` — How each vulnerability check works (Phase 3)
-- `docs/LEGAL.md` — Legal considerations (TODO)
+- `docs/vulnerability-detection.md` — How each vulnerability check works
+- `docs/reporting-engine.md` — Report generation and submission guide
+- `docs/operations.md` — Operational runbook (Phase 5)

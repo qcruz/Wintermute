@@ -34,3 +34,9 @@ Thumbs.db
 # Database files
 *.db
 *.sqlite3
+
+# Logs
+logs/*.log
+
+# Ruff cache
+.ruff_cache/
