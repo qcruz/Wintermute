@@ -581,6 +581,52 @@ An Insecure Direct Object Reference (IDOR) vulnerability was identified on `{fin
     )
 
 
+def path_traversal_report(finding) -> Report:
+    """Generate a report for a path traversal / LFI finding."""
+    return Report(
+        title=finding.title,
+        severity_rating=finding.severity,
+        weakness_id=22,  # CWE-22: Improper Limitation of a Pathname to a Restricted Directory
+        vulnerability_information=f"""## Summary
+
+A path traversal (Local File Inclusion) vulnerability was identified on `{finding.hostname}`.
+
+## Description
+
+{finding.description}
+
+## Steps to Reproduce
+
+1. Send the following request:
+   ```
+   curl -s "{finding.evidence.split(chr(10))[0].replace('Parameter: ', '')}"
+   ```
+
+2. Observe that the response contains contents of a system file that should not be accessible.
+
+## Evidence
+
+```
+{finding.evidence}
+```
+
+## Remediation
+
+- Never construct file paths from user input directly
+- Use an allowlist of permitted file names or identifiers
+- Resolve paths with `realpath()` and verify they remain within the intended directory
+- Strip or reject traversal sequences (`../`, `..\\\\`, URL-encoded variants)
+- Run the application with minimal filesystem permissions
+
+## References
+
+- [CWE-22: Improper Limitation of a Pathname to a Restricted Directory](https://cwe.mitre.org/data/definitions/22.html)
+- [OWASP Path Traversal](https://owasp.org/www-community/attacks/Path_Traversal)
+- [OWASP Testing for Path Traversal](https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/05-Authorization_Testing/01-Testing_Directory_Traversal_File_Include)""",
+        impact=f"""An attacker can read arbitrary files from the server filesystem by manipulating file path parameters. This can expose sensitive configuration files, source code, credentials, and system information. In severe cases, path traversal can be chained with other vulnerabilities for remote code execution.""",
+    )
+
+
 # ── Template dispatcher ─────────────────────────────────────────────
 
 TEMPLATE_MAP = {
@@ -604,4 +650,5 @@ TEMPLATE_MAP = {
     "clickjack": business_logic_report,
     "cache_issue": business_logic_report,
     "idor": idor_report,
+    "path_traversal": path_traversal_report,
 }

@@ -29,6 +29,7 @@ from src.scanner.cors import CORSCheck, check_cors
 from src.scanner.exposed_files import ExposedFilesResult, check_exposed_files
 from src.scanner.idor import check_idor
 from src.scanner.injection import test_injection
+from src.scanner.path_traversal import check_path_traversal
 from src.scanner.security_headers import (
     HeaderAnalysisResult,
     analyze_missing_headers,
@@ -74,7 +75,7 @@ class ScanResult:
 ALL_CHECKS = [
     "subdomain_takeover", "cors", "ssl_tls", "exposed_files",
     "security_headers", "content_discovery", "injection",
-    "auth_checks", "business_logic", "idor",
+    "auth_checks", "business_logic", "idor", "path_traversal",
 ]
 
 # Lighter check set for quick scans (fast, low request count per target)
@@ -343,6 +344,27 @@ def run_scan(
                         "Verify that the authenticated user owns or has permission to "
                         "access the requested resource. Use UUIDs instead of sequential "
                         "IDs to make enumeration harder (defense in depth, not a fix)."
+                    ),
+                ))
+
+        # ── Path Traversal / LFI ──
+        if "path_traversal" in enabled_checks:
+            traversal_result = check_path_traversal(hostname)
+            result.checks_run["path_traversal"] = result.checks_run.get("path_traversal", 0) + 1
+            for finding in traversal_result.findings:
+                result.findings.append(ScanFinding(
+                    hostname=hostname,
+                    vuln_type=finding.vuln_type,
+                    title=f"Path Traversal via '{finding.parameter}' on {hostname}",
+                    severity=finding.severity,
+                    confidence=finding.confidence,
+                    description=finding.description,
+                    evidence=finding.evidence,
+                    remediation=(
+                        "Never use user input directly in file paths. Use an allowlist of "
+                        "permitted files, resolve paths with realpath() and verify they stay "
+                        "within the intended directory, and strip or reject directory traversal "
+                        "sequences (../, ..\\, URL-encoded variants)."
                     ),
                 ))
 

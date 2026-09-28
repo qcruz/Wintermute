@@ -31,6 +31,7 @@ from src.reporting.templates import (
     exposed_file_report,
     idor_report,
     injection_report,
+    path_traversal_report,
     missing_security_header_report,
     ssl_tls_report,
     subdomain_takeover_report,
@@ -361,6 +362,9 @@ def _generate_report(finding: Finding, target: Target) -> Report | None:
 
         elif finding.vuln_type == "idor":
             return idor_report(finding)
+
+        elif finding.vuln_type == "path_traversal":
+            return path_traversal_report(finding)
 
         elif finding.vuln_type in ("info_disclosure", "error_leak", "method_allowed", "clickjack", "cache_issue"):
             return business_logic_report(

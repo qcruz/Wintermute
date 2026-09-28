@@ -10,6 +10,13 @@ from src.scanner.idor import (
     API_PATTERNS,
     TEST_IDS,
 )
+from src.scanner.path_traversal import (
+    UNIX_PAYLOADS,
+    WINDOWS_PAYLOADS,
+    UNIX_SIGNATURES,
+    WINDOWS_SIGNATURES,
+    FILE_PARAMS,
+)
 
 
 # ── Security Headers ─────────────────────────────────────────────────
@@ -162,3 +169,74 @@ def test_test_ids_are_small_numbers():
     for tid in TEST_IDS:
         assert tid.isdigit(), f"Test ID is not numeric: {tid}"
         assert int(tid) <= 1000, f"Test ID too large: {tid}"
+
+
+# ── Path Traversal ──────────────────────────────────────────────────
+
+
+def test_unix_payloads_target_safe_files():
+    """All Unix payloads should target /etc/passwd or /etc/hostname only."""
+    allowed = {"/etc/passwd", "/etc/hostname"}
+    for payload, target, desc in UNIX_PAYLOADS:
+        assert target in allowed, f"Unsafe target file: {target} ({desc})"
+
+
+def test_windows_payloads_target_safe_files():
+    """All Windows payloads should target win.ini only."""
+    for payload, target, desc in WINDOWS_PAYLOADS:
+        assert target == "win.ini", f"Unsafe target file: {target} ({desc})"
+
+
+def test_unix_signatures_are_valid_regex():
+    import re
+    for pattern, name in UNIX_SIGNATURES:
+        re.compile(pattern)  # Should not raise
+
+
+def test_windows_signatures_are_valid_regex():
+    import re
+    for pattern, name in WINDOWS_SIGNATURES:
+        re.compile(pattern)  # Should not raise
+
+
+def test_unix_signature_matches_passwd_format():
+    import re
+    passwd_line = "root:x:0:0:root:/root:/bin/bash"
+    matched = any(re.search(p, passwd_line) for p, _ in UNIX_SIGNATURES)
+    assert matched, "No Unix signature matched a valid /etc/passwd line"
+
+
+def test_windows_signature_matches_win_ini():
+    import re
+    win_ini_content = "[fonts]\n[extensions]\n; for 16-bit app support"
+    matched = any(re.search(p, win_ini_content, re.IGNORECASE) for p, _ in WINDOWS_SIGNATURES)
+    assert matched, "No Windows signature matched valid win.ini content"
+
+
+def test_file_params_contain_common_names():
+    assert "file" in FILE_PARAMS
+    assert "path" in FILE_PARAMS
+    assert "template" in FILE_PARAMS
+    assert "include" in FILE_PARAMS
+    assert "page" in FILE_PARAMS
+
+
+def test_payloads_use_traversal_sequences():
+    """Every payload should contain a traversal sequence."""
+    for payload, _, _ in UNIX_PAYLOADS + WINDOWS_PAYLOADS:
+        has_traversal = (
+            ".." in payload
+            or "%2e%2e" in payload.lower()
+            or "%252f" in payload
+        )
+        assert has_traversal, f"Payload missing traversal: {payload}"
+
+
+def test_unix_payloads_have_descriptions():
+    for payload, target, desc in UNIX_PAYLOADS:
+        assert len(desc) > 0, f"Missing description for payload: {payload}"
+
+
+def test_windows_payloads_have_descriptions():
+    for payload, target, desc in WINDOWS_PAYLOADS:
+        assert len(desc) > 0, f"Missing description for payload: {payload}"

@@ -49,8 +49,7 @@ Research, prototype, and integrate new vulnerability detection capabilities. Eac
 
 ### Queue
 
-1. **Path Traversal / LFI** — Test file/path parameters with safe traversal canaries (`....//etc/hostname`)
-2. **GraphQL Introspection** — When GraphQL endpoints are found, query schema, analyze for sensitive mutations and missing auth
+1. **GraphQL Introspection** — When GraphQL endpoints are found, query schema, analyze for sensitive mutations and missing auth
 3. **JavaScript Analysis** — Parse JS files for hardcoded API keys, secrets, internal URLs, cloud credentials
 4. **SSRF Detection** — Test URL/webhook parameters for internal network access (requires callback server setup)
 5. **Host Header Injection** — Test for password reset poisoning and cache poisoning via Host header manipulation
@@ -138,7 +137,7 @@ Session flow:
 - HackerOne API client (auth, scope, programs, submissions)
 - Scope checker with wildcard/CIDR matching, default deny, audit logging
 - SQLite database with SQLAlchemy ORM
-- 61 unit tests, ruff linting
+- 71 unit tests, ruff linting
 
 ### Recon Pipeline (Built)
 - Certificate Transparency subdomain enumeration (crt.sh)
@@ -146,7 +145,7 @@ Session flow:
 - HTTP header fingerprinting and technology detection
 - Scope-gated orchestration pipeline
 
-### Scanner Modules (10 Built)
+### Scanner Modules (11 Built)
 1. Subdomain takeover (20+ services, CNAME chain, HTTP fingerprint)
 2. CORS misconfiguration (origin reflection, null origin, credentials)
 3. SSL/TLS analysis (expiry, weak protocols, hostname mismatch)
@@ -157,9 +156,10 @@ Session flow:
 8. Auth checks (cookies, JWT, missing auth, CSRF)
 9. Business logic (error leaks, version disclosure, clickjacking, HTTP methods)
 10. IDOR detection (sequential ID enumeration, sensitive field detection)
+11. Path traversal / LFI (traversal canaries, encoding bypasses, baseline comparison)
 
 ### Reporting Engine (Built)
-- 20 report templates with CWE references
+- 21 report templates with CWE references
 - Duplicate detection (internal DB + HackerOne API)
 - Interactive review queue with human approval
 - HackerOne API submission
