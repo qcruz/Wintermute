@@ -27,7 +27,7 @@ Built to explore whether an individual equipped with AI agents and open-source t
 
 ## Scanner Architecture
 
-Wintermute runs 9 vulnerability check modules against discovered targets. Each module is independent, safe (read-only / GET-only), and produces findings with confidence scores.
+Wintermute runs 10 vulnerability check modules against discovered targets. Each module is independent, safe (read-only / GET-only), and produces findings with confidence scores.
 
 ### Quick Checks (fast, low request count)
 
@@ -46,6 +46,7 @@ Wintermute runs 9 vulnerability check modules against discovered targets. Each m
 | **Injection Testing** | Reflected XSS, SQL injection (error-based), open redirects, Server-Side Template Injection (SSTI) | Discovers parameters from page links/forms, injects safe canary strings, checks for reflection (XSS), SQL error patterns (15+ DB signatures), redirect behavior, and template evaluation (`{{7*7}}` -> `49`) |
 | **Auth Checks** | Insecure cookies, unauthenticated API access, JWT exposure, login form CSRF, HTTP credential submission | Analyzes Set-Cookie flags (Secure, HttpOnly, SameSite), probes 24 sensitive endpoints without auth, extracts and decodes JWT headers, inspects login forms |
 | **Business Logic** | Stack trace / error leaks, version disclosure, dangerous HTTP methods, clickjacking, missing HTTPS redirect, cache issues | Triggers error pages and inspects for debug info (15 patterns across Python/Java/.NET/PHP/Node), checks OPTIONS response, tests X-Frame-Options/CSP frame-ancestors |
+| **IDOR Detection** | Insecure Direct Object References — unauthenticated access to user data via sequential API IDs | Probes 30 common REST API patterns (`/api/users/{id}`, `/api/orders/{id}`, etc.), tests sequential IDs, compares responses for different data objects, checks for sensitive fields (email, phone, PII) |
 | **Exposed Files** | `.git/`, `.env`, `.DS_Store`, backup files, admin panels, config files | Checks for known sensitive file paths with content validation to reduce false positives |
 
 ### False Positive Reduction

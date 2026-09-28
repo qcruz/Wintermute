@@ -27,6 +27,7 @@ from src.scanner.business_logic import analyze_business_logic
 from src.scanner.content_discovery import discover_content
 from src.scanner.cors import CORSCheck, check_cors
 from src.scanner.exposed_files import ExposedFilesResult, check_exposed_files
+from src.scanner.idor import check_idor
 from src.scanner.injection import test_injection
 from src.scanner.security_headers import (
     HeaderAnalysisResult,
@@ -73,7 +74,7 @@ class ScanResult:
 ALL_CHECKS = [
     "subdomain_takeover", "cors", "ssl_tls", "exposed_files",
     "security_headers", "content_discovery", "injection",
-    "auth_checks", "business_logic",
+    "auth_checks", "business_logic", "idor",
 ]
 
 # Lighter check set for quick scans (fast, low request count per target)
@@ -322,6 +323,27 @@ def run_scan(
                     description=finding.description,
                     evidence=finding.evidence,
                     remediation=_business_remediation(finding.vuln_type),
+                ))
+
+        # ── IDOR Detection ──────────────────────────────────────────
+        if "idor" in enabled_checks:
+            idor_result = check_idor(hostname)
+            result.checks_run["idor"] = result.checks_run.get("idor", 0) + 1
+            for finding in idor_result.findings:
+                result.findings.append(ScanFinding(
+                    hostname=hostname,
+                    vuln_type=finding.vuln_type,
+                    title=finding.title,
+                    severity=finding.severity,
+                    confidence=finding.confidence,
+                    description=finding.description,
+                    evidence=finding.evidence,
+                    remediation=(
+                        "Implement proper authorization checks on all API endpoints. "
+                        "Verify that the authenticated user owns or has permission to "
+                        "access the requested resource. Use UUIDs instead of sequential "
+                        "IDs to make enumeration harder (defense in depth, not a fix)."
+                    ),
                 ))
 
     # Step 4: Store findings in database

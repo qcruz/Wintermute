@@ -537,6 +537,50 @@ def business_logic_report(
     )
 
 
+def idor_report(finding) -> Report:
+    """Generate a report for an IDOR finding."""
+    return Report(
+        title=finding.title,
+        severity_rating=finding.severity,
+        weakness_id=639,  # CWE-639: Authorization Bypass Through User-Controlled Key
+        vulnerability_information=f"""## Summary
+
+An Insecure Direct Object Reference (IDOR) vulnerability was identified on `{finding.hostname}`.
+
+## Description
+
+{finding.description}
+
+## Steps to Reproduce
+
+1. Navigate to: `https://{finding.hostname}{finding.evidence.split(chr(10))[0].replace('Endpoint: ', '')}`
+2. Observe that the endpoint returns data without requiring authentication
+3. Change the ID parameter to a different value (e.g., increment by 1)
+4. Observe that different data objects are returned for different IDs
+
+## Evidence
+
+```
+{finding.evidence}
+```
+
+## Remediation
+
+- Implement server-side authorization checks on every API endpoint
+- Verify the authenticated user has permission to access the requested object
+- Return 401/403 for unauthenticated requests to sensitive endpoints
+- Use UUIDs instead of sequential integers for object identifiers (defense in depth)
+- Implement rate limiting on API endpoints to slow enumeration attempts
+
+## References
+
+- [CWE-639: Authorization Bypass Through User-Controlled Key](https://cwe.mitre.org/data/definitions/639.html)
+- [OWASP IDOR Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Insecure_Direct_Object_Reference_Prevention_Cheat_Sheet.html)
+- [OWASP Broken Access Control](https://owasp.org/Top10/A01_2021-Broken_Access_Control/)""",
+        impact=f"""An attacker can enumerate object IDs to access data belonging to other users without authentication. Depending on the data exposed, this could lead to mass data theft, privacy violations, or account compromise. IDOR is consistently ranked in the OWASP Top 10 under Broken Access Control (A01:2021).""",
+    )
+
+
 # ── Template dispatcher ─────────────────────────────────────────────
 
 TEMPLATE_MAP = {
@@ -559,4 +603,5 @@ TEMPLATE_MAP = {
     "method_allowed": business_logic_report,
     "clickjack": business_logic_report,
     "cache_issue": business_logic_report,
+    "idor": idor_report,
 }

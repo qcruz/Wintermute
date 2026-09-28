@@ -255,7 +255,7 @@ Wintermute follows a rotating cycle across sessions to maintain balanced progres
 ### Candidate Bug Classes to Investigate
 
 #### High Priority (Common, High Bounty Value)
-- [ ] **IDOR (Insecure Direct Object Reference)** — Enumerate predictable IDs in API responses, detect sequential access patterns
+- [x] **IDOR (Insecure Direct Object Reference)** — Enumerate predictable IDs in API responses, detect sequential access patterns
 - [ ] **Broken Access Control** — Test API endpoints with role escalation patterns (e.g., `/api/admin` accessible without admin cookie)
 - [ ] **Server-Side Request Forgery (SSRF)** — Test URL/webhook parameters for internal network access (safe canary payloads)
 - [ ] **Path Traversal / LFI** — Test file parameters for directory traversal (safe: `....//etc/hostname`)
@@ -291,6 +291,7 @@ Wintermute follows a rotating cycle across sessions to maintain balanced progres
 - [x] Parameter fuzzing (XSS, SQLi, open redirect, SSTI)
 - [x] Authentication/authorization checks (cookies, JWT, CSRF, missing auth)
 - [x] Business logic analysis (error leaks, version disclosure, clickjacking, HTTP methods)
+- [x] IDOR detection (sequential ID enumeration, sensitive field detection, unauthenticated API access)
 
 ---
 

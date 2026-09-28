@@ -29,6 +29,7 @@ from src.reporting.templates import (
     content_discovery_report,
     cors_misconfiguration_report,
     exposed_file_report,
+    idor_report,
     injection_report,
     missing_security_header_report,
     ssl_tls_report,
@@ -357,6 +358,9 @@ def _generate_report(finding: Finding, target: Target) -> Report | None:
                 description=finding.description or "",
                 evidence=finding.evidence or "",
             )
+
+        elif finding.vuln_type == "idor":
+            return idor_report(finding)
 
         elif finding.vuln_type in ("info_disclosure", "error_leak", "method_allowed", "clickjack", "cache_issue"):
             return business_logic_report(
