@@ -163,7 +163,12 @@ def discover_content(hostname: str, max_paths: int = 30) -> ContentDiscoveryResu
     base_url = f"https://{hostname}"
 
     # Step 1: Get custom 404 baseline
-    not_found_body, not_found_length = _get_404_baseline(base_url)
+    not_found_body, not_found_length, baseline_status = _get_404_baseline(base_url)
+
+    # Early exit: blanket-403 hosts return Forbidden for every path
+    if baseline_status == 403:
+        logger.debug("Skipping content discovery on %s — blanket 403 on all paths", hostname)
+        return result
 
     # Step 2: Early exit — detect third-party hosted sites
     # If the first probe redirects to a known third-party login, skip this host
@@ -238,8 +243,12 @@ def _detect_third_party(base_url: str) -> str:
     return ""
 
 
-def _get_404_baseline(base_url: str) -> tuple[str, int]:
-    """Get the custom 404 response for comparison."""
+def _get_404_baseline(base_url: str) -> tuple[str, int, int]:
+    """Get the custom 404 response for comparison.
+
+    Returns (body, content_length, status_code). The status_code is used to
+    detect blanket-403 hosts where every path returns Forbidden.
+    """
     try:
         resp = httpx.get(
             f"{base_url}/wintermute-nonexistent-path-7f3a9b2c",
@@ -248,10 +257,11 @@ def _get_404_baseline(base_url: str) -> tuple[str, int]:
             headers={"User-Agent": "Wintermute/0.1 (Security Research)"},
         )
         if resp.status_code == 200:
-            return resp.text.lower(), len(resp.content)
+            return resp.text.lower(), len(resp.content), 200
+        return "", 0, resp.status_code
     except Exception:
         pass
-    return "", 0
+    return "", 0, 0
 
 
 def _parse_robots_disallow(base_url: str) -> list[str]:
