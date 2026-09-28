@@ -71,6 +71,24 @@ Wintermute follows a rotating cycle to maintain balanced progress across scannin
 □ Execute
 ```
 
+## Scan Sizing Guidelines
+
+**Keep scans short and incremental.** A single session should never block on a scan longer than ~5 minutes. Large programs (100+ subdomains) must be broken into multiple sessions.
+
+| Program Size | Recon | Scan Strategy |
+|-------------|-------|---------------|
+| Small (<20 targets) | Full recon + quick scan in one session | Can deep scan all targets |
+| Medium (20-50 targets) | Recon in one session, scan in next | `--limit 10` per session, rotate batches |
+| Large (50-300 targets) | Recon is its own session | `--limit 5 --filter <keyword>` to focus on interesting hosts |
+| Huge (300+ targets like Hyatt) | Recon is its own session | `--scan-only --limit 5 --filter api` — slice by keyword (api, admin, dev, staging, etc.) across sessions |
+
+**Rules:**
+- Always use `--limit` on programs with 20+ targets
+- Use `--filter` to focus on high-value subdomains (api, admin, dev, staging, internal, portal)
+- Use `--quick` for first pass, then `--scan-only --checks <specific>` for deeper dives
+- If recon alone takes >5 min, let it finish and save scanning for the next session
+- Progress is cumulative — findings persist in the DB across sessions, so there's no rush
+
 ## Key Commands
 
 ```bash
