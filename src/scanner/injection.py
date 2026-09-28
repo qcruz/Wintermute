@@ -418,8 +418,6 @@ def _test_ssti(base_url: str, param: str) -> InjectionFinding | None:
         # But we need to make sure "49" isn't just coincidental
         if SSTI_RESULT in body and SSTI_CANARY not in body:
             # The expression was evaluated (canary gone, result present)
-            # Verify by checking if "49" appears near where our input would be
-            # This reduces false positives from pages that naturally contain "49"
 
             # Get baseline: request without the canary
             baseline = httpx.get(
@@ -430,20 +428,34 @@ def _test_ssti(base_url: str, param: str) -> InjectionFinding | None:
             )
 
             # If "49" appears in baseline too, it's not from our injection
-            if SSTI_RESULT not in baseline.text:
-                return InjectionFinding(
-                    url=url,
-                    parameter=param,
-                    vuln_type="ssti",
-                    severity="critical",
-                    confidence=0.85,
-                    description=(
-                        f"Server-Side Template Injection in parameter '{param}' — "
-                        f"expression {{{{7*7}}}} was evaluated to 49"
-                    ),
-                    evidence=f"Template expression evaluated: {SSTI_CANARY} → {SSTI_RESULT}",
-                    payload_used=SSTI_CANARY,
-                )
+            if SSTI_RESULT in baseline.text:
+                return None
+
+            # Guard against random tokens (Cloudflare challenges, session IDs)
+            # that coincidentally contain "49". Re-request and confirm "49" is
+            # still present — random tokens change on each request.
+            confirm = httpx.get(
+                url,
+                timeout=10.0,
+                follow_redirects=True,
+                headers={"User-Agent": "Wintermute/0.1 (Security Research)"},
+            )
+            if SSTI_RESULT not in confirm.text or SSTI_CANARY in confirm.text:
+                return None
+
+            return InjectionFinding(
+                url=url,
+                parameter=param,
+                vuln_type="ssti",
+                severity="critical",
+                confidence=0.85,
+                description=(
+                    f"Server-Side Template Injection in parameter '{param}' — "
+                    f"expression {{{{7*7}}}} was evaluated to 49"
+                ),
+                evidence=f"Template expression evaluated: {SSTI_CANARY} → {SSTI_RESULT}",
+                payload_used=SSTI_CANARY,
+            )
 
     except Exception as e:
         logger.debug("SSTI test failed for %s param=%s: %s", base_url, param, e)
