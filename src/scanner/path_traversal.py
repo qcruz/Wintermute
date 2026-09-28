@@ -105,7 +105,8 @@ WINDOWS_SIGNATURES = [
     (r"for 16-bit app support", "Windows win.ini header"),
 ]
 
-# Parameters likely to reference files
+# Parameters likely to reference files.
+# Full list used for discovery matching; only TOP_FILE_PARAMS are brute-tested.
 FILE_PARAMS = [
     "file", "path", "filepath", "filename",
     "page", "template", "tmpl", "tpl",
@@ -120,7 +121,6 @@ FILE_PARAMS = [
     "log", "report", "export",
     "download", "attachment",
 ]
-
 THIRD_PARTY_REDIRECTS = [
     "accounts.google.com",
     "login.microsoftonline.com",

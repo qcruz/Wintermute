@@ -4,6 +4,28 @@ Track what each session accomplished, what was found, and what's queued for next
 
 ---
 
+## Session 7 — 2026-09-28 (Scanning — Cycle 1)
+
+**Cycle step:** Scanning & Operations
+
+**What was done:**
+- Scanned Kiwi.com (6 targets) with new IDOR, path traversal, GraphQL checks — 0 new findings (5m 34s)
+- Scanned CLEAR with --filter api,corpsupport — 0 targets matched filter, nothing scanned
+- Started Deriv scan (13 targets) — killed after 20+ min, too slow
+- Diagnosed scan speed issue: path traversal tested 28 params × 10 payloads = 280 requests/target, IDOR tested 30 patterns × 4 IDs = 120 requests/target — ~400 requests/target total
+- Updated scan sizing guidelines: `--limit 3` default batch, check in with user between batches, never run long scans unattended
+
+**Findings:** 0 new findings from deep checks on Kiwi.com. These programs are well-secured.
+
+**Lesson learned:**
+- Deep checks take ~2 min/target. Don't reduce thoroughness — reduce batch size instead. Use `--limit 3` (~6 min per batch) and check in with user between batches.
+
+**Queued for next session:**
+- Cycle 1: Re-run Deriv in `--limit 3` batches, then scout for fresh programs
+- Consider: well-known programs may be picked clean — fresh/newer programs may yield more
+
+---
+
 ## Session 6 — 2026-09-28 (R&D — Cycle 2 + housekeeping)
 
 **Cycle step:** Scanner R&D & Buildout (primary)
