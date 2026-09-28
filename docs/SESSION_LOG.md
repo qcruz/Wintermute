@@ -64,3 +64,32 @@ Track what each session accomplished, what was found, and what's queued for next
 - Hyatt: run recon (will take its own session), then slice scans with --limit 5 --filter
 - Kiwi.com: quick scan (wildcard scope, should be manageable)
 - Consider R&D step soon (haven't done one yet in the cycle)
+
+---
+
+## Session 4 — 2026-09-28 (Scout + Scan + R&D)
+
+**Cycle step:** Scout + Scan + Review + R&D
+
+**What was done:**
+- Quick + deep scan on Kiwi.com: 6 targets, 8 real findings + 90 content discovery FPs
+- Found CORS misconfiguration on tequila.kiwi.com (HIGH, 0.95 confidence) — reflects arbitrary origin with credentials
+- Fixed blanket-403 false positive pattern in content discovery (hosts returning 403 for all paths)
+- Cleaned 90 blanket-403 FPs from DB
+- Evaluated CORS finding for test submission (first report candidate)
+- Built comprehensive README with scanner architecture breakdown
+- Created strategic analysis doc (docs/STRATEGY.md) for tracking progress, trends, and research
+- R&D: researched current bug bounty meta and AI-assisted vulnerability classes
+
+**Key finding:**
+- **CORS on tequila.kiwi.com** — reflects arbitrary origin with `Access-Control-Allow-Credentials: true`. Tequila is Kiwi.com's travel API platform. However, manual re-verification showed the host now returns blanket 403 with no CORS headers — **not reproducible, NOT submitted**. Lesson: verify findings immediately before they go stale.
+
+**Improvements made:**
+- Content discovery now skips blanket-403 hosts (baseline probe detects the pattern)
+- SSTI detector confirmation request (from earlier this session)
+
+**Queued for next session:**
+- Follow up on CORS submission outcome if submitted
+- Hyatt: recon session, then sliced scans
+- Continue R&D on new scanner modules from research
+- Review strategic analysis and adjust priorities
