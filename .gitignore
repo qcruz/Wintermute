@@ -1,0 +1,35 @@
+# Secrets and credentials
+.env
+.env.*
+*.key
+*.pem
+credentials.json
+secrets.yaml
+
+# Scan results (may contain sensitive target data)
+results/
+scans/
+output/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Database files
+*.db
+*.sqlite3
