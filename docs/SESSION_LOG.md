@@ -49,9 +49,16 @@ Track what each session accomplished, what was found, and what's queued for next
 - Created this session log
 
 **Findings to follow up:**
-- Algolia SSTI on dashboard.algolia.com (`q` and `template` params) — verify manually, could be search syntax not a vuln
 - Algolia HTTP methods (PUT, DELETE, TRACE, PATCH) on www.algolia.com
 - Deriv clickjacking on api.deriv.com and partners.deriv.com
+
+**Investigated and closed:**
+- Algolia SSTI on dashboard.algolia.com — FALSE POSITIVE. "49" was appearing in Cloudflare challenge tokens (random base64 strings), not template evaluation. Confirmed by re-requesting 3 times: "49" appeared inconsistently at different positions. Fixed SSTI detector to send confirmation request.
+
+**Improvements made:**
+- Fixed SSTI false positives: detector now re-requests to confirm "49" is consistent, filtering out random token noise
+- Added scan sizing guidelines to CLAUDE.md (small/medium/large/huge program strategies)
+- Created session log (this file) and added to startup checklist
 
 **Queued for next session:**
 - Hyatt: run recon (will take its own session), then slice scans with --limit 5 --filter
