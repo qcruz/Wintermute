@@ -50,7 +50,7 @@ Our false positive detection is improving with each scan. The pattern: scan a ne
 ### What's Not Working Yet
 - **No submissions** — we haven't proven the pipeline can produce reportable findings
 - **Finding quality** — most findings are informational (missing headers, cert expiry) that programs reject
-- **Deep vulns missing** — we don't detect IDOR, SSRF, path traversal, or business logic bugs that earn bounties
+- **Deep vulns now building** — IDOR, path traversal, and GraphQL modules built; need live findings to validate them
 - **Timing gap** — CORS on Kiwi.com was real but went stale before we could submit. Findings need faster turnaround.
 - **Large program handling** — Hyatt (291 targets) needs multi-session strategy
 
@@ -67,16 +67,17 @@ Based on HackerOne Hacktivity, public disclosures, and bounty trends:
 
 | Bug Class | Avg Bounty | Our Detection | Gap |
 |-----------|-----------|---------------|-----|
-| **IDOR / Broken Access Control** | $500-5,000 | None | Need API parameter enumeration, sequential ID detection |
+| **IDOR / Broken Access Control** | $500-5,000 | **Built** (12 modules) | 30 API patterns, sequential ID testing, PII detection |
 | **SSRF** | $1,000-10,000 | None | Need URL parameter testing with canary callbacks |
 | **Stored XSS** | $500-3,000 | Reflected only | Need form submission testing (POST), DOM analysis |
 | **Authentication Bypass** | $1,000-10,000 | Basic cookie/JWT checks | Need token manipulation, privilege escalation patterns |
 | **Information Disclosure via API** | $200-2,000 | Partial (missing auth check) | Need response content analysis, PII detection |
 | **Subdomain Takeover** | $200-1,000 | Good | Working well, but common/competitive |
 | **CORS with impact** | $200-1,000 | Good | Need to verify authenticated data exposure, not just header reflection |
-| **GraphQL vulnerabilities** | $500-5,000 | Endpoint detection only | Need introspection query, mutation analysis |
+| **GraphQL vulnerabilities** | $500-5,000 | **Built** (12 modules) | Introspection query, mutation/query analysis, severity classification |
 | **Race Conditions** | $500-5,000 | None | Complex — needs concurrent request testing |
-| **Path Traversal / LFI** | $500-5,000 | None | Need file parameter testing with traversal canaries |
+| **Path Traversal / LFI** | $500-5,000 | **Built** (12 modules) | Traversal canaries, 5 encoding bypasses, baseline comparison |
+| **Prompt Injection (AI)** | $500-10,000 | None | AI vuln reports up 210%, prompt injection up 540% — fastest growing category |
 
 ### AI Agent Hacking — Emerging Attack Surface
 
@@ -105,15 +106,15 @@ AI agents and LLM-integrated applications are a rapidly growing attack surface. 
 ## Strategic Priorities
 
 ### Immediate (Next 2-3 Sessions)
-1. **Get first submission** — focus on IDOR/access control or information disclosure, which have clear impact and lower duplicate rates
+1. **Get first submission** — run new deep checks (IDOR, path traversal, GraphQL) against all programs; verify and submit any strong findings immediately
 2. **Faster turnaround** — when a strong finding appears, verify and submit in the same session before it goes stale
-3. **Hyatt sliced scanning** — large attack surface = more chances for unique findings
+3. **Scan fresh programs** — scout and scan new programs where competition may be lower
 
 ### Short-term (Next 5-10 Sessions)
-4. **Build IDOR detection** — enumerate API endpoints, test sequential/predictable IDs, detect unauthorized data access
-5. **Build path traversal detection** — test file/path parameters with safe traversal canaries
-6. **GraphQL introspection** — when GraphQL endpoints are found, query the schema and analyze for sensitive mutations
-7. **JavaScript analysis** — parse JS files for hardcoded API keys, internal URLs, cloud credentials
+4. **JavaScript analysis** — parse JS files for hardcoded API keys, internal URLs, cloud credentials (high ROI, many programs leak secrets in JS)
+5. **SSRF detection** — test URL parameters with callback canaries (requires callback server setup)
+6. **Hyatt sliced scanning** — large attack surface, slice recon by domain subsets
+7. **AI/LLM prompt injection** — fastest growing category (+540%), low competition from automated scanners
 
 ### Medium-term (10-20 Sessions)
 8. **AI/LLM vulnerability scanning** — build detection for prompt injection, context leakage, insecure output handling
@@ -139,3 +140,6 @@ Update this document every 3-4 sessions or after significant events (first submi
 | 2026-09-28 | Scouted 74 programs | Deriv, Algolia, Kiwi.com, Hyatt evaluated |
 | 2026-09-28 | First submission candidate (CORS) | Not reproducible on re-verify — lesson learned |
 | 2026-09-28 | Strategy doc created | Shifting focus toward higher-value bug classes |
+| 2026-09-28 | Built IDOR, path traversal, GraphQL modules | 3 deep-scan modules in one session, 12 total scanners |
+| 2026-09-28 | HackerOne meta research | AI vulns +210%, prompt injection +540%, broken access control +36%, XSS still #1 but declining 10%, critical bounties avg $3K-$15K |
+| 2026-09-28 | MIT license added | Project now formally open-source |

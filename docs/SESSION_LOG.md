@@ -4,6 +4,27 @@ Track what each session accomplished, what was found, and what's queued for next
 
 ---
 
+## Session 6 — 2026-09-28 (R&D — Cycle 2 + housekeeping)
+
+**Cycle step:** Scanner R&D & Buildout (primary)
+
+**What was done:**
+- Built GraphQL Introspection module (12th scanner) — probes 8 paths, introspection query via POST/GET, schema analysis for sensitive mutations/queries, severity classification
+- Full integration: pipeline scan loop, report template (CWE-200), reporting branch, 12 new tests (83 total), educational explainer
+- Added MIT LICENSE file (Cycle 4 quick win), removed from Cycle 4 queue
+- Attempted Hyatt recon — killed after 30+ min (340+ targets, sequential header fingerprinting). Moved to bottom of Cycle 1 queue with "slice by domain" strategy
+- Researched HackerOne 2026 meta (Cycle 3): AI vulns +210%, prompt injection +540%, broken access control +36%, XSS still #1 but declining 10%, critical bounties avg $3K-$15K
+- Updated STRATEGY.md with research findings and revised priorities
+- Updated ROADMAP.md — removed completed items, reordered queues
+
+**Lesson learned:**
+- One session, one cycle. Don't try to touch all 4 cycles — pick the cycle, work the first item, wrap up.
+
+**Queued for next session:**
+- Cycle 1 (Scanning): Kiwi.com deep scan with new checks (IDOR, path traversal, GraphQL)
+
+---
+
 ## Session 5 — 2026-09-28 (R&D — Cycle 2)
 
 **Cycle step:** Scanner R&D & Buildout

@@ -150,4 +150,4 @@ See `docs/ETHICS.md` for the full rules of engagement.
 
 ## License
 
-TBD
+MIT License — see [LICENSE](LICENSE) for details.

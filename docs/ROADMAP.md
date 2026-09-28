@@ -27,14 +27,14 @@ Active scanning, program management, and operational improvements. This is the c
 
 ### Queue
 
-1. Hyatt — run recon (own session, 291 targets), then slice scans with `--limit 5 --filter` across subsequent sessions
-2. Kiwi.com — deep scan remaining targets, re-check CORS on tequila.kiwi.com
-3. Scout for new programs — run `scout`, evaluate 2-3 new candidates, quick-scan the best
-4. CLEAR — re-scan with IDOR and path traversal checks on interesting hosts (corpsupport, api)
-5. Deriv — scan remaining 8 targets with full checks
-6. Scan a fresh program from scout results — pick one never scanned, full pipeline
-7. Review submission candidates — verify any high-confidence findings, submit if reproducible
-8. Multi-program batch run — scan 3 programs in sequence with `--quick`
+1. Kiwi.com — deep scan remaining targets with new checks (IDOR, path traversal, GraphQL)
+2. Scout for new programs — run `scout`, evaluate 2-3 new candidates, quick-scan the best
+3. CLEAR — re-scan with IDOR and path traversal checks on interesting hosts (corpsupport, api)
+4. Deriv — scan remaining 8 targets with full checks
+5. Scan a fresh program from scout results — pick one never scanned, full pipeline
+6. Review submission candidates — verify any high-confidence findings, submit if reproducible
+7. Multi-program batch run — scan 3 programs in sequence with `--quick`
+8. Hyatt — slice recon by domain subsets across sessions (61 base domains, 805 subdomains), then scan with `--limit 5 --filter`
 
 **Continuous items** (rotate to bottom after working):
 - Scout for new programs
@@ -73,12 +73,12 @@ Market research, competitive analysis, and strategic direction. Feeds into R&D p
 
 ### Queue
 
-1. Research current HackerOne Hacktivity — what bug types are getting accepted and paid this month?
-2. Analyze our false positive rate — which modules generate the most noise? Prioritize fixes
-3. Study AI/LLM attack surface landscape — OWASP Top 10 for LLMs, emerging patterns
-4. Review bounty payout trends — which programs pay well, which are responsive, which to avoid
-5. Competitive analysis — what are other automated scanners (Nuclei, Burp, etc.) detecting that we're not?
-6. Update `docs/STRATEGY.md` with findings, adjust cycle priorities
+1. Analyze our false positive rate — which modules generate the most noise? Prioritize fixes
+2. Study AI/LLM attack surface landscape — OWASP Top 10 for LLMs, emerging patterns
+3. Review bounty payout trends — which programs pay well, which are responsive, which to avoid
+4. Competitive analysis — what are other automated scanners (Nuclei, Burp, etc.) detecting that we're not?
+5. Update `docs/STRATEGY.md` with findings, adjust cycle priorities
+6. Research current HackerOne Hacktivity — what bug types are getting accepted and paid this month?
 
 **Continuous items** (all — rotate after working):
 - All items in this cycle are continuous research tasks
@@ -91,14 +91,12 @@ Code quality, documentation, testing, infrastructure. Keeps the project maintain
 
 ### Queue
 
-1. Choose open-source license (Apache 2.0 or MIT) and add LICENSE file
-2. Create GitHub Actions CI pipeline (lint with ruff, run pytest)
-3. Add tests for new scanner modules (IDOR, path traversal, etc. — target 80+ tests)
-4. Write case study doc for first accepted bounty (when it happens)
-5. Draft `docs/LEGAL.md` — relevant laws, safe harbor provisions
-6. Review and update all docs for accuracy after recent changes
-7. Add CLI dashboard showing pipeline status, program coverage, finding stats
-8. Implement submission outcome tracking — log accepted/rejected/duplicate results
+1. Create GitHub Actions CI pipeline (lint with ruff, run pytest)
+2. Write case study doc for first accepted bounty (when it happens)
+3. Draft `docs/LEGAL.md` — relevant laws, safe harbor provisions
+4. Review and update all docs for accuracy after recent changes
+5. Add CLI dashboard showing pipeline status, program coverage, finding stats
+6. Implement submission outcome tracking — log accepted/rejected/duplicate results
 
 **Continuous items** (rotate to bottom after working):
 - Review and update all docs for accuracy after recent changes
