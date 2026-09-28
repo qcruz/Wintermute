@@ -64,11 +64,13 @@ Wintermute follows a rotating cycle to maintain balanced progress across scannin
 
 ```
 □ Read docs/ROADMAP.md
+□ Read docs/SESSION_LOG.md (check last session's findings and queued work)
 □ Run: python -m scripts.wintermute status
 □ Check: git log --oneline -5
 □ Determine cycle step (scan / scout / R&D / review)
 □ Brief the user on plan (1-2 sentences)
 □ Execute
+□ At end of session: append entry to docs/SESSION_LOG.md
 ```
 
 ## Scan Sizing Guidelines
