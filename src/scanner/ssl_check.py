@@ -17,6 +17,8 @@ import ssl
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 
+import certifi
+
 logger = logging.getLogger(__name__)
 
 
@@ -47,7 +49,7 @@ def check_ssl(hostname: str, port: int = 443) -> SSLCheck:
 
     # Step 1: Connect and get certificate info
     try:
-        context = ssl.create_default_context()
+        context = ssl.create_default_context(cafile=certifi.where())
         with socket.create_connection((hostname, port), timeout=10) as sock:
             with context.wrap_socket(sock, server_hostname=hostname) as ssock:
                 result.has_ssl = True

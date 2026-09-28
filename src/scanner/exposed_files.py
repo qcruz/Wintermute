@@ -72,13 +72,14 @@ SENSITIVE_PATHS = [
     (
         "/.env",
         "Environment variables (may contain secrets)",
-        ["="],  # Very basic check — .env files have KEY=VALUE format
+        # Look for common .env patterns, not just "=" which matches everything
+        ["db_", "api_key", "secret", "password", "token", "database_url", "app_key"],
         "critical",
     ),
     (
         "/.env.backup",
         "Environment file backup",
-        ["="],
+        ["db_", "api_key", "secret", "password", "token", "database_url", "app_key"],
         "critical",
     ),
     (
@@ -196,7 +197,7 @@ def check_exposed_files(hostname: str) -> ExposedFilesResult:
     base_url = f"https://{hostname}"
 
     # First, get the custom 404 response to compare against
-    not_found_body = _get_404_body(base_url)
+    not_found_body, not_found_length = _get_404_body(base_url)
 
     for path, description, fingerprints, severity in SENSITIVE_PATHS:
         check = ExposedFileCheck(path=path, severity=severity)
@@ -216,6 +217,11 @@ def check_exposed_files(hostname: str) -> ExposedFilesResult:
 
                 # Skip if response is identical to custom 404
                 if not_found_body and body == not_found_body:
+                    continue
+
+                # Skip if content length matches the 404 page (soft match
+                # for sites that include dynamic elements like timestamps)
+                if not_found_length and abs(check.content_length - not_found_length) < 50:
                     continue
 
                 if fingerprints:
@@ -250,11 +256,13 @@ def check_exposed_files(hostname: str) -> ExposedFilesResult:
     return result
 
 
-def _get_404_body(base_url: str) -> str:
+def _get_404_body(base_url: str) -> tuple[str, int]:
     """Fetch a definitely-nonexistent path to identify custom 404 pages.
 
     Many sites return 200 status for everything with a custom "not found"
     page. We need to detect this to avoid false positives.
+
+    Returns (body_text, content_length) for comparison.
     """
     try:
         response = httpx.get(
@@ -264,10 +272,10 @@ def _get_404_body(base_url: str) -> str:
             headers={"User-Agent": "Wintermute/0.1 (Security Research)"},
         )
         if response.status_code == 200:
-            return response.text.lower()
+            return response.text.lower(), len(response.content)
     except Exception:
         pass
-    return ""
+    return "", 0
 
 
 def check_many(hostnames: list[str]) -> list[ExposedFilesResult]:
