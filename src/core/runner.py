@@ -11,7 +11,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 
 from src.recon.pipeline import ReconResult, run_recon
-from src.scanner.pipeline import ScanResult, run_scan
+from src.scanner.pipeline import ALL_CHECKS, QUICK_CHECKS, ScanResult, run_scan
 from src.reporting.pipeline import ReportingResult, generate_reports
 
 logger = logging.getLogger(__name__)
@@ -45,6 +45,9 @@ def run_full_pipeline(
     program_handle: str,
     min_confidence: float = 0.7,
     skip_recon: bool = False,
+    max_targets: int = 0,
+    checks: list[str] | None = None,
+    hostname_filter: str = "",
 ) -> PipelineResult:
     """Run the complete Wintermute pipeline against a program.
 
@@ -57,6 +60,9 @@ def run_full_pipeline(
         program_handle: HackerOne program handle
         min_confidence: Minimum finding confidence to generate reports
         skip_recon: If True, skip recon and use existing DB data
+        max_targets: Limit number of targets to scan (0 = all)
+        checks: List of check names to run (None = all)
+        hostname_filter: Only scan hostnames containing this substring
     """
     result = PipelineResult(program_handle=program_handle)
     result.started_at = datetime.now(timezone.utc).isoformat()
@@ -86,7 +92,12 @@ def run_full_pipeline(
     logger.info("PHASE 2: VULNERABILITY SCANNING")
     logger.info("=" * 50)
     try:
-        result.scan = run_scan(program_handle)
+        result.scan = run_scan(
+            program_handle,
+            max_targets=max_targets,
+            checks=checks,
+            hostname_filter=hostname_filter,
+        )
         logger.info(
             "Scan complete: %d targets, %d findings",
             result.scan.targets_scanned,

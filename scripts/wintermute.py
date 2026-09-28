@@ -4,16 +4,22 @@
 Run the full pipeline or individual phases against a bug bounty program.
 
 Usage:
-  python -m scripts.wintermute <program_handle>              # Full pipeline
-  python -m scripts.wintermute <program_handle> --scan-only   # Skip recon, scan existing data
-  python -m scripts.wintermute status                         # Show database status
-  python -m scripts.wintermute programs                       # List available programs
+  python -m scripts.wintermute <handle>                        # Full pipeline
+  python -m scripts.wintermute <handle> --scan-only            # Skip recon
+  python -m scripts.wintermute <handle> --quick                # Quick scan (4 fast checks)
+  python -m scripts.wintermute <handle> --limit 5              # Scan only 5 targets
+  python -m scripts.wintermute <handle> --filter api           # Only targets containing "api"
+  python -m scripts.wintermute <handle> --checks cors,injection  # Only specific checks
+  python -m scripts.wintermute status                          # Show database status
+  python -m scripts.wintermute programs                        # List available programs
+  python -m scripts.wintermute scout                           # Discover new programs to work
 """
 
 import logging
 import sys
 
 from src.core.runner import run_full_pipeline, print_summary
+from src.scanner.pipeline import ALL_CHECKS, QUICK_CHECKS
 
 logging.basicConfig(
     level=logging.INFO,
@@ -91,15 +97,106 @@ def list_programs() -> None:
         print(f"  {handle:<33s} {name}")
 
 
+def scout_programs() -> None:
+    """Discover and evaluate programs for targeting.
+
+    Shows programs sorted by opportunity signals:
+    - Newer programs (less competition)
+    - Wide scope (wildcard domains)
+    - Bounty eligibility
+    - Response efficiency
+    """
+    from src.platforms.hackerone import HackerOneClient
+    from src.core.db import Program, get_session
+
+    print("Scouting HackerOne for programs...")
+    print("=" * 70)
+
+    with HackerOneClient() as client:
+        data = client._get("/hackers/programs", {"page[size]": 100})
+
+    programs = data.get("data", [])
+
+    # Score and rank programs
+    scored = []
+    for p in programs:
+        attrs = p.get("attributes", {})
+        handle = attrs.get("handle", "?")
+        name = attrs.get("name", "?")
+        state = attrs.get("state", "")
+        submission_state = attrs.get("submission_state", "")
+        offers_bounties = attrs.get("offers_bounties", False)
+        started_accepting = attrs.get("started_accepting_at", "")
+
+        # Only programs accepting submissions
+        if submission_state != "open":
+            continue
+
+        scored.append({
+            "handle": handle,
+            "name": name,
+            "bounty": offers_bounties,
+            "started": started_accepting[:10] if started_accepting else "unknown",
+        })
+
+    # Check which ones we've already scanned
+    session = get_session()
+    scanned_handles = {
+        p.handle for p in session.query(Program).all()
+    }
+    session.close()
+
+    # Sort: unscanned first, then by start date (newer first)
+    scored.sort(key=lambda p: (p["handle"] in scanned_handles, p["started"]))
+    scored.reverse()
+
+    print(f"\n  {'Handle':<30s} {'Bounty':<8s} {'Started':<12s} {'Status'}")
+    print("  " + "-" * 68)
+
+    for p in scored[:40]:
+        bounty = "Yes" if p["bounty"] else "No"
+        status = "SCANNED" if p["handle"] in scanned_handles else "NEW"
+        marker = "  " if status == "NEW" else "  ✓ "
+        print(f"  {marker}{p['handle']:<28s} {bounty:<8s} {p['started']:<12s} {status}")
+
+    print(f"\n  Total: {len(scored)} programs ({len(scored) - len(scanned_handles & {p['handle'] for p in scored})} new)")
+    print()
+    print("  Tips:")
+    print("  - NEW programs have less competition")
+    print("  - Rotate targets periodically to avoid tunnel vision")
+    print("  - Run 'python -m scripts.h1_explore show <handle>' to check scope")
+    print()
+
+
+def _parse_arg(args: list[str], flag: str, default: str = "") -> str:
+    """Extract a flag value like --limit 5 from args."""
+    if flag in args:
+        idx = args.index(flag)
+        if idx + 1 < len(args):
+            return args[idx + 1]
+    return default
+
+
 def main() -> None:
     if len(sys.argv) < 2:
         print("Wintermute — Automated Bug Bounty Pipeline")
         print()
         print("Usage:")
-        print("  python -m scripts.wintermute <program_handle>       Full pipeline")
-        print("  python -m scripts.wintermute <handle> --scan-only   Skip recon")
-        print("  python -m scripts.wintermute status                 DB status")
-        print("  python -m scripts.wintermute programs               List programs")
+        print("  python -m scripts.wintermute <handle>                    Full pipeline")
+        print("  python -m scripts.wintermute <handle> --scan-only        Skip recon")
+        print("  python -m scripts.wintermute <handle> --quick            Quick scan (fast checks)")
+        print("  python -m scripts.wintermute <handle> --limit N          Scan N targets max")
+        print("  python -m scripts.wintermute <handle> --filter TERM      Only matching hostnames")
+        print("  python -m scripts.wintermute <handle> --checks a,b,c     Only specific checks")
+        print("  python -m scripts.wintermute status                      DB status")
+        print("  python -m scripts.wintermute programs                    List programs")
+        print("  python -m scripts.wintermute scout                       Find new programs")
+        print()
+        print("Available checks:")
+        for check in sorted(ALL_CHECKS):
+            marker = "*" if check in QUICK_CHECKS else " "
+            print(f"  {marker} {check}")
+        print("  (* = included in --quick)")
         sys.exit(1)
 
     cmd = sys.argv[1]
@@ -112,16 +209,56 @@ def main() -> None:
         list_programs()
         return
 
+    if cmd == "scout":
+        scout_programs()
+        return
+
     # Full pipeline
     handle = cmd
-    scan_only = "--scan-only" in sys.argv
+    args = sys.argv[2:]
 
+    scan_only = "--scan-only" in args
+    quick = "--quick" in args
+
+    # Parse --limit N
+    limit_str = _parse_arg(args, "--limit")
+    max_targets = int(limit_str) if limit_str else 0
+
+    # Parse --filter TERM
+    hostname_filter = _parse_arg(args, "--filter")
+
+    # Parse --checks a,b,c
+    checks_str = _parse_arg(args, "--checks")
+    if checks_str:
+        checks = [c.strip() for c in checks_str.split(",")]
+        invalid = [c for c in checks if c not in ALL_CHECKS]
+        if invalid:
+            print(f"Unknown checks: {', '.join(invalid)}")
+            print(f"Available: {', '.join(sorted(ALL_CHECKS))}")
+            sys.exit(1)
+    elif quick:
+        checks = list(QUICK_CHECKS)
+    else:
+        checks = None  # All checks
+
+    # Display scan plan
     print(f"Wintermute starting pipeline for: {handle}")
+    if max_targets:
+        print(f"  Target limit: {max_targets}")
+    if hostname_filter:
+        print(f"  Hostname filter: *{hostname_filter}*")
+    if checks:
+        print(f"  Checks: {', '.join(sorted(checks))}")
+    if scan_only:
+        print(f"  Mode: scan-only (skip recon)")
     print("=" * 60)
 
     result = run_full_pipeline(
         program_handle=handle,
         skip_recon=scan_only,
+        max_targets=max_targets,
+        checks=checks,
+        hostname_filter=hostname_filter,
     )
 
     print_summary(result)

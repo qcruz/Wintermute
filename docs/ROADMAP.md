@@ -128,10 +128,40 @@ This project is educational and ethical by design. Every component respects prog
 - [x] Check for exposed admin panels
 - [ ] Check for directory listing enabled
 
-### 3.6 Open Redirect Detection
-- [ ] Test common redirect parameters (deferred)
+### 3.6 Active Content Discovery ✅
+- [x] API documentation endpoints (Swagger, GraphQL, OpenAPI)
+- [x] Common API path patterns (/api/v1/, /api/v2/, etc.)
+- [x] Admin and management interfaces (Tomcat, phpMyAdmin, Adminer)
+- [x] Development/debug endpoints (Spring Boot Actuator, Go pprof)
+- [x] robots.txt Disallow path mining
+- [x] Source maps and build artifacts
+- [x] Custom 404 detection to filter false positives
 
-### 3.7 Validation Layer
+### 3.7 Injection Testing ✅
+- [x] Reflected XSS detection (canary-based, multi-stage confirmation)
+- [x] SQL injection via error-based detection (15+ DB error patterns)
+- [x] Open redirect testing (redirect parameter fuzzing)
+- [x] Server-Side Template Injection (SSTI) detection
+- [x] Automatic parameter discovery from page links and forms
+- [x] Common parameter wordlist fallback
+
+### 3.8 Authentication & Authorization Checks ✅
+- [x] Session cookie security flags (Secure, HttpOnly, SameSite)
+- [x] Unauthenticated access to sensitive API endpoints
+- [x] JWT token exposure and weak algorithm detection
+- [x] Login form CSRF protection check
+- [x] HTTP credential submission detection
+
+### 3.9 Business Logic Analysis ✅
+- [x] Verbose error/stack trace detection (Python, Java, .NET, PHP, Node)
+- [x] Version disclosure in response headers
+- [x] Dangerous HTTP methods (PUT, DELETE, TRACE via OPTIONS)
+- [x] HTTP → HTTPS redirect check
+- [x] Clickjacking protection (X-Frame-Options, CSP frame-ancestors)
+- [x] Cache control on sensitive pages
+- [x] TRACE method / Cross-Site Tracing (XST)
+
+### 3.10 Validation Layer
 - [x] Confidence scoring (0.0 - 1.0)
 - [x] False positive reduction (content-length soft match, content fingerprinting)
 - [x] Subdoc: `docs/vulnerability-detection.md`
@@ -162,15 +192,40 @@ This project is educational and ethical by design. Every component respects prog
 
 ---
 
+## Operating Cycle
+
+Wintermute follows a rotating cycle across sessions to maintain balanced progress. See `CLAUDE.md` for the full session continuation protocol.
+
+| Cycle Step | Frequency | What to do |
+|------------|-----------|------------|
+| **Scan** | Every session | Quick or deep scan against an active program |
+| **Scout** | Every 2-3 sessions | `scout` for new programs, quick-scan 1-2 |
+| **R&D** | Every 3-4 sessions | Prototype a new bug class from Phase 6 list |
+| **Review** | As needed | Check HackerOne outcomes, update docs, fix FPs |
+
+**Rule:** Don't do the same step three sessions in a row. Vary the mix.
+
+---
+
 ## Phase 5: Operations & Monitoring (Current)
 
 **Goal:** Run the system continuously and monitor its effectiveness.
 
 ### 5.1 Scheduling & Automation
-- [ ] Single command to run full pipeline (recon → scan → report)
+- [x] Single command to run full pipeline (recon → scan → report)
+- [x] Batch scanning: `--limit N`, `--filter TERM`, `--checks a,b,c`
+- [x] Quick scan mode: `--quick` runs 4 fast checks only
+- [x] Program scouting: `scout` command to discover new targets
 - [ ] Cron-based scheduling for recurring scans
 - [ ] New program monitoring (alert when new programs appear)
 - [ ] Scope change detection (re-scan when scope expands)
+
+### 5.2 Program Rotation & Diversification
+- [x] `scout` command ranks programs by opportunity (new, bounty, scope)
+- [x] Tracks which programs have been scanned vs. untouched
+- [ ] Periodic rotation reminder (don't get stuck on one target)
+- [ ] Program health scoring (response time, bounty history, scope width)
+- [ ] Multi-program batch runs (scan N programs in sequence)
 
 ### 5.2 Dashboard & Metrics
 - [ ] CLI dashboard showing pipeline status
@@ -185,6 +240,60 @@ This project is educational and ethical by design. Every component respects prog
 
 ---
 
+## Phase 6: Scanner R&D (Ongoing)
+
+**Goal:** Continuously research, develop, and refine detection capabilities. Each cycle identifies new bug classes, evaluates feasibility, builds proof-of-concept checks, and integrates what works into the pipeline.
+
+### R&D Cycle Process
+1. **Research** — Study recent CVEs, HackerOne Hacktivity, OWASP updates, and real-world disclosures to identify high-value bug classes we're not yet detecting
+2. **Prioritize** — Rank candidates by: bounty value × detection feasibility × automation potential
+3. **Prototype** — Build a standalone check module with test cases
+4. **Validate** — Run against known-vulnerable test targets (OWASP Juice Shop, DVWA, etc.)
+5. **Integrate** — Wire into the scanner pipeline with report templates
+6. **Measure** — Track acceptance rate of new finding types across programs
+
+### Candidate Bug Classes to Investigate
+
+#### High Priority (Common, High Bounty Value)
+- [ ] **IDOR (Insecure Direct Object Reference)** — Enumerate predictable IDs in API responses, detect sequential access patterns
+- [ ] **Broken Access Control** — Test API endpoints with role escalation patterns (e.g., `/api/admin` accessible without admin cookie)
+- [ ] **Server-Side Request Forgery (SSRF)** — Test URL/webhook parameters for internal network access (safe canary payloads)
+- [ ] **Path Traversal / LFI** — Test file parameters for directory traversal (safe: `....//etc/hostname`)
+- [ ] **Insecure Deserialization markers** — Detect Java serialized objects, PHP serialized data, pickle in responses
+
+#### Medium Priority (Valuable, Moderate Complexity)
+- [ ] **Subdomain enumeration expansion** — Integrate multiple passive sources (SecurityTrails, Shodan, VirusTotal APIs)
+- [ ] **JavaScript analysis** — Parse JS files for hardcoded API keys, secrets, internal URLs, and cloud service credentials
+- [ ] **Broken rate limiting** — Detect missing rate limits on login, password reset, and API endpoints
+- [ ] **Email header injection** — Test contact/feedback forms for header injection via newline characters
+- [ ] **Host header injection** — Test for password reset poisoning and cache poisoning via Host header manipulation
+- [ ] **WebSocket testing** — Check for unauthenticated WebSocket connections and missing origin validation
+- [ ] **API versioning gaps** — Test older API versions (v1 when v2 exists) for deprecated, unpatched endpoints
+
+#### Lower Priority (Niche but Rewarding)
+- [ ] **Prototype pollution** — Detect JavaScript prototype pollution via `__proto__` in JSON APIs
+- [ ] **Race conditions** — Detect TOCTOU issues on coupon/discount/balance endpoints
+- [ ] **GraphQL introspection** — If GraphQL found, query full schema and analyze for sensitive mutations
+- [ ] **Cloud metadata SSRF** — Test for AWS/GCP/Azure metadata endpoint access (169.254.169.254)
+- [ ] **Dependency confusion** — Analyze package.json/requirements.txt for internal package names vulnerable to public registry hijacking
+- [ ] **Cache poisoning** — Test for web cache deception via path confusion and unkeyed headers
+- [ ] **DNS rebinding** — Detect services vulnerable to DNS rebinding attacks
+
+### Research Resources
+- HackerOne Hacktivity (public disclosures for patterns)
+- OWASP Testing Guide v4.2
+- PortSwigger Web Security Academy
+- Recent CVE databases for newly discovered attack patterns
+- Bug bounty write-ups and conference talks
+
+### Completed R&D
+- [x] Active content discovery (API docs, admin panels, debug endpoints)
+- [x] Parameter fuzzing (XSS, SQLi, open redirect, SSTI)
+- [x] Authentication/authorization checks (cookies, JWT, CSRF, missing auth)
+- [x] Business logic analysis (error leaks, version disclosure, clickjacking, HTTP methods)
+
+---
+
 ## Education & Documentation (Ongoing)
 
 Documentation grows organically as we work through cases and learn.
@@ -194,6 +303,7 @@ GitHub repo is the public-facing project — docs live alongside code.
 - [x] How It Works guide (`docs/how-it-works.md`)
 - [x] Vulnerability detection guide (`docs/vulnerability-detection.md`)
 - [x] Reporting engine guide (`docs/reporting-engine.md`)
+- [x] Submission decision guide (`docs/submission-guide.md`)
 - [ ] Case study docs as we work real bounties
 
 ---
@@ -207,7 +317,9 @@ GitHub repo is the public-facing project — docs live alongside code.
 | 2026-09-27 | Start with HackerOne only | Largest platform, good API, defer Bugcrowd |
 | 2026-09-27 | Passive recon only in v1 | Safety first — CT logs and DNS are public data |
 | 2026-09-27 | SQLite for storage | Simple, no server needed, good enough for v1 |
-| 2026-09-27 | GitHub IS the public release | No separate Phase 6 — docs grow with the project |
+| 2026-09-27 | GitHub IS the public release | No separate release phase — docs grow with the project |
+| 2026-09-27 | Added 4 advanced scanner modules | Content discovery, injection, auth, business logic |
+| 2026-09-27 | Created R&D cycle (Phase 6) | Ongoing research to expand detection capabilities |
 
 ---
 
@@ -219,3 +331,4 @@ GitHub repo is the public-facing project — docs live alongside code.
 - `docs/vulnerability-detection.md` — How each vulnerability check works
 - `docs/reporting-engine.md` — Report generation and submission guide
 - `docs/operations.md` — Operational runbook (Phase 5)
+- `docs/submission-guide.md` — When to submit, risks of oversubmitting

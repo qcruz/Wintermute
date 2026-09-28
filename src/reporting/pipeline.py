@@ -24,8 +24,12 @@ from src.platforms.hackerone import HackerOneClient
 from src.reporting.dedup import DedupResult, full_dedup_check
 from src.reporting.templates import (
     Report,
+    auth_finding_report,
+    business_logic_report,
+    content_discovery_report,
     cors_misconfiguration_report,
     exposed_file_report,
+    injection_report,
     missing_security_header_report,
     ssl_tls_report,
     subdomain_takeover_report,
@@ -306,6 +310,61 @@ def _generate_report(finding: Finding, target: Target) -> Report | None:
                 issue=finding.description or "",
                 tls_version="",
                 cert_info=finding.evidence or "",
+            )
+
+        elif finding.vuln_type == "content_discovery":
+            # Extract path from title like "Discovered X at host/path"
+            path = ""
+            title = finding.title or ""
+            if " at " in title:
+                after_at = title.split(" at ")[-1]
+                if "/" in after_at:
+                    path = "/" + after_at.split("/", 1)[-1]
+
+            return content_discovery_report(
+                hostname=target.hostname,
+                path=path,
+                description=finding.description or "",
+                category="",
+                evidence=finding.evidence or "",
+                severity=finding.severity,
+            )
+
+        elif finding.vuln_type in ("xss", "sqli", "open_redirect", "ssti"):
+            # Extract parameter from evidence like "Parameter: X, Payload: Y"
+            parameter = ""
+            payload = ""
+            evidence = finding.evidence or ""
+            if "Parameter:" in evidence:
+                parameter = evidence.split("Parameter:")[1].split(",")[0].strip()
+            if "Payload:" in evidence:
+                payload = evidence.split("Payload:")[1].split("\n")[0].strip()
+
+            return injection_report(
+                hostname=target.hostname,
+                vuln_type=finding.vuln_type,
+                parameter=parameter,
+                description=finding.description or "",
+                evidence=evidence,
+                payload=payload,
+            )
+
+        elif finding.vuln_type in ("insecure_cookie", "missing_auth", "jwt_issue", "session_issue"):
+            return auth_finding_report(
+                hostname=target.hostname,
+                vuln_type=finding.vuln_type,
+                title=finding.title or "",
+                description=finding.description or "",
+                evidence=finding.evidence or "",
+            )
+
+        elif finding.vuln_type in ("info_disclosure", "error_leak", "method_allowed", "clickjack", "cache_issue"):
+            return business_logic_report(
+                hostname=target.hostname,
+                vuln_type=finding.vuln_type,
+                title=finding.title or "",
+                description=finding.description or "",
+                evidence=finding.evidence or "",
             )
 
         else:

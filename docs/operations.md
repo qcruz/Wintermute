@@ -33,7 +33,36 @@ python -m scripts.wintermute <handle>
 
 # Skip recon, just re-scan existing targets
 python -m scripts.wintermute <handle> --scan-only
+
+# Quick scan — only fast checks (takeover, CORS, SSL, headers)
+python -m scripts.wintermute <handle> --quick
+
+# Scan only 5 targets (good for testing or quick passes)
+python -m scripts.wintermute <handle> --limit 5
+
+# Scan only targets matching a filter
+python -m scripts.wintermute <handle> --filter api
+
+# Run only specific checks
+python -m scripts.wintermute <handle> --checks cors,injection,auth_checks
+
+# Combine options: quick scan of 3 API-related targets
+python -m scripts.wintermute <handle> --scan-only --quick --limit 3 --filter api
 ```
+
+### Available Checks
+
+| Check | In `--quick` | Description |
+|-------|:---:|-------------|
+| `subdomain_takeover` | Yes | Dangling CNAME detection |
+| `cors` | Yes | CORS misconfiguration |
+| `ssl_tls` | Yes | Certificate and protocol issues |
+| `security_headers` | Yes | Missing security headers |
+| `exposed_files` | | Sensitive files (.git, .env, backups) |
+| `content_discovery` | | API docs, admin panels, debug endpoints |
+| `injection` | | XSS, SQLi, open redirect, SSTI |
+| `auth_checks` | | Cookie flags, missing auth, JWT issues |
+| `business_logic` | | Error leaks, version disclosure, clickjacking |
 
 ### Individual Phases
 
@@ -60,6 +89,9 @@ python -m scripts.run_reports <handle> --preview   # Preview only, no submit opt
 ```bash
 # Show database status (programs, targets, findings)
 python -m scripts.wintermute status
+
+# Scout for new programs to target
+python -m scripts.wintermute scout
 ```
 
 ---
@@ -103,16 +135,26 @@ Examples:
 
 ## Workflow for Working a New Program
 
-1. **Find the program**: `python -m scripts.wintermute programs`
+1. **Scout programs**: `python -m scripts.wintermute scout`
 2. **Check the scope**: `python -m scripts.h1_explore show <handle>`
-3. **Read the policy**: Visit the program page on HackerOne to understand
-   any special rules or restrictions
-4. **Run the pipeline**: `python -m scripts.wintermute <handle>`
-5. **Review findings**: Check the summary output
-6. **Review reports**: `python -m scripts.run_reports <handle>`
-7. **Submit or skip**: Approve reports you're confident about
-8. **Track outcomes**: Check HackerOne for triage responses
-9. **Learn**: If a report is rejected, note why and adjust
+3. **Read the policy**: Visit the program page on HackerOne
+4. **Quick scan first**: `python -m scripts.wintermute <handle> --quick --limit 10`
+5. **Review quick results**: Are there promising targets worth deep scanning?
+6. **Deep scan**: `python -m scripts.wintermute <handle> --scan-only` (full checks)
+7. **Review reports**: `python -m scripts.run_reports <handle>`
+8. **Submit or skip**: Approve reports you're confident about
+9. **Rotate**: Don't spend too long on one program — `scout` for new ones
+10. **Learn**: If a report is rejected, note why and adjust
+
+## Diversification Strategy
+
+Avoid getting stuck on a single program or bug type:
+
+- **Weekly scout**: Run `scout` at least weekly to find new programs
+- **Rotate programs**: Work 2-3 programs in parallel, not just one
+- **Vary scan depth**: Quick scans across many programs, then deep dives on promising ones
+- **Track patterns**: Which check types produce accepted findings? Double down on those
+- **Explore new areas**: Periodically try check types you haven't used much
 
 ---
 

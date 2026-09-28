@@ -298,6 +298,245 @@ def ssl_tls_report(
     )
 
 
+def content_discovery_report(
+    hostname: str,
+    path: str,
+    description: str,
+    category: str,
+    evidence: str,
+    severity: str,
+) -> Report:
+    """Generate a report for a discovered endpoint."""
+    severity_map = {
+        "critical": "critical",
+        "high": "high",
+        "medium": "medium",
+        "low": "low",
+        "info": "none",
+    }
+
+    return Report(
+        title=f"Exposed {description} at {hostname}{path}",
+        severity_rating=severity_map.get(severity, "medium"),
+        vulnerability_information=f"""## Summary
+
+Active content discovery found `{description}` publicly accessible at `https://{hostname}{path}`. This endpoint (category: {category}) should typically not be exposed to the public internet.
+
+## Steps to Reproduce
+
+1. Navigate to:
+   ```
+   https://{hostname}{path}
+   ```
+
+2. The endpoint responds with content confirming its presence.
+
+## Evidence
+
+{evidence}
+
+## Remediation
+
+- Restrict access to `{path}` using authentication or IP allowlisting
+- Remove development, debug, and documentation endpoints from production
+- Use a web application firewall (WAF) to block access to sensitive paths
+- Review deployment configuration to prevent accidental exposure
+
+## References
+
+- [CWE-200: Exposure of Sensitive Information](https://cwe.mitre.org/data/definitions/200.html)
+- [OWASP: Information Disclosure](https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/01-Information_Gathering/)""",
+        impact=f"""The exposed endpoint at `{path}` may reveal sensitive information about the application's internal structure, API surface, or configuration. Depending on the endpoint type ({category}), this could enable:
+
+- **API abuse:** Discovering undocumented API endpoints for unauthorized access
+- **Information gathering:** Learning internal architecture to plan further attacks
+- **Direct exploitation:** Accessing debug or admin interfaces without authentication""",
+    )
+
+
+def injection_report(
+    hostname: str,
+    vuln_type: str,
+    parameter: str,
+    description: str,
+    evidence: str,
+    payload: str,
+) -> Report:
+    """Generate a report for an injection vulnerability."""
+    type_info = {
+        "xss": {
+            "title": f"Reflected Cross-Site Scripting (XSS) via '{parameter}' parameter on {hostname}",
+            "severity": "high",
+            "cwe": "CWE-79: Improper Neutralization of Input During Web Page Generation",
+            "cwe_url": "https://cwe.mitre.org/data/definitions/79.html",
+            "impact": (
+                "An attacker can execute arbitrary JavaScript in the context of a victim's browser session. "
+                "This enables session hijacking, credential theft, defacement, and phishing attacks "
+                "that appear to originate from the trusted domain."
+            ),
+        },
+        "sqli": {
+            "title": f"SQL Injection via '{parameter}' parameter on {hostname}",
+            "severity": "critical",
+            "cwe": "CWE-89: SQL Injection",
+            "cwe_url": "https://cwe.mitre.org/data/definitions/89.html",
+            "impact": (
+                "An attacker can manipulate database queries to extract, modify, or delete data. "
+                "In severe cases, this can lead to full database compromise, authentication bypass, "
+                "or remote code execution on the database server."
+            ),
+        },
+        "open_redirect": {
+            "title": f"Open Redirect via '{parameter}' parameter on {hostname}",
+            "severity": "medium",
+            "cwe": "CWE-601: URL Redirection to Untrusted Site",
+            "cwe_url": "https://cwe.mitre.org/data/definitions/601.html",
+            "impact": (
+                "An attacker can craft URLs that redirect users to malicious websites while appearing "
+                "to link to the trusted domain. This facilitates phishing attacks and credential theft."
+            ),
+        },
+        "ssti": {
+            "title": f"Server-Side Template Injection via '{parameter}' parameter on {hostname}",
+            "severity": "critical",
+            "cwe": "CWE-1336: Improper Neutralization of Special Elements Used in a Template Engine",
+            "cwe_url": "https://cwe.mitre.org/data/definitions/1336.html",
+            "impact": (
+                "An attacker can inject template directives that are executed server-side, potentially "
+                "leading to remote code execution, file system access, and full server compromise."
+            ),
+        },
+    }
+
+    info = type_info.get(vuln_type, type_info["xss"])
+
+    return Report(
+        title=info["title"],
+        severity_rating=info["severity"],
+        vulnerability_information=f"""## Summary
+
+{description}
+
+## Steps to Reproduce
+
+1. Send the following request:
+   ```
+   curl -s "https://{hostname}/?{parameter}={payload}"
+   ```
+
+2. Observe the response for evidence of the vulnerability.
+
+## Evidence
+
+{evidence}
+
+## Remediation
+
+- Validate and sanitize all user-supplied input
+- Use parameterized queries for database operations
+- Encode output according to context (HTML, JavaScript, URL)
+- Implement Content-Security-Policy headers
+
+## References
+
+- [{info['cwe']}]({info['cwe_url']})
+- [OWASP Testing Guide](https://owasp.org/www-project-web-security-testing-guide/)""",
+        impact=info["impact"],
+    )
+
+
+def auth_finding_report(
+    hostname: str,
+    vuln_type: str,
+    title: str,
+    description: str,
+    evidence: str,
+) -> Report:
+    """Generate a report for an auth-related finding."""
+    severity_map = {
+        "insecure_cookie": "medium",
+        "missing_auth": "high",
+        "jwt_issue": "high",
+        "session_issue": "medium",
+    }
+
+    cwe_map = {
+        "insecure_cookie": ("CWE-614", "Sensitive Cookie in HTTPS Session Without 'Secure' Attribute"),
+        "missing_auth": ("CWE-306", "Missing Authentication for Critical Function"),
+        "jwt_issue": ("CWE-347", "Improper Verification of Cryptographic Signature"),
+        "session_issue": ("CWE-352", "Cross-Site Request Forgery"),
+    }
+
+    cwe_id, cwe_name = cwe_map.get(vuln_type, ("CWE-287", "Improper Authentication"))
+
+    return Report(
+        title=title,
+        severity_rating=severity_map.get(vuln_type, "medium"),
+        vulnerability_information=f"""## Summary
+
+{description}
+
+## Evidence
+
+{evidence}
+
+## Remediation
+
+- Implement proper authentication and session management
+- Set Secure, HttpOnly, and SameSite flags on all session cookies
+- Use CSRF tokens on all state-changing forms
+- Validate JWT tokens with strong algorithms (RS256/ES256)
+
+## References
+
+- [{cwe_id}: {cwe_name}](https://cwe.mitre.org/data/definitions/{cwe_id.split('-')[1]}.html)
+- [OWASP Authentication Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html)""",
+        impact=f"""Authentication and session management vulnerabilities can allow attackers to impersonate legitimate users, access protected data, or perform unauthorized actions. The specific impact depends on the application's functionality and the data it handles.""",
+    )
+
+
+def business_logic_report(
+    hostname: str,
+    vuln_type: str,
+    title: str,
+    description: str,
+    evidence: str,
+) -> Report:
+    """Generate a report for a business logic finding."""
+    severity_map = {
+        "info_disclosure": "low",
+        "error_leak": "medium",
+        "method_allowed": "low",
+        "clickjack": "medium",
+        "cache_issue": "low",
+    }
+
+    return Report(
+        title=title,
+        severity_rating=severity_map.get(vuln_type, "low"),
+        vulnerability_information=f"""## Summary
+
+{description}
+
+## Evidence
+
+{evidence}
+
+## Remediation
+
+- Remove version information from response headers
+- Configure custom error pages without stack traces
+- Disable unnecessary HTTP methods
+- Set proper security headers (X-Frame-Options, Cache-Control)
+
+## References
+
+- [CWE-200: Exposure of Sensitive Information](https://cwe.mitre.org/data/definitions/200.html)
+- [OWASP Information Disclosure](https://owasp.org/www-project-web-security-testing-guide/)""",
+        impact=f"""Information disclosure and business logic issues can provide attackers with intelligence to plan more targeted attacks. While not directly exploitable in most cases, these findings weaken the overall security posture and may enable escalation to higher-severity vulnerabilities.""",
+    )
+
+
 # ── Template dispatcher ─────────────────────────────────────────────
 
 TEMPLATE_MAP = {
@@ -306,4 +545,18 @@ TEMPLATE_MAP = {
     "exposed_file": exposed_file_report,
     "missing_security_header": missing_security_header_report,
     "ssl_tls": ssl_tls_report,
+    "content_discovery": content_discovery_report,
+    "xss": injection_report,
+    "sqli": injection_report,
+    "open_redirect": injection_report,
+    "ssti": injection_report,
+    "insecure_cookie": auth_finding_report,
+    "missing_auth": auth_finding_report,
+    "jwt_issue": auth_finding_report,
+    "session_issue": auth_finding_report,
+    "info_disclosure": business_logic_report,
+    "error_leak": business_logic_report,
+    "method_allowed": business_logic_report,
+    "clickjack": business_logic_report,
+    "cache_issue": business_logic_report,
 }
