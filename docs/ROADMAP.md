@@ -8,169 +8,156 @@ This project is educational and ethical by design. Every component respects prog
 
 ---
 
-## Phase 0: Foundation (Current)
+## Phase 0: Foundation ✅
 
 **Goal:** Establish project infrastructure, accounts, and legal/ethical framework.
 
 ### 0.1 Project Setup
 - [x] Create project folder and directory structure
 - [x] Write initial roadmap
-- [ ] Initialize git repository
-- [ ] Create GitHub repository (private during development, public when ready)
-- [ ] Set up `.gitignore` (exclude secrets, credentials, scan results with PII)
+- [x] Initialize git repository
+- [x] Create GitHub repository
+- [x] Set up `.gitignore` (exclude secrets, credentials, scan results with PII)
 - [ ] Choose open-source license (Apache 2.0 or MIT recommended)
 
 ### 0.2 Platform Accounts
-- [ ] Create HackerOne hacker account (https://hackerone.com)
-- [ ] Create Bugcrowd researcher account (https://bugcrowd.com)
-- [ ] Review and accept platform terms of service
-- [ ] Generate API keys for each platform
-- [ ] Store API keys securely (environment variables or encrypted config)
+- [x] Create HackerOne hacker account
+- [x] Generate API keys
+- [x] Store API keys securely (environment variables via .env)
+- [ ] Create Bugcrowd researcher account (deferred — starting with HackerOne)
 
 ### 0.3 Ethics & Legal Framework
-- [ ] Draft `docs/ETHICS.md` — rules of engagement the system will always follow
-  - Only test explicitly in-scope assets
-  - Never attempt denial of service
-  - Never exfiltrate real user data
-  - Respect rate limits
-  - Stop immediately if impact to real users is possible
-  - Always disclose through proper channels
-- [ ] Draft `docs/LEGAL.md` — relevant laws (CFAA, local equivalents), safe harbor provisions
-- [ ] Build scope-checking into the pipeline as a hard gate (not optional)
+- [x] Draft `docs/ETHICS.md` — rules of engagement
+- [x] Build scope-checking into the pipeline as a hard gate
+- [ ] Draft `docs/LEGAL.md` — relevant laws, safe harbor provisions
 
 ### 0.4 Development Environment
-- [ ] Select primary language (Python recommended)
-- [ ] Set up virtual environment / dependency management (poetry or pip + requirements.txt)
-- [ ] Set up linting and formatting (ruff, black)
+- [x] Python 3.14 with virtual environment
+- [x] Dependencies installed (requests, httpx, sqlalchemy, dnspython, etc.)
+- [x] Linting with ruff
+- [x] Testing with pytest (26 tests passing)
 - [ ] Create basic CI pipeline (GitHub Actions: lint, test)
 
 ---
 
-## Phase 1: Program Ingestion & Scope Management
+## Phase 1: Program Ingestion & Scope Management ✅
 
 **Goal:** Automatically discover bug bounty programs and parse their scope into structured data.
 
 ### 1.1 Platform API Integration
-- [ ] HackerOne API client (`src/platforms/hackerone.py`)
-  - Authenticate with API token
+- [x] HackerOne API client (`src/platforms/hackerone.py`)
+  - Authenticate with API token (basic auth)
   - List programs accepting submissions
   - Fetch program policy and scope
-  - Fetch program response metrics (helps prioritize responsive programs)
-- [ ] Bugcrowd API client (`src/platforms/bugcrowd.py`)
-  - Same capabilities as above
-- [ ] Unified program model — normalize data across platforms
-- [ ] Subdoc: `docs/platform-integration.md`
+  - Fetch program weaknesses (accepted CWEs)
+  - Submit reports via API
+- [ ] Bugcrowd API client (deferred)
 
 ### 1.2 Scope Parser
-- [ ] Parse in-scope domains, IPs, URLs, mobile apps
-- [ ] Parse out-of-scope exclusions
-- [ ] Parse bounty ranges and severity requirements
-- [ ] Parse special instructions and testing restrictions
-- [ ] Store parsed scope in local database (SQLite initially)
+- [x] Parse in-scope domains, IPs, URLs
+- [x] Parse out-of-scope exclusions
+- [x] Store parsed scope in local database (SQLite)
 
-### 1.3 Program Prioritization
-- [ ] Score programs by: bounty amount, response time, scope breadth, competition level
-- [ ] Filter for programs suited to automated testing (web apps, APIs)
-- [ ] Flag programs with restrictions that affect automated tools
+### 1.3 Scope Checker (`src/core/scope.py`)
+- [x] Wildcard domain matching (*.example.com)
+- [x] CIDR/IP range matching
+- [x] Out-of-scope exclusions override in-scope wildcards
+- [x] Default deny for unmatched targets
+- [x] Full audit logging
+- [x] `require_scope()` hard gate function
+- [x] 24 unit tests
 
 ---
 
-## Phase 2: Reconnaissance Pipeline
+## Phase 2: Reconnaissance Pipeline ✅
 
 **Goal:** For each in-scope target, discover the attack surface automatically.
 
 ### 2.1 Subdomain Enumeration
-- [ ] Integrate subfinder or amass (passive enumeration only to start)
-- [ ] Certificate transparency log queries
-- [ ] DNS brute-forcing (wordlist-based, respecting rate limits)
-- [ ] Deduplicate and validate discovered subdomains (DNS resolution check)
-- [ ] Store results in database with timestamps
+- [x] Certificate Transparency log queries (crt.sh)
+- [x] DNS resolution validation (A and AAAA records)
+- [x] Deduplicate discovered subdomains
+- [x] Store results in database with timestamps
 
-### 2.2 Port & Service Scanning
-- [ ] Integrate nmap or masscan (with conservative rate settings)
-- [ ] Service version detection
-- [ ] Map services to known technologies
-- [ ] Hard gate: verify every target is in scope before scanning
+### 2.2 Web Technology Fingerprinting
+- [x] HTTP response header analysis
+- [x] Server identification
+- [x] Technology detection (CloudFront, Cloudflare, Drupal, etc.)
+- [x] Security header gap analysis
 
-### 2.3 Web Technology Fingerprinting
-- [ ] HTTP response header analysis
-- [ ] Technology stack detection (Wappalyzer-style)
-- [ ] CMS detection (WordPress, Drupal, etc.)
-- [ ] JavaScript framework detection
-- [ ] API endpoint discovery from client-side code
+### 2.3 Recon Pipeline (`src/recon/pipeline.py`)
+- [x] Orchestrated pipeline: fetch scope → enumerate → filter → fingerprint → store
+- [x] Scope-gated: every target checked before interaction
+- [x] Database storage with change tracking
+- [x] Validated end-to-end against HackerOne's own program
 
-### 2.4 Content Discovery
-- [ ] Directory and file brute-forcing (ffuf or feroxbuster integration)
-- [ ] Robots.txt and sitemap.xml parsing
+### 2.4 Not Yet Implemented
+- [ ] Port & service scanning (nmap integration)
+- [ ] Content discovery (directory brute-forcing)
 - [ ] Wayback Machine historical URL retrieval
-- [ ] Common sensitive file checks (.git, .env, .DS_Store, backup files)
-
-### 2.5 Recon Data Store
-- [ ] Design database schema for all recon data
-- [ ] Build query interface for downstream vulnerability checks
-- [ ] Track changes over time (new subdomains, removed services, etc.)
-- [ ] Subdoc: `docs/recon-pipeline.md`
+- [ ] Additional passive sources (Subfinder, Amass)
 
 ---
 
-## Phase 3: Vulnerability Detection
+## Phase 3: Vulnerability Detection (Current)
 
 **Goal:** Scan discovered assets for known and common vulnerabilities.
 
-### 3.1 Known CVE Detection
-- [ ] Integrate nuclei with community templates
-- [ ] Match discovered tech stacks against CVE databases (NVD API)
-- [ ] Version-based vulnerability matching
-- [ ] Template management: auto-update, custom templates
+### 3.1 Subdomain Takeover Detection
+- [ ] Check for dangling CNAME records
+- [ ] Match against known vulnerable services (S3, Heroku, GitHub Pages, etc.)
+- [ ] Verify takeover feasibility
 
-### 3.2 Common Web Vulnerability Checks
-- [ ] Subdomain takeover detection (CNAME pointing to unclaimed services)
-- [ ] Open redirect detection
-- [ ] CORS misconfiguration checks
-- [ ] Security header analysis (CSP, HSTS, X-Frame-Options, etc.)
-- [ ] Exposed sensitive files and directories
-- [ ] Default credentials on admin panels
-- [ ] SSL/TLS configuration issues
+### 3.2 Security Header Analysis
+- [ ] Flag missing critical security headers as findings
+- [ ] Severity classification per missing header
+- [ ] Generate actionable remediation advice
 
-### 3.3 API Security Checks
-- [ ] Broken authentication patterns
-- [ ] IDOR (Insecure Direct Object Reference) pattern detection
-- [ ] Rate limiting verification
-- [ ] Information disclosure in API responses
-- [ ] GraphQL introspection checks
+### 3.3 CORS Misconfiguration Detection
+- [ ] Test for wildcard origin reflection
+- [ ] Test for null origin acceptance
+- [ ] Test for credential-inclusive CORS with open origins
 
-### 3.4 Validation Layer
-- [ ] False positive reduction logic for each vulnerability class
+### 3.4 SSL/TLS Analysis
+- [ ] Certificate expiration checks
+- [ ] Weak protocol detection (TLS 1.0, 1.1)
+- [ ] Certificate chain validation
+
+### 3.5 Exposed Sensitive Files
+- [ ] Check for .git, .env, .DS_Store, backup files
+- [ ] Check for exposed admin panels
+- [ ] Check for directory listing enabled
+
+### 3.6 Open Redirect Detection
+- [ ] Test common redirect parameters
+- [ ] Validate redirect behavior
+
+### 3.7 Validation Layer
 - [ ] Confidence scoring (high / medium / low)
-- [ ] Safe proof-of-concept generation (non-destructive verification)
-- [ ] Human review queue for medium/low confidence findings
+- [ ] False positive reduction
+- [ ] Human review queue for medium/low confidence
 - [ ] Subdoc: `docs/vulnerability-detection.md`
 
 ---
 
 ## Phase 4: Reporting Engine
 
-**Goal:** Generate clear, professional vulnerability reports and submit them through proper channels.
+**Goal:** Generate clear, professional vulnerability reports and submit them.
 
 ### 4.1 Report Generation
 - [ ] Report template system (per vulnerability class)
-- [ ] Auto-populate: title, description, impact, CVSS score, reproduction steps
-- [ ] Include evidence (screenshots, HTTP request/response pairs)
-- [ ] Use LLM (Claude API) to refine report language and clarity
+- [ ] Auto-populate: title, description, impact, CVSS, reproduction steps
+- [ ] Use LLM (Claude API) to refine report language
 - [ ] Remediation recommendations
 
 ### 4.2 Duplicate Avoidance
-- [ ] Query platform APIs for existing reports on same asset/vuln
-- [ ] Check public disclosure databases
-- [ ] Internal dedup against our own previous submissions
-- [ ] Confidence-based decision: skip if likely duplicate
+- [ ] Query platform APIs for existing reports
+- [ ] Internal dedup against previous submissions
 
 ### 4.3 Submission Pipeline
-- [ ] Auto-submit high-confidence findings via platform API
-- [ ] Queue medium-confidence findings for human review before submission
-- [ ] Track submission status (triaged, accepted, duplicate, N/A, resolved)
-- [ ] Handle triage follow-up questions (flag for human response)
-- [ ] Subdoc: `docs/reporting-engine.md`
+- [ ] Auto-submit high-confidence findings via API
+- [ ] Queue medium-confidence for human review
+- [ ] Track submission status
 
 ---
 
@@ -178,26 +165,10 @@ This project is educational and ethical by design. Every component respects prog
 
 **Goal:** Run the system continuously and monitor its effectiveness.
 
-### 5.1 Scheduling & Orchestration
-- [ ] Cron-based or event-driven pipeline execution
-- [ ] New program monitoring (run recon on newly added programs)
-- [ ] Scope change detection (re-scan when scope expands)
-- [ ] Rate limit management across all tools and targets
-
-### 5.2 Dashboard & Metrics
-- [ ] Web dashboard (simple Flask/Streamlit app)
-  - Active programs being monitored
-  - Recon coverage per program
-  - Findings by status and severity
-  - Submission outcomes (accepted, duplicate, N/A)
-  - Revenue tracking (bounties earned)
-- [ ] Alert system for high-severity findings
-
-### 5.3 Feedback Loop
-- [ ] Track which vulnerability classes yield accepted reports
-- [ ] Adjust scanning priorities based on success rates
-- [ ] Log reasons for rejected/duplicate reports to improve detection
-- [ ] Subdoc: `docs/operations.md`
+- [ ] Cron-based pipeline scheduling
+- [ ] New program monitoring
+- [ ] Web dashboard (Streamlit)
+- [ ] Feedback loop: track what gets accepted vs rejected
 
 ---
 
@@ -205,35 +176,12 @@ This project is educational and ethical by design. Every component respects prog
 
 **Goal:** Package the project for others to learn from and use responsibly.
 
-### 6.1 Documentation
+- [x] Glossary of terms (`docs/GLOSSARY.md`)
+- [x] How It Works guide (`docs/how-it-works.md`)
 - [ ] Comprehensive setup guide
-- [ ] Tool-by-tool explainer (what each component does and why)
-- [ ] Ethical guidelines for users
 - [ ] Video walkthroughs or blog posts
-
-### 6.2 Public Repository
-- [ ] Security audit of codebase before public release
-- [ ] Remove any hardcoded credentials or sensitive data from git history
-- [ ] Add CONTRIBUTING.md
-- [ ] Add CODE_OF_CONDUCT.md
-- [ ] Community discussion setup (GitHub Discussions or Discord)
-
-### 6.3 Ongoing Maintenance
-- [ ] Keep nuclei templates and tool integrations current
-- [ ] Community contributions and PRs
-- [ ] Periodic review of ethical framework as landscape evolves
-
----
-
-## Development Cycles
-
-Each phase follows this cycle:
-
-```
-Design -> Implement -> Test (local) -> Test (safe target*) -> Review -> Merge
-```
-
-*Safe targets: use deliberately vulnerable apps (DVWA, Juice Shop, HackTheBox) and your own infrastructure for testing before running against real bounty programs.
+- [ ] Security audit before public release
+- [ ] CONTRIBUTING.md, CODE_OF_CONDUCT.md
 
 ---
 
@@ -243,18 +191,16 @@ Design -> Implement -> Test (local) -> Test (safe target*) -> Review -> Merge
 |------|----------|-----------|
 | 2026-09-27 | Project initiated as "Wintermute" | Explore feasibility of AI-assisted bounty hunting |
 | 2026-09-27 | Python as primary language | Best ecosystem for security tooling |
-| | | |
+| 2026-09-27 | Start with HackerOne only | Largest platform, good API, defer Bugcrowd |
+| 2026-09-27 | Passive recon only in v1 | Safety first — CT logs and DNS are public data |
+| 2026-09-27 | SQLite for storage | Simple, no server needed, good enough for v1 |
 
 ---
 
-## Subdocument Index
+## Documentation Index
 
-Created as each area develops:
-
-- `docs/ETHICS.md` — Rules of engagement (Phase 0)
-- `docs/LEGAL.md` — Legal considerations (Phase 0)
-- `docs/platform-integration.md` — API integration details (Phase 1)
-- `docs/recon-pipeline.md` — Recon architecture (Phase 2)
-- `docs/vulnerability-detection.md` — Detection methodology (Phase 3)
-- `docs/reporting-engine.md` — Report generation details (Phase 4)
-- `docs/operations.md` — Operational runbook (Phase 5)
+- `docs/GLOSSARY.md` — Plain-language definitions of all technical terms
+- `docs/how-it-works.md` — Step-by-step explanation of the full pipeline
+- `docs/ETHICS.md` — Mandatory rules of engagement
+- `docs/vulnerability-detection.md` — How each vulnerability check works (Phase 3)
+- `docs/LEGAL.md` — Legal considerations (TODO)
