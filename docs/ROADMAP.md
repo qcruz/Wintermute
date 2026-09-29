@@ -99,8 +99,7 @@ Code quality, documentation, testing, infrastructure. Keeps the project maintain
 ### Queue
 
 1. Write case study doc for first accepted bounty (when it happens)
-3. Draft `docs/LEGAL.md` — relevant laws, safe harbor provisions
-4. Review and update all docs for accuracy after recent changes
+2. Review and update all docs for accuracy after recent changes
 5. Add CLI dashboard showing pipeline status, program coverage, finding stats
 6. Implement submission outcome tracking — log accepted/rejected/duplicate results
 
@@ -209,4 +208,5 @@ Session flow:
 - `docs/operations.md` — Command reference and workflow
 - `docs/how-it-works.md` — Step-by-step pipeline explanation
 - `docs/ETHICS.md` — Mandatory rules of engagement
+- `docs/LEGAL.md` — Legal context, CFAA, safe harbor provisions
 - `docs/GLOSSARY.md` — Plain-language definitions

@@ -4,6 +4,28 @@ Track what each session accomplished, what was found, and what's queued for next
 
 ---
 
+## Session 20 — 2026-09-29 (Docs — Cycle 4)
+
+**Cycle step:** Project Organization & Docs — Draft LEGAL.md
+
+**What was done:**
+- Drafted `docs/LEGAL.md` — legal context for security research
+  - CFAA overview and interaction with bug bounties
+  - DMCA security research exemption
+  - International considerations (EU NIS2, UK CMA)
+  - Safe harbor provisions: what they mean and don't mean
+  - Wintermute's built-in legal risk mitigations
+  - Best practices for researchers
+- Added LEGAL.md to documentation index
+- Removed completed item from Cycle 4 queue
+
+**Queued for next session:**
+- Cycle 1 (Scanning): GitHub Copilot scan, Notion, Quora/Poe
+- Cycle 2 (R&D): Insecure AI Integration module or SSTI FP fix
+- Cycle 3 (Research): Review bounty payout trends
+
+---
+
 ## Session 19 — 2026-09-29 (Research — Cycle 3)
 
 **Cycle step:** Research & Strategic Planning — Analyze false positive rate
