@@ -55,7 +55,7 @@ Research, prototype, and integrate new vulnerability detection capabilities. Eac
 ### Queue
 
 **False positive fixes (high priority — directly improves scan quality):**
-1. **Catch-all routing detection** — Before testing discovered paths, request a random nonsense path; if it returns 200, skip all path-based discoveries for that host (fixes 86 FPs on gist.github.com alone)
+1. ~~**Catch-all routing detection**~~ ✅ DONE (Session 22) — Pipeline detects catch-all hosts and skips path-based discovery checks (content_discovery, ai_prompt_injection, ai_data_exfil, mcp_security). Fixes 110+ FPs across GitHub and Notion.
 2. **SSTI baseline comparison** — Request the target without SSTI payload first; if "49" appears in the baseline response, skip the SSTI finding (fixes 21 FPs on Deriv)
 3. **Content discovery confidence tuning** — All 138 findings at 0.6 confidence; require content fingerprinting (not just HTTP 200) to raise confidence above threshold
 

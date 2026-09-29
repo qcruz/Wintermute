@@ -4,6 +4,30 @@ Track what each session accomplished, what was found, and what's queued for next
 
 ---
 
+## Session 22 — 2026-09-29 (R&D — Cycle 2)
+
+**Cycle step:** Scanner R&D — Catch-all routing detection (FP fix #1)
+
+**What was done:**
+- Implemented catch-all routing detection in `src/scanner/pipeline.py`
+  - New `_detect_catchall()` function: requests a random UUID path, if it returns 200, host is catch-all
+  - New `PATH_DISCOVERY_CHECKS` set: `content_discovery`, `ai_prompt_injection`, `ai_data_exfil`, `mcp_security`
+  - Pipeline skips path-based checks for catch-all hosts, runs all other checks normally
+  - Prints warning when catch-all detected so user sees it in output
+- Verified against known catch-all hosts: mail.notion.so ✓, retool.mail.notion.so ✓
+- Added 3 tests (PATH_DISCOVERY_CHECKS contents, exclusions, connection error handling)
+- All 148 tests pass, ruff clean
+- Updated ROADMAP.md: marked catch-all detection as ✅ DONE
+- Updated STRATEGY.md: added catch-all FPs to the fixed FP table (110+ FPs eliminated)
+
+**Impact:** Eliminates 110+ false positives across GitHub and Notion scans. This was the #1 FP source.
+
+**Queued for next session:**
+- Cycle 3 (Research): Review bounty payout trends (first item in queue)
+- Cycle 2 backlog: SSTI baseline comparison (#2 FP fix), content discovery confidence tuning (#3)
+
+---
+
 ## Session 21 — 2026-09-29 (Scanning — Cycle 1)
 
 **Cycle step:** Scanning & Operations — GitHub + Notion scans

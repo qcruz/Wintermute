@@ -72,6 +72,7 @@ from src.scanner.path_traversal import (
     WINDOWS_PAYLOADS,
     WINDOWS_SIGNATURES,
 )
+from src.scanner.pipeline import PATH_DISCOVERY_CHECKS, _detect_catchall
 from src.scanner.security_headers import SEVERITY_ORDER, analyze_missing_headers
 from src.scanner.subdomain_takeover import _match_service
 
@@ -897,3 +898,29 @@ def test_no_false_positive_on_generic_text():
     text = "I can help you with your question about programming. What would you like to know?"
     leaked = _analyze_response(text, "user_data")
     assert len(leaked) == 0
+
+
+# ── Catch-All Routing Detection ──────────────────────────────────────
+
+
+def test_path_discovery_checks_contains_expected_modules():
+    """PATH_DISCOVERY_CHECKS should include the 4 path-based modules."""
+    assert "content_discovery" in PATH_DISCOVERY_CHECKS
+    assert "ai_prompt_injection" in PATH_DISCOVERY_CHECKS
+    assert "ai_data_exfil" in PATH_DISCOVERY_CHECKS
+    assert "mcp_security" in PATH_DISCOVERY_CHECKS
+
+
+def test_path_discovery_checks_excludes_non_path_modules():
+    """PATH_DISCOVERY_CHECKS should not include modules that don't rely on path discovery."""
+    assert "subdomain_takeover" not in PATH_DISCOVERY_CHECKS
+    assert "cors" not in PATH_DISCOVERY_CHECKS
+    assert "ssl_tls" not in PATH_DISCOVERY_CHECKS
+    assert "security_headers" not in PATH_DISCOVERY_CHECKS
+    assert "injection" not in PATH_DISCOVERY_CHECKS
+
+
+def test_detect_catchall_returns_false_on_connection_error():
+    """_detect_catchall should return False when the host is unreachable."""
+    result = _detect_catchall("this-host-does-not-exist-wintermute-test.invalid")
+    assert result is False

@@ -15,7 +15,10 @@ Flow:
 from __future__ import annotations
 
 import logging
+import uuid
 from dataclasses import dataclass, field
+
+import httpx
 
 from src.core.db import Finding, Program, Target, get_session
 from src.core.scope import ScopeChecker
@@ -82,6 +85,12 @@ ALL_CHECKS = [
     "graphql", "js_analysis", "ai_prompt_injection", "ai_data_exfil", "mcp_security",
 ]
 
+# Checks that rely on path-based discovery and produce false positives
+# on catch-all routing hosts (hosts that return 200 for any path).
+PATH_DISCOVERY_CHECKS = {
+    "content_discovery", "ai_prompt_injection", "ai_data_exfil", "mcp_security",
+}
+
 # Lighter check set for quick scans (fast, low request count per target)
 QUICK_CHECKS = [
     "subdomain_takeover", "cors", "ssl_tls", "security_headers",
@@ -145,7 +154,6 @@ def run_scan(
     # Step 3: Run each check type
     total_targets = len(hostnames)
     checks_list = sorted(enabled_checks)
-    total_checks = len(checks_list)
 
     for target_idx, hostname in enumerate(hostnames, 1):
         # Re-verify scope (defense in depth)
@@ -156,14 +164,25 @@ def run_scan(
 
         print(f"\n  [{target_idx}/{total_targets}] {hostname}")
         result.targets_scanned += 1
+
+        # Detect catch-all routing before running path-based checks
+        is_catchall = _detect_catchall(hostname)
+        if is_catchall:
+            active_checks = enabled_checks - PATH_DISCOVERY_CHECKS
+            active_list = sorted(active_checks)
+        else:
+            active_checks = enabled_checks
+            active_list = checks_list
+
+        total_active = len(active_list)
         check_num = [0]
 
         def _prog(name):
             check_num[0] += 1
-            print(f"    ({check_num[0]}/{total_checks}) {name}...", flush=True)
+            print(f"    ({check_num[0]}/{total_active}) {name}...", flush=True)
 
         # ── Subdomain Takeover ───────────────────────────────────
-        if "subdomain_takeover" in enabled_checks:
+        if "subdomain_takeover" in active_checks:
             _prog("subdomain_takeover")
             takeover = check_takeover(hostname)
             result.checks_run["subdomain_takeover"] = result.checks_run.get("subdomain_takeover", 0) + 1
@@ -186,7 +205,7 @@ def run_scan(
                 ))
 
         # ── CORS Misconfiguration ────────────────────────────────
-        if "cors" in enabled_checks:
+        if "cors" in active_checks:
             _prog("cors")
             cors = check_cors(hostname)
             result.checks_run["cors"] = result.checks_run.get("cors", 0) + 1
@@ -206,7 +225,7 @@ def run_scan(
                 ))
 
         # ── SSL/TLS Issues ───────────────────────────────────────
-        if "ssl_tls" in enabled_checks:
+        if "ssl_tls" in active_checks:
             _prog("ssl_tls")
             ssl_result = check_ssl(hostname)
             result.checks_run["ssl_tls"] = result.checks_run.get("ssl_tls", 0) + 1
@@ -231,7 +250,7 @@ def run_scan(
                 ))
 
         # ── Exposed Files ────────────────────────────────────────
-        if "exposed_files" in enabled_checks:
+        if "exposed_files" in active_checks:
             _prog("exposed_files")
             files_result = check_exposed_files(hostname)
             result.checks_run["exposed_files"] = result.checks_run.get("exposed_files", 0) + 1
@@ -252,7 +271,7 @@ def run_scan(
                 ))
 
         # ── Security Headers ─────────────────────────────────────
-        if "security_headers" in enabled_checks:
+        if "security_headers" in active_checks:
             _prog("security_headers")
             header_analysis = analyze_headers(hostname)
             result.checks_run["security_headers"] = result.checks_run.get("security_headers", 0) + 1
@@ -274,7 +293,7 @@ def run_scan(
                         ))
 
         # ── Content Discovery ─────────────────────────────────────
-        if "content_discovery" in enabled_checks:
+        if "content_discovery" in active_checks:
             _prog("content_discovery")
             content_result = discover_content(hostname)
             result.checks_run["content_discovery"] = result.checks_run.get("content_discovery", 0) + 1
@@ -299,7 +318,7 @@ def run_scan(
                 ))
 
         # ── Injection Testing ─────────────────────────────────────
-        if "injection" in enabled_checks:
+        if "injection" in active_checks:
             _prog("injection")
             injection_result = test_injection(hostname)
             result.checks_run["injection"] = result.checks_run.get("injection", 0) + 1
@@ -316,7 +335,7 @@ def run_scan(
                 ))
 
         # ── Authentication Checks ─────────────────────────────────
-        if "auth_checks" in enabled_checks:
+        if "auth_checks" in active_checks:
             _prog("auth_checks")
             auth_result = check_auth(hostname)
             result.checks_run["auth_checks"] = result.checks_run.get("auth_checks", 0) + 1
@@ -333,7 +352,7 @@ def run_scan(
                 ))
 
         # ── Business Logic Analysis ───────────────────────────────
-        if "business_logic" in enabled_checks:
+        if "business_logic" in active_checks:
             _prog("business_logic")
             biz_result = analyze_business_logic(hostname)
             result.checks_run["business_logic"] = result.checks_run.get("business_logic", 0) + 1
@@ -350,7 +369,7 @@ def run_scan(
                 ))
 
         # ── IDOR Detection ──────────────────────────────────────────
-        if "idor" in enabled_checks:
+        if "idor" in active_checks:
             _prog("idor")
             idor_result = check_idor(hostname)
             result.checks_run["idor"] = result.checks_run.get("idor", 0) + 1
@@ -372,7 +391,7 @@ def run_scan(
                 ))
 
         # ── Path Traversal / LFI ──
-        if "path_traversal" in enabled_checks:
+        if "path_traversal" in active_checks:
             _prog("path_traversal")
             traversal_result = check_path_traversal(hostname)
             result.checks_run["path_traversal"] = result.checks_run.get("path_traversal", 0) + 1
@@ -394,7 +413,7 @@ def run_scan(
                 ))
 
         # ── GraphQL Introspection ──
-        if "graphql" in enabled_checks:
+        if "graphql" in active_checks:
             _prog("graphql")
             gql_result = check_graphql(hostname)
             result.checks_run["graphql"] = result.checks_run.get("graphql", 0) + 1
@@ -416,7 +435,7 @@ def run_scan(
                 ))
 
         # ── JavaScript Secret Analysis ──
-        if "js_analysis" in enabled_checks:
+        if "js_analysis" in active_checks:
             _prog("js_analysis")
             js_result = check_js_secrets(hostname)
             result.checks_run["js_analysis"] = result.checks_run.get("js_analysis", 0) + 1
@@ -438,7 +457,7 @@ def run_scan(
                 ))
 
         # ── AI Prompt Injection ──
-        if "ai_prompt_injection" in enabled_checks:
+        if "ai_prompt_injection" in active_checks:
             _prog("ai_prompt_injection")
             ai_result = check_ai_prompt_injection(hostname)
             result.checks_run["ai_prompt_injection"] = result.checks_run.get("ai_prompt_injection", 0) + 1
@@ -455,7 +474,7 @@ def run_scan(
                 ))
 
         # ── AI Data Exfiltration ──
-        if "ai_data_exfil" in enabled_checks:
+        if "ai_data_exfil" in active_checks:
             _prog("ai_data_exfil")
             exfil_result = check_ai_data_exfil(hostname)
             result.checks_run["ai_data_exfil"] = result.checks_run.get("ai_data_exfil", 0) + 1
@@ -472,7 +491,7 @@ def run_scan(
                 ))
 
         # ── MCP Security ──
-        if "mcp_security" in enabled_checks:
+        if "mcp_security" in active_checks:
             _prog("mcp_security")
             mcp_result = check_mcp_security(hostname)
             result.checks_run["mcp_security"] = result.checks_run.get("mcp_security", 0) + 1
@@ -501,6 +520,33 @@ def run_scan(
     )
 
     return result
+
+
+def _detect_catchall(hostname: str) -> bool:
+    """Detect if a host has catch-all routing (returns 200 for any path).
+
+    Hosts like gist.github.com or mail.notion.so return 200 for every path,
+    causing massive false positives in path-based discovery modules.
+    We request a random nonsense path — if it returns 200, the host is catch-all.
+    """
+    random_path = f"/wintermute-catchall-{uuid.uuid4().hex[:12]}"
+    try:
+        resp = httpx.get(
+            f"https://{hostname}{random_path}",
+            timeout=10.0,
+            follow_redirects=False,
+            headers={"User-Agent": "Wintermute/0.1 (Security Research)"},
+        )
+        if resp.status_code == 200:
+            logger.warning(
+                "Catch-all routing detected on %s — skipping path-based discovery checks",
+                hostname,
+            )
+            print("    ⚠ Catch-all routing detected — skipping path discovery checks")
+            return True
+    except Exception:
+        pass
+    return False
 
 
 def _ssl_remediation(issue: str) -> str:
