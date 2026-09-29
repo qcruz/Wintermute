@@ -60,6 +60,17 @@ Full analysis of 333 findings across 6 programs. Ranked by noise generation:
 3. **High-signal modules** (subdomain_takeover, cors, js_secret) generate very few findings but they're worth investigating
 4. **Immediate fix priorities:** (a) SSTI baseline comparison, (b) content_discovery confidence tuning, (c) filter info-level exposed_files from reports
 
+### Catch-All Routing FP Pattern (Session 21 — GitHub scan)
+
+**New FP class discovered:** Sites with catch-all routing (gist.github.com, any user-profile/slug site) return 200 for every path. This fools both:
+- **AI endpoint discovery** — `/assistant`, `/ai`, `/chatbot`, `/sse` all return 200, flagged as "AI endpoints"
+- **Content discovery** — `/graphiql`, `/cpanel/`, `/actuator`, `/phpmyadmin/` all return 200, flagged as exposed admin panels
+- **Prompt injection** — tests then fire against all "discovered" endpoints, generating 8 FPs per fake endpoint
+
+Result: 86 FPs on gist.github.com alone (72 prompt injection, 9 content discovery, 5 AI endpoint exposed).
+
+**Fix needed:** Before testing a discovered path, verify it's not a catch-all by requesting a random nonsense path (e.g., `/wintermute-random-404-check-xyz`) — if that also returns 200, the host has catch-all routing and all path-based discoveries should be discarded.
+
 ---
 
 ## Lessons Learned

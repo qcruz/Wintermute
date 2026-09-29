@@ -4,6 +4,29 @@ Track what each session accomplished, what was found, and what's queued for next
 
 ---
 
+## Session 21 — 2026-09-29 (Scanning — Cycle 1)
+
+**Cycle step:** Scanning & Operations — GitHub recon + scan
+
+**What was done:**
+- Ran recon on GitHub — crt.sh found only 2 subdomains (gist, classroom), manually added 4 key in-scope domains (github.com, api.github.com, education.github.com, npmjs.com)
+- Scanned api.github.com: 1 finding — GraphQL console at /graphql/console (403, low value)
+- Scanned gist.github.com: **86 findings, ALL false positives** — catch-all routing returns 200 for every path
+  - AI endpoint discovery flagged `/assistant`, `/ai`, `/chatbot`, `/sse` as AI endpoints (actually user profile pages)
+  - Content discovery flagged `/graphiql`, `/cpanel/`, `/actuator` as admin panels (same issue)
+  - Prompt injection sprayed 8 parameters against each fake endpoint
+- Discovered new FP class: **catch-all routing sites** — need random-path baseline check before testing discoveries
+- Wrote analysis to STRATEGY.md
+
+**Key insight:** GitHub itself is heavily hardened — 0 real findings across github.com and api.github.com. The real AI testing opportunity (Copilot endpoints) requires authenticated testing which our scanner doesn't support yet.
+
+**Queued for next session:**
+- Cycle 2 (R&D): Fix catch-all routing FPs or build Insecure AI Integration module
+- Cycle 3 (Research): Review bounty payout trends
+- Cycle 1 backlog: Notion scan, Quora/Poe scan
+
+---
+
 ## Session 20 — 2026-09-29 (Docs — Cycle 4)
 
 **Cycle step:** Project Organization & Docs — Draft LEGAL.md

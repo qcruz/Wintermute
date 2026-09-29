@@ -29,7 +29,7 @@ Active scanning, program management, and operational improvements. This is the c
 
 ### Queue
 
-1. GitHub — recon + scan, focus on Copilot endpoints (AI security target: Copilot, Copilot Chat, Copilot Coding Agent, Copilot Spaces all in scope)
+1. Notion — recon + scan with AI-focused checks (explicit `AI_MODEL` asset: Notion AI) (AI security target: Copilot, Copilot Chat, Copilot Coding Agent, Copilot Spaces all in scope)
 3. Notion — recon + scan with AI-focused checks (explicit `AI_MODEL` asset: Notion AI)
 4. Quora/Poe — recon + scan poe.com for prompt injection (multi-model AI chatbot platform)
 5. Wealthsimple — deep scan remaining targets by keyword (staging, crypto, trade, cdn)
