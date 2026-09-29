@@ -340,7 +340,7 @@ def _probe_path(
     if resp.status_code == 403:
         # 403 = path exists but is protected — notable for admin/debug paths
         if category in ("admin", "api", "debug", "api_docs"):
-            endpoint.evidence = f"HTTP 403 Forbidden — endpoint exists but is access-restricted"
+            endpoint.evidence = "HTTP 403 Forbidden — endpoint exists but is access-restricted"
             endpoint.severity = "low"  # Downgrade since it's protected
             return endpoint
         return None

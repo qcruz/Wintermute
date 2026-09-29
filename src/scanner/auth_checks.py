@@ -234,7 +234,6 @@ def _check_missing_auth(base_url: str, result: AuthResult) -> None:
                 if not_found_length and abs(len(resp.content) - not_found_length) < 50:
                     continue
 
-                body = resp.text.lower()
                 content_type = resp.headers.get("content-type", "").lower()
 
                 # Check if it's returning actual data (JSON API response)

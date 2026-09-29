@@ -294,8 +294,8 @@ def _check_https_redirect(hostname: str, result: BusinessResult) -> None:
                 confidence=0.9,
                 title=f"No HTTP to HTTPS redirect on {hostname}",
                 description=(
-                    f"The server serves content over unencrypted HTTP without "
-                    f"redirecting to HTTPS. User connections can be intercepted."
+                    "The server serves content over unencrypted HTTP without "
+                    "redirecting to HTTPS. User connections can be intercepted."
                 ),
                 evidence=f"HTTP request to {hostname} returned status {resp.status_code}",
             ))
@@ -386,8 +386,9 @@ def _check_cache_headers(base_url: str, result: BusinessResult) -> None:
             pragma = resp.headers.get("pragma", "").lower()
 
             # Check if sensitive page allows caching
-            if not cache_control or (
+            if (not cache_control and "no-cache" not in pragma) or (
                 "no-store" not in cache_control and "no-cache" not in cache_control
+                and "no-cache" not in pragma
             ):
                 body = resp.text.lower()
                 # Only flag if the page has login/sensitive content
@@ -437,10 +438,10 @@ def _check_trace_method(base_url: str, result: BusinessResult) -> None:
                     confidence=0.9,
                     title=f"TRACE method enabled on {hostname}",
                     description=(
-                        f"The server supports the HTTP TRACE method, which echoes "
-                        f"back the request including headers. This enables "
-                        f"Cross-Site Tracing (XST) attacks that can steal "
-                        f"authentication cookies even with HttpOnly flag set."
+                        "The server supports the HTTP TRACE method, which echoes "
+                        "back the request including headers. This enables "
+                        "Cross-Site Tracing (XST) attacks that can steal "
+                        "authentication cookies even with HttpOnly flag set."
                     ),
                     evidence=f"TRACE response: {resp.text[:200]}",
                 ))

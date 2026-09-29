@@ -18,11 +18,10 @@ Safety:
 
 from __future__ import annotations
 
-import html
 import logging
 import re
 from dataclasses import dataclass, field
-from urllib.parse import parse_qs, urlencode, urljoin, urlparse
+from urllib.parse import parse_qs, urlencode, urlparse
 
 import httpx
 
@@ -279,7 +278,7 @@ def _test_xss(base_url: str, param: str) -> InjectionFinding | None:
                         f"Reflected XSS in parameter '{param}' — "
                         f"HTML tags are reflected unescaped"
                     ),
-                    evidence=f"HTML special chars reflected without encoding",
+                    evidence="HTML special chars reflected without encoding",
                     payload_used=XSS_SIMPLE,
                 )
 

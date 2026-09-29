@@ -7,12 +7,12 @@ It chains all three phases together and produces a unified summary.
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime, timezone
 
 from src.recon.pipeline import ReconResult, run_recon
-from src.scanner.pipeline import ALL_CHECKS, QUICK_CHECKS, ScanResult, run_scan
 from src.reporting.pipeline import ReportingResult, generate_reports
+from src.scanner.pipeline import ScanResult, run_scan
 
 logger = logging.getLogger(__name__)
 
@@ -145,7 +145,7 @@ def print_summary(result: PipelineResult) -> None:
 
     if result.recon:
         r = result.recon
-        print(f"\n  RECON:")
+        print("\n  RECON:")
         print(f"    Subdomains discovered:  {r.subdomains_found}")
         print(f"    Alive:                  {r.subdomains_alive}")
         print(f"    In-scope targets:       {r.in_scope_targets}")
@@ -153,32 +153,31 @@ def print_summary(result: PipelineResult) -> None:
 
     if result.scan:
         s = result.scan
-        print(f"\n  SCAN:")
+        print("\n  SCAN:")
         print(f"    Targets scanned:        {s.targets_scanned}")
         print(f"    Findings:               {s.finding_count}")
         print(f"    High-confidence:        {len(s.high_confidence_findings)}")
         if s.checks_run:
-            print(f"    Checks run:")
+            print("    Checks run:")
             for check, count in sorted(s.checks_run.items()):
                 print(f"      {check:25s} {count}")
 
     if result.reporting:
         rp = result.reporting
-        print(f"\n  REPORTS:")
+        print("\n  REPORTS:")
         print(f"    Total findings:         {rp.total_findings}")
         print(f"    Below threshold:        {rp.below_threshold}")
         print(f"    Duplicates skipped:     {rp.duplicates_skipped}")
         print(f"    Reports ready:          {rp.reports_generated}")
 
         if rp.candidates:
-            print(f"\n  REPORTABLE FINDINGS:")
+            print("\n  REPORTABLE FINDINGS:")
             severity_order = {"critical": 0, "high": 1, "medium": 2, "low": 3}
             sorted_candidates = sorted(
                 rp.candidates,
                 key=lambda c: (severity_order.get(c.severity, 5), -c.confidence),
             )
             for c in sorted_candidates:
-                conf = int(c.confidence * 100)
                 dup = c.duplicate_warning
                 print(f"    [{c.severity.upper():8s}] {c.report.title}{dup}")
 

@@ -16,7 +16,6 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
 
 from src.core.db import Finding, Program, Target, get_session
 from src.core.scope import ScopeChecker
@@ -24,22 +23,21 @@ from src.platforms.hackerone import HackerOneClient, parse_scope
 from src.recon.headers import analyze_headers
 from src.scanner.ai_prompt_injection import check_ai_prompt_injection
 from src.scanner.auth_checks import check_auth
-from src.scanner.mcp_security import check_mcp_security
 from src.scanner.business_logic import analyze_business_logic
 from src.scanner.content_discovery import discover_content
-from src.scanner.cors import CORSCheck, check_cors
-from src.scanner.exposed_files import ExposedFilesResult, check_exposed_files
+from src.scanner.cors import check_cors
+from src.scanner.exposed_files import check_exposed_files
+from src.scanner.graphql_introspection import check_graphql
 from src.scanner.idor import check_idor
 from src.scanner.injection import test_injection
-from src.scanner.graphql_introspection import check_graphql
 from src.scanner.js_analysis import check_js_secrets
+from src.scanner.mcp_security import check_mcp_security
 from src.scanner.path_traversal import check_path_traversal
 from src.scanner.security_headers import (
-    HeaderAnalysisResult,
     analyze_missing_headers,
 )
-from src.scanner.ssl_check import SSLCheck, check_ssl
-from src.scanner.subdomain_takeover import TakeoverCheck, check_takeover
+from src.scanner.ssl_check import check_ssl
+from src.scanner.subdomain_takeover import check_takeover
 
 logger = logging.getLogger(__name__)
 

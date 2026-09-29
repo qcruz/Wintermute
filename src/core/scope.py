@@ -8,10 +8,9 @@ from __future__ import annotations
 
 import fnmatch
 import logging
-import re
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from ipaddress import IPv4Address, IPv4Network, ip_address, ip_network
+from ipaddress import ip_address, ip_network
 from urllib.parse import urlparse
 
 logger = logging.getLogger(__name__)

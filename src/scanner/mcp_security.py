@@ -523,10 +523,6 @@ def _analyze_tools(
         for name, cat, desc in dangerous_tools:
             categories.setdefault(cat, []).append(name)
 
-        category_summary = "; ".join(
-            f"{cat}: {', '.join(names)}" for cat, names in categories.items()
-        )
-
         result.findings.append(MCPFinding(
             hostname=hostname,
             vuln_type="mcp_dangerous_tools",

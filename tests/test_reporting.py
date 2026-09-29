@@ -1,19 +1,18 @@
 """Tests for the reporting engine."""
 
+from src.reporting.dedup import (
+    COMMON_FINDING_SCORES,
+    HEAVILY_TESTED_PROGRAMS,
+    check_heuristic_duplicate,
+)
 from src.reporting.templates import (
     Report,
-    subdomain_takeover_report,
     cors_misconfiguration_report,
     exposed_file_report,
     missing_security_header_report,
     ssl_tls_report,
+    subdomain_takeover_report,
 )
-from src.reporting.dedup import (
-    check_heuristic_duplicate,
-    COMMON_FINDING_SCORES,
-    HEAVILY_TESTED_PROGRAMS,
-)
-
 
 # ── Report template tests ───────────────────────────────────────────
 

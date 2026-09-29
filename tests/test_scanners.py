@@ -1,61 +1,60 @@
 """Tests for vulnerability scanners."""
 
-from src.scanner.js_analysis import (
-    SECRET_PATTERNS,
-    COMMON_JS_PATHS,
-    FALSE_POSITIVE_VALUES,
-    _shannon_entropy,
-    _is_false_positive,
-    _redact,
-    _calculate_confidence,
-)
-from src.scanner.security_headers import analyze_missing_headers, SEVERITY_ORDER
-from src.scanner.subdomain_takeover import _match_service, _get_cname
-from src.scanner.cors import TEST_ORIGIN
-from src.scanner.idor import (
-    _looks_like_data_object,
-    _count_unique_responses,
-    SENSITIVE_FIELDS,
-    API_PATTERNS,
-    TEST_IDS,
-)
-from src.scanner.path_traversal import (
-    UNIX_PAYLOADS,
-    WINDOWS_PAYLOADS,
-    UNIX_SIGNATURES,
-    WINDOWS_SIGNATURES,
-    FILE_PARAMS,
-)
-from src.scanner.mcp_security import (
-    MCP_PATHS,
-    MCP_LIST_METHODS,
-    MCP_RESPONSE_INDICATORS,
-    DANGEROUS_TOOL_PATTERNS,
-    POISONING_INDICATORS,
-    MCP_TRAVERSAL_PAYLOADS,
-    FILE_SIGNATURES,
-    _analyze_tools,
-)
 from src.scanner.ai_prompt_injection import (
     AI_ENDPOINT_PATHS,
-    AI_RESPONSE_INDICATORS,
     AI_HTML_INDICATORS,
-    INJECTION_CANARIES,
+    AI_RESPONSE_INDICATORS,
     EXTRACTION_PROMPTS,
+    INJECTION_CANARIES,
     SYSTEM_PROMPT_LEAK_PATTERNS,
     _extract_ai_response,
 )
+from src.scanner.cors import TEST_ORIGIN
 from src.scanner.graphql_introspection import (
     GRAPHQL_PATHS,
     INTROSPECTION_QUERY,
     SENSITIVE_MUTATION_PATTERNS,
     SENSITIVE_QUERY_PATTERNS,
     _analyze_schema,
-    _determine_severity,
     _determine_confidence,
+    _determine_severity,
     _extract_schema,
 )
-
+from src.scanner.idor import (
+    API_PATTERNS,
+    SENSITIVE_FIELDS,
+    TEST_IDS,
+    _count_unique_responses,
+    _looks_like_data_object,
+)
+from src.scanner.js_analysis import (
+    COMMON_JS_PATHS,
+    FALSE_POSITIVE_VALUES,
+    SECRET_PATTERNS,
+    _calculate_confidence,
+    _is_false_positive,
+    _redact,
+    _shannon_entropy,
+)
+from src.scanner.mcp_security import (
+    DANGEROUS_TOOL_PATTERNS,
+    FILE_SIGNATURES,
+    MCP_LIST_METHODS,
+    MCP_PATHS,
+    MCP_RESPONSE_INDICATORS,
+    MCP_TRAVERSAL_PAYLOADS,
+    POISONING_INDICATORS,
+    _analyze_tools,
+)
+from src.scanner.path_traversal import (
+    FILE_PARAMS,
+    UNIX_PAYLOADS,
+    UNIX_SIGNATURES,
+    WINDOWS_PAYLOADS,
+    WINDOWS_SIGNATURES,
+)
+from src.scanner.security_headers import SEVERITY_ORDER, analyze_missing_headers
+from src.scanner.subdomain_takeover import _match_service
 
 # ── Security Headers ─────────────────────────────────────────────────
 
@@ -524,7 +523,7 @@ def test_ai_html_indicators_are_valid_regex():
 
 def test_injection_canaries_have_required_fields():
     for canary in INJECTION_CANARIES:
-        assert "name" in canary, f"Canary missing name"
+        assert "name" in canary, "Canary missing name"
         assert "prompt" in canary, f"Canary missing prompt: {canary.get('name')}"
         assert "severity" in canary, f"Canary missing severity: {canary['name']}"
         assert "description" in canary, f"Canary missing description: {canary['name']}"

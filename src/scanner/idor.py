@@ -30,9 +30,7 @@ from __future__ import annotations
 
 import json
 import logging
-import re
 from dataclasses import dataclass, field
-from urllib.parse import urljoin
 
 import httpx
 
@@ -382,7 +380,7 @@ def _test_endpoint_idor(
         f"IDs returning data: {', '.join(ids_with_data)} ({unique_responses} unique objects)",
         f"Response fields: {', '.join(sample_keys)}",
         f"Sensitive fields found: {', '.join(sensitive_list)}",
-        f"No authentication required",
+        "No authentication required",
     ]
 
     return IDORFinding(

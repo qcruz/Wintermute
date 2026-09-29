@@ -9,7 +9,7 @@ triage analyst to verify in under 5 minutes.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 
 @dataclass
@@ -491,7 +491,7 @@ def auth_finding_report(
 
 - [{cwe_id}: {cwe_name}](https://cwe.mitre.org/data/definitions/{cwe_id.split('-')[1]}.html)
 - [OWASP Authentication Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html)""",
-        impact=f"""Authentication and session management vulnerabilities can allow attackers to impersonate legitimate users, access protected data, or perform unauthorized actions. The specific impact depends on the application's functionality and the data it handles.""",
+        impact="""Authentication and session management vulnerabilities can allow attackers to impersonate legitimate users, access protected data, or perform unauthorized actions. The specific impact depends on the application's functionality and the data it handles.""",
     )
 
 
@@ -533,7 +533,7 @@ def business_logic_report(
 
 - [CWE-200: Exposure of Sensitive Information](https://cwe.mitre.org/data/definitions/200.html)
 - [OWASP Information Disclosure](https://owasp.org/www-project-web-security-testing-guide/)""",
-        impact=f"""Information disclosure and business logic issues can provide attackers with intelligence to plan more targeted attacks. While not directly exploitable in most cases, these findings weaken the overall security posture and may enable escalation to higher-severity vulnerabilities.""",
+        impact="""Information disclosure and business logic issues can provide attackers with intelligence to plan more targeted attacks. While not directly exploitable in most cases, these findings weaken the overall security posture and may enable escalation to higher-severity vulnerabilities.""",
     )
 
 
@@ -577,7 +577,7 @@ An Insecure Direct Object Reference (IDOR) vulnerability was identified on `{fin
 - [CWE-639: Authorization Bypass Through User-Controlled Key](https://cwe.mitre.org/data/definitions/639.html)
 - [OWASP IDOR Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Insecure_Direct_Object_Reference_Prevention_Cheat_Sheet.html)
 - [OWASP Broken Access Control](https://owasp.org/Top10/A01_2021-Broken_Access_Control/)""",
-        impact=f"""An attacker can enumerate object IDs to access data belonging to other users without authentication. Depending on the data exposed, this could lead to mass data theft, privacy violations, or account compromise. IDOR is consistently ranked in the OWASP Top 10 under Broken Access Control (A01:2021).""",
+        impact="""An attacker can enumerate object IDs to access data belonging to other users without authentication. Depending on the data exposed, this could lead to mass data theft, privacy violations, or account compromise. IDOR is consistently ranked in the OWASP Top 10 under Broken Access Control (A01:2021).""",
     )
 
 
@@ -623,7 +623,7 @@ A path traversal (Local File Inclusion) vulnerability was identified on `{findin
 - [CWE-22: Improper Limitation of a Pathname to a Restricted Directory](https://cwe.mitre.org/data/definitions/22.html)
 - [OWASP Path Traversal](https://owasp.org/www-community/attacks/Path_Traversal)
 - [OWASP Testing for Path Traversal](https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/05-Authorization_Testing/01-Testing_Directory_Traversal_File_Include)""",
-        impact=f"""An attacker can read arbitrary files from the server filesystem by manipulating file path parameters. This can expose sensitive configuration files, source code, credentials, and system information. In severe cases, path traversal can be chained with other vulnerabilities for remote code execution.""",
+        impact="""An attacker can read arbitrary files from the server filesystem by manipulating file path parameters. This can expose sensitive configuration files, source code, credentials, and system information. In severe cases, path traversal can be chained with other vulnerabilities for remote code execution.""",
     )
 
 
@@ -671,7 +671,7 @@ GraphQL introspection is enabled in production on `{finding.hostname}`, exposing
 - [CWE-200: Exposure of Sensitive Information](https://cwe.mitre.org/data/definitions/200.html)
 - [OWASP GraphQL Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/GraphQL_Cheat_Sheet.html)
 - [GraphQL Introspection Security](https://www.apollographql.com/blog/graphql/security/why-you-should-disable-graphql-introspection-in-production/)""",
-        impact=f"""Exposing the full GraphQL schema gives attackers a complete map of the API, including internal types, admin mutations, and sensitive data queries. This information accelerates attack planning and can reveal operations that were not intended to be publicly known. If sensitive mutations lack proper authorization, this finding enables direct exploitation.""",
+        impact="""Exposing the full GraphQL schema gives attackers a complete map of the API, including internal types, admin mutations, and sensitive data queries. This information accelerates attack planning and can reveal operations that were not intended to be publicly known. If sensitive mutations lack proper authorization, this finding enables direct exploitation.""",
     )
 
 
@@ -714,7 +714,7 @@ A hardcoded secret was found in a publicly accessible JavaScript file on `{findi
 
 - [CWE-798: Use of Hard-coded Credentials](https://cwe.mitre.org/data/definitions/798.html)
 - [OWASP: Sensitive Data Exposure](https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/01-Information_Gathering/05-Review_Webpage_Content_for_Information_Leakage)""",
-        impact=f"""Exposed secrets in JavaScript files are accessible to any visitor. Depending on the type of secret, an attacker could gain unauthorized access to cloud infrastructure, payment systems, email services, or internal APIs. Hardcoded credentials are a critical security risk because they cannot be rotated without deploying new code.""",
+        impact="""Exposed secrets in JavaScript files are accessible to any visitor. Depending on the type of secret, an attacker could gain unauthorized access to cloud infrastructure, payment systems, email services, or internal APIs. Hardcoded credentials are a critical security risk because they cannot be rotated without deploying new code.""",
     )
 
 

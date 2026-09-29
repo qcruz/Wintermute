@@ -1,6 +1,6 @@
 """Tests for HackerOne API client."""
 
-from src.platforms.hackerone import HackerOneClient, parse_scope
+from src.platforms.hackerone import parse_scope
 
 
 def test_parse_scope_separates_eligible():

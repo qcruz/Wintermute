@@ -18,7 +18,7 @@ Usage:
 import logging
 import sys
 
-from src.core.runner import run_full_pipeline, print_summary
+from src.core.runner import print_summary, run_full_pipeline
 from src.scanner.pipeline import ALL_CHECKS, QUICK_CHECKS
 
 logging.basicConfig(
@@ -30,7 +30,7 @@ logging.getLogger("httpx").setLevel(logging.WARNING)
 
 def show_status() -> None:
     """Show current database status."""
-    from src.core.db import Program, Target, Finding, get_session
+    from src.core.db import Finding, Program, Target, get_session
 
     session = get_session()
     programs = session.query(Program).all()
@@ -106,8 +106,8 @@ def scout_programs() -> None:
     - Bounty eligibility
     - Response efficiency
     """
-    from src.platforms.hackerone import HackerOneClient
     from src.core.db import Program, get_session
+    from src.platforms.hackerone import HackerOneClient
 
     print("Scouting HackerOne for programs...")
     print("=" * 70)
@@ -123,7 +123,6 @@ def scout_programs() -> None:
         attrs = p.get("attributes", {})
         handle = attrs.get("handle", "?")
         name = attrs.get("name", "?")
-        state = attrs.get("state", "")
         submission_state = attrs.get("submission_state", "")
         offers_bounties = attrs.get("offers_bounties", False)
         started_accepting = attrs.get("started_accepting_at", "")
@@ -250,7 +249,7 @@ def main() -> None:
     if checks:
         print(f"  Checks: {', '.join(sorted(checks))}")
     if scan_only:
-        print(f"  Mode: scan-only (skip recon)")
+        print("  Mode: scan-only (skip recon)")
     print("=" * 60)
 
     result = run_full_pipeline(

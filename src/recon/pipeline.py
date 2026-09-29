@@ -6,8 +6,8 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 
-from src.core.db import Finding, Program, Scope, Service, Target, get_session
-from src.core.scope import ScopeChecker, ScopeEntry
+from src.core.db import Program, Scope, Target, get_session
+from src.core.scope import ScopeChecker
 from src.platforms.hackerone import HackerOneClient, parse_scope
 from src.recon.headers import HeaderAnalysis, analyze_headers
 from src.recon.subdomain import SubdomainResult, enumerate_subdomains
@@ -168,7 +168,6 @@ def _store_results(
                 ))
 
         # Store targets
-        header_map = {h.hostname: h for h in headers}
         for sub in targets:
             existing = (
                 session.query(Target)

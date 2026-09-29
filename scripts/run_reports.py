@@ -59,7 +59,6 @@ def main() -> None:
     print("=" * 60)
 
     for i, candidate in enumerate(result.candidates, 1):
-        conf_pct = int(candidate.confidence * 100)
         dup_warn = candidate.duplicate_warning
 
         print(f"\n{'─' * 60}")
@@ -69,7 +68,7 @@ def main() -> None:
         print()
 
         if preview_only:
-            print(f"[PREVIEW MODE — not submitting]")
+            print("[PREVIEW MODE — not submitting]")
             continue
 
         if not candidate.is_reportable:
@@ -79,19 +78,19 @@ def main() -> None:
         # Interactive review
         while True:
             action = input(
-                f"  Action? [s]ubmit / [k]ip / [q]uit: "
+                "  Action? [s]ubmit / [k]ip / [q]uit: "
             ).strip().lower()
 
             if action in ("s", "submit"):
-                print(f"  Submitting to HackerOne...")
+                print("  Submitting to HackerOne...")
                 success = submit_candidate(candidate, handle)
                 if success:
-                    print(f"  ✓ Report submitted successfully!")
+                    print("  ✓ Report submitted successfully!")
                 else:
-                    print(f"  ✗ Submission failed. Check logs for details.")
+                    print("  ✗ Submission failed. Check logs for details.")
                 break
             elif action in ("k", "skip"):
-                print(f"  Skipped.")
+                print("  Skipped.")
                 break
             elif action in ("q", "quit"):
                 print("Exiting review queue.")

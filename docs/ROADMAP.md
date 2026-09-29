@@ -100,8 +100,7 @@ Code quality, documentation, testing, infrastructure. Keeps the project maintain
 
 ### Queue
 
-1. Create GitHub Actions CI pipeline (lint with ruff, run pytest)
-2. Write case study doc for first accepted bounty (when it happens)
+1. Write case study doc for first accepted bounty (when it happens)
 3. Draft `docs/LEGAL.md` — relevant laws, safe harbor provisions
 4. Review and update all docs for accuracy after recent changes
 5. Add CLI dashboard showing pipeline status, program coverage, finding stats

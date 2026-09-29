@@ -29,7 +29,6 @@ Safety:
 
 from __future__ import annotations
 
-import json
 import logging
 import re
 from dataclasses import dataclass, field
@@ -179,12 +178,12 @@ def check_graphql(hostname: str) -> GraphQLResult:
         ]
 
         if analysis["sensitive_mutations"]:
-            evidence_lines.append(f"\nSensitive mutations found:")
+            evidence_lines.append("\nSensitive mutations found:")
             for name, category in analysis["sensitive_mutations"]:
                 evidence_lines.append(f"  - {name} ({category})")
 
         if analysis["sensitive_queries"]:
-            evidence_lines.append(f"\nSensitive queries found:")
+            evidence_lines.append("\nSensitive queries found:")
             for name, category in analysis["sensitive_queries"]:
                 evidence_lines.append(f"  - {name} ({category})")
 
