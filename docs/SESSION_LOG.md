@@ -4,6 +4,34 @@ Track what each session accomplished, what was found, and what's queued for next
 
 ---
 
+## Session 12 — 2026-09-28 (R&D — Cycle 2 + Strategic Analysis)
+
+**Cycle step:** Scanner R&D & Buildout — AI/LLM Prompt Injection module
+
+**What was done:**
+- Built AI Prompt Injection module (14th scanner) — Wintermute's first AI-specific detection capability
+  - AI endpoint discovery: 30+ path probes (chat APIs, MCP servers, LLM proxies, AI search), HTML analysis for AI feature indicators
+  - Prompt injection testing: 3 safe canary prompts (instruction override, role escape, delimiter injection)
+  - System prompt extraction: 4 extraction prompts, 8 leak detection patterns
+  - Multi-format API probing: tries 6 JSON body formats to find working format, supports OpenAI-compatible and custom formats
+  - AI response parsing: handles OpenAI, Anthropic, and custom response formats
+- Full integration: pipeline scan loop, 3 report templates (CWE-77/CWE-200), reporting pipeline dispatch, 15 new tests (110 total)
+- Updated ETHICS.md with AI-specific testing rules (safe canaries only, no destructive AI instructions, no data exfiltration)
+- Updated vulnerability-detection.md with Section 14 explainer
+- Updated README, CLAUDE.md, ROADMAP.md — all counts updated to 14 modules, 26 templates, 110 tests
+- Wrote strategic differentiation analysis in STRATEGY.md — practical long-term benefits, 4-layer capability development framework, competitive landscape analysis, honest risk assessment
+
+**Strategic analysis highlights:**
+- Wintermute fills a gap no existing tool covers: combined recon + scope-gated scanning + AI security detection + automated reporting
+- 4-layer development framework: Foundation (built) → AI Endpoint Intelligence (building) → Agent Behavior Analysis (planned) → Pattern Recognition (future)
+- Key advantage: the AI-builds-AI-security feedback loop — building scanners deepens understanding, findings validate detection, bounties teach what triagers accept
+
+**Queued for next session:**
+- Cycle 1 (Scanning): Scout for AI-integrated programs, test prompt injection module against real targets
+- Cycle 2 (R&D): MCP security testing module is next in queue
+
+---
+
 ## Session 11 — 2026-09-28 (Research — Cycle 3)
 
 **Cycle step:** Research & Strategic Planning — Study AI/LLM attack surface landscape

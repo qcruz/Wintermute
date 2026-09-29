@@ -190,8 +190,8 @@ Based on research, these are the attack classes we should build detection for, o
 
 | Priority | Attack Class | Bounty Range | Detection Feasibility | Module Status |
 |----------|-------------|-------------|----------------------|---------------|
-| 1 | **Direct Prompt Injection** | $500-$15K | High — send canary prompts, check responses | Planned (Cycle 2 queue #1) |
-| 2 | **System Prompt Extraction** | $500-$5K | High — well-known extraction phrases | Planned (part of Prompt Injection module) |
+| 1 | **Direct Prompt Injection** | $500-$15K | High — send canary prompts, check responses | **Built** (14th module) |
+| 2 | **System Prompt Extraction** | $500-$5K | High — well-known extraction phrases | **Built** (part of Prompt Injection module) |
 | 3 | **MCP Auth Bypass** | $500-$10K | High — probe MCP endpoints without auth | Planned (Cycle 2 queue #2) |
 | 4 | **MCP Path Traversal** | $500-$10K | High — reuse existing traversal patterns | Planned (Cycle 2 queue #2) |
 | 5 | **Indirect Prompt Injection** | $1K-$15K | Medium — requires understanding what content the AI consumes | Planned (Cycle 2 queue #1) |
@@ -222,8 +222,8 @@ Based on research, these programs have AI features in scope:
 3. **Scan fresh programs** — scout and scan new programs where competition may be lower
 
 ### Short-term (Next 5-10 Sessions)
-4. **AI/LLM Prompt Injection module** — highest priority R&D item, fastest growing category (+540%), low competition from automated scanners
-5. **MCP security testing** — probe MCP server endpoints for auth bypass, path traversal, command injection
+4. **MCP security testing** — probe MCP server endpoints for auth bypass, path traversal, command injection, tool poisoning
+5. **Scan AI-integrated targets** — run the new AI prompt injection module against programs with AI features
 6. **SSRF detection** — test URL parameters with callback canaries (requires callback server setup)
 7. **Hyatt sliced scanning** — large attack surface, slice recon by domain subsets
 8. **Scout AI-focused programs** — find HackerOne programs with chatbots, AI assistants, LLM APIs in scope
@@ -240,6 +240,86 @@ Based on research, these programs have AI features in scope:
 - Contribute findings back to the security community via write-ups
 - Open-source the tooling so others can learn and contribute
 - Explore whether AI agents can autonomously identify novel vulnerability patterns
+
+---
+
+## Practical Benefits & Differentiation Framework
+
+### Why This Project Matters Long-Term
+
+The value of Wintermute is not just bounty income — it's the compound effect of building specialized capabilities in a fast-moving security domain. Here's what the project trajectory actually produces:
+
+**1. Deep technical understanding of a frontier attack surface.**
+AI agent security is a discipline that barely existed 18 months ago. By building detection tooling from scratch — not just using existing frameworks — we develop a first-principles understanding of how these attacks work, why they succeed, and what defenses fail. This understanding is worth more than any individual bounty because it compounds: each module built makes the next one easier and more effective.
+
+**2. A differentiated scanner that fills a real gap.**
+Existing security scanners (Nuclei, Burp Suite, ZAP, Semgrep) are excellent at traditional web vulnerabilities. None of them have meaningful AI agent vulnerability detection. Here's the landscape:
+
+| Tool | Traditional Web | AI/LLM Security | MCP Security |
+|------|----------------|-----------------|--------------|
+| Nuclei | Excellent (9,000+ templates) | None | None |
+| Burp Suite | Excellent | None native (some extensions) | None |
+| OWASP ZAP | Good | None | None |
+| Semgrep | Source code rules | Some LLM rules (static only) | None |
+| Garak (NVIDIA) | None | Prompt injection probes | None |
+| **Wintermute** | Good (14 modules) | **Prompt injection, endpoint discovery, system prompt extraction** | **Planned** |
+
+Wintermute's general web scanning will never match Nuclei's 9,000 templates — and it doesn't need to. The differentiation is in the AI security layer that sits on top of the recon pipeline. No existing tool combines subdomain enumeration, scope-gated scanning, AI endpoint discovery, prompt injection testing, AND automated HackerOne report generation in a single pipeline.
+
+**3. Educational and community value.**
+The open-source, educational design means every module built is also a teaching tool. The vulnerability-detection docs explain each attack class in plain language. As AI security becomes a critical skill, this becomes a reference implementation that others can learn from.
+
+### How Wintermute Can Develop Unique Function
+
+Based on our R&D history and session trajectory, here's the framework for developing differentiated capabilities:
+
+**Layer 1: Foundation (Built)**
+General web security scanning that provides the recon pipeline, scope enforcement, finding storage, and reporting engine. This is the infrastructure that everything else builds on. 14 modules across XSS, SQLi, IDOR, CORS, path traversal, GraphQL, JS secrets, etc.
+
+**Layer 2: AI Endpoint Intelligence (Building)**
+The AI prompt injection module represents the beginning of this layer. It discovers AI endpoints that traditional scanners ignore entirely, then tests them with AI-specific attack patterns. Unique capabilities:
+- AI endpoint discovery across 30+ path patterns (chat APIs, MCP servers, LLM proxies)
+- HTML analysis for AI feature indicators (chat widgets, copilot integrations)
+- Safe canary-based prompt injection testing
+- System prompt extraction detection
+
+**Layer 3: Agent Behavior Analysis (Planned)**
+This is where Wintermute becomes truly differentiated. Future modules will:
+- **Map agent capabilities**: discover what tools an AI agent has access to, what actions it can take, what data it can access
+- **Test agency boundaries**: can the agent be instructed to exceed its intended scope? Can it call tools it shouldn't?
+- **MCP security analysis**: probe MCP server endpoints for auth bypass, path traversal, tool poisoning, and the rug-pull attack pattern
+- **Indirect injection via stored content**: test whether AI agents that consume web content can be poisoned through content we control within scope
+
+**Layer 4: Pattern Recognition (Future)**
+As the database of findings grows, Wintermute can start recognizing patterns that humans miss:
+- Which AI integration patterns are most vulnerable?
+- Which frameworks/SDKs produce the most security issues?
+- What does a "typical" vulnerable AI endpoint look like in terms of response format, headers, and behavior?
+- Cross-program correlation: if program A has a vulnerability pattern, do similar programs have the same issue?
+
+### What Makes This Approach Work
+
+**The AI-builds-AI-security feedback loop.** Wintermute is built by AI (Claude Code), scans for AI vulnerabilities, and reports them to programs that build AI. This creates a unique feedback loop where:
+- Building AI security scanners deepens our understanding of AI attack surfaces
+- Finding AI vulnerabilities in real programs validates and improves our detection
+- Each bounty interaction teaches us what triagers consider valid vs. noise
+- The tooling itself serves as a proof of concept for AI-assisted security research
+
+**Compound specialization over breadth.** Rather than trying to match Nuclei's breadth, we're building depth in a domain where nobody else is automated yet. Every session adds either:
+- A new AI detection capability (depth)
+- A new program scanned with existing capabilities (breadth of testing)
+- Research that informs what to build next (strategic direction)
+
+This cycle-based approach ensures we don't get stuck on any one dimension.
+
+**The timing advantage.** AI agent security is in its "early web security" phase — the equivalent of XSS in 2005. The attack patterns are being discovered faster than defenses are deployed. Programs are actively listing AI features in scope. The 540% growth in prompt injection reports shows demand, but the tooling hasn't caught up. Building specialized detection now — while the field is young — gives us a head start that compounds as the attack surface grows.
+
+### Risks and Honest Assessment
+
+- **Bounty income may be slow.** Our 0-for-10 submission record reflects calibration, not failure, but we need accepted reports to validate the approach.
+- **AI features may be hard to find in scope.** Not all programs have AI endpoints. We need to specifically scout for AI-integrated targets.
+- **False positives in AI testing are different.** An AI that says "I'm an assistant" isn't leaking its system prompt. The confidence thresholds need tuning against real targets.
+- **The field moves fast.** Attack patterns we build for today may be mitigated in frameworks by next quarter. We need to stay current with research.
 
 ---
 
@@ -260,3 +340,5 @@ Update this document every 3-4 sessions or after significant events (first submi
 | 2026-09-28 | AI agent security deep research | OWASP LLM 2026, HackerOne AI bounties, MCP vulnerabilities — specialty focus established |
 | 2026-09-28 | JS Analysis module built | 13th scanner, secret detection in JS files |
 | 2026-09-28 | Wealthsimple deep scan (3 batches) | 27 findings, 0 high-confidence — well-secured |
+| 2026-09-28 | AI Prompt Injection module built | 14th scanner, first AI-specific detection capability, 15 new tests |
+| 2026-09-28 | Differentiation framework written | Long-term strategy for unique specialization in AI agent security |

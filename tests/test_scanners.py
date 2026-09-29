@@ -26,6 +26,15 @@ from src.scanner.path_traversal import (
     WINDOWS_SIGNATURES,
     FILE_PARAMS,
 )
+from src.scanner.ai_prompt_injection import (
+    AI_ENDPOINT_PATHS,
+    AI_RESPONSE_INDICATORS,
+    AI_HTML_INDICATORS,
+    INJECTION_CANARIES,
+    EXTRACTION_PROMPTS,
+    SYSTEM_PROMPT_LEAK_PATTERNS,
+    _extract_ai_response,
+)
 from src.scanner.graphql_introspection import (
     GRAPHQL_PATHS,
     INTROSPECTION_QUERY,
@@ -476,6 +485,114 @@ def test_common_js_paths_valid():
 def test_false_positive_values_nonempty():
     """Should have a reasonable set of false positive values."""
     assert len(FALSE_POSITIVE_VALUES) >= 10
+
+
+# ── AI Prompt Injection Tests ──────────────────────────────────────
+
+
+def test_ai_endpoint_paths_start_with_slash():
+    for path, description in AI_ENDPOINT_PATHS:
+        assert path.startswith("/"), f"AI path missing leading slash: {path}"
+
+
+def test_ai_endpoint_paths_have_descriptions():
+    for path, description in AI_ENDPOINT_PATHS:
+        assert len(description) > 0, f"Missing description for path: {path}"
+
+
+def test_ai_response_indicators_are_valid_regex():
+    import re
+    for pattern in AI_RESPONSE_INDICATORS:
+        re.compile(pattern)  # Should not raise
+
+
+def test_ai_html_indicators_are_valid_regex():
+    import re
+    for pattern in AI_HTML_INDICATORS:
+        re.compile(pattern)  # Should not raise
+
+
+def test_injection_canaries_have_required_fields():
+    for canary in INJECTION_CANARIES:
+        assert "name" in canary, f"Canary missing name"
+        assert "prompt" in canary, f"Canary missing prompt: {canary.get('name')}"
+        assert "severity" in canary, f"Canary missing severity: {canary['name']}"
+        assert "description" in canary, f"Canary missing description: {canary['name']}"
+        assert "canary" in canary or "canary_patterns" in canary, (
+            f"Canary {canary['name']} needs either 'canary' or 'canary_patterns'"
+        )
+
+
+def test_injection_canaries_are_safe():
+    """Canary prompts should not contain destructive instructions."""
+    dangerous = ["delete", "drop", "rm -rf", "format", "shutdown", "exec(", "eval("]
+    for canary in INJECTION_CANARIES:
+        prompt_lower = canary["prompt"].lower()
+        for d in dangerous:
+            assert d not in prompt_lower, (
+                f"Canary '{canary['name']}' contains dangerous keyword: {d}"
+            )
+
+
+def test_extraction_prompts_have_required_fields():
+    for prompt in EXTRACTION_PROMPTS:
+        assert "name" in prompt
+        assert "prompt" in prompt
+        assert "severity" in prompt
+
+
+def test_system_prompt_leak_patterns_are_valid_regex():
+    import re
+    for pattern in SYSTEM_PROMPT_LEAK_PATTERNS:
+        re.compile(pattern, re.IGNORECASE)  # Should not raise
+
+
+def test_system_prompt_leak_pattern_matches():
+    import re
+    test_text = "You are a helpful assistant that answers questions about our products."
+    matched = any(
+        re.search(p, test_text, re.IGNORECASE)
+        for p in SYSTEM_PROMPT_LEAK_PATTERNS
+    )
+    assert matched, "Should match a system prompt pattern"
+
+
+def test_system_prompt_leak_pattern_no_false_match():
+    import re
+    test_text = "The weather today is sunny and warm."
+    matched = any(
+        re.search(p, test_text, re.IGNORECASE)
+        for p in SYSTEM_PROMPT_LEAK_PATTERNS
+    )
+    assert not matched, "Should not match normal text"
+
+
+def test_extract_ai_response_openai_format():
+    data = {
+        "choices": [{"message": {"role": "assistant", "content": "Hello there!"}}]
+    }
+    assert _extract_ai_response(data) == "Hello there!"
+
+
+def test_extract_ai_response_simple_format():
+    data = {"response": "I can help with that."}
+    assert _extract_ai_response(data) == "I can help with that."
+
+
+def test_extract_ai_response_nested_data():
+    data = {"data": {"response": "Nested response"}}
+    assert _extract_ai_response(data) == "Nested response"
+
+
+def test_extract_ai_response_text_field():
+    data = {"text": "Plain text response"}
+    assert _extract_ai_response(data) == "Plain text response"
+
+
+def test_canary_strings_are_unique():
+    """Each canary should have a unique identifier to avoid confusion."""
+    canaries = [c.get("canary", "") for c in INJECTION_CANARIES if "canary" in c]
+    assert len(canaries) == len(set(canaries)), "Canary strings should be unique"
 
 
 def test_secret_patterns_have_severity():

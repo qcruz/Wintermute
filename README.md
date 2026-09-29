@@ -27,7 +27,7 @@ Built to explore whether an individual equipped with AI agents and open-source t
 
 ## Scanner Architecture
 
-Wintermute runs 12 vulnerability check modules against discovered targets. Each module is independent, safe (read-only / GET-only), and produces findings with confidence scores.
+Wintermute runs 14 vulnerability check modules against discovered targets. Each module is independent, safe (read-only / GET-only), and produces findings with confidence scores.
 
 ### Quick Checks (fast, low request count)
 
@@ -50,6 +50,7 @@ Wintermute runs 12 vulnerability check modules against discovered targets. Each 
 | **Path Traversal / LFI** | Local file inclusion via directory traversal in file parameters | Tests file/path/template parameters with traversal payloads (`../../../etc/passwd`), multiple encoding bypasses (URL-encoded, double-encoded, filter bypass), validates via file content signatures, baseline comparison to eliminate false positives |
 | **GraphQL Introspection** | Exposed GraphQL schemas with sensitive mutations and queries | Probes 8 common GraphQL paths, sends introspection query via POST and GET, analyzes schema for sensitive operations (deleteUser, resetPassword, payments, admin), classifies severity by exposed operation type |
 | **JavaScript Analysis** | Hardcoded secrets in JS files — API keys, cloud credentials, tokens, private keys, internal URLs | Discovers JS files from HTML and common paths, scans with 20+ regex patterns for known secret formats (AWS, Stripe, GitHub, Slack, etc.), validates with Shannon entropy checks and false positive filtering |
+| **AI Prompt Injection** | Prompt injection in AI chatbots, system prompt leakage, exposed AI endpoints, MCP servers | Discovers AI endpoints via path probing and HTML analysis, tests with safe canary prompts for instruction override and system prompt extraction, analyzes responses for injection indicators |
 | **Exposed Files** | `.git/`, `.env`, `.DS_Store`, backup files, admin panels, config files | Checks for known sensitive file paths with content validation to reduce false positives |
 
 ### False Positive Reduction
@@ -79,7 +80,7 @@ Every finding includes a confidence score (0.0 - 1.0):
 
 Findings that pass confidence thresholds are turned into professional reports:
 
-- **23 report templates** covering all vulnerability classes
+- **26 report templates** covering all vulnerability classes
 - **Duplicate detection** — checks internal DB and HackerOne API for prior submissions
 - **Duplicate probability scoring** — flags common/low-value findings (e.g., missing HSTS: 95% likely duplicate)
 - **Interactive review** — human always previews and approves before submission
@@ -118,10 +119,10 @@ src/
   core/         Config, DB models (SQLAlchemy/SQLite), scope checker, pipeline runner
   platforms/    HackerOne API client (auth, scope, submissions)
   recon/        Subdomain enumeration (crt.sh), DNS validation, header fingerprinting
-  scanner/      12 vulnerability check modules + scan pipeline orchestrator
-  reporting/    23 report templates, duplicate detection, submission pipeline
+  scanner/      14 vulnerability check modules + scan pipeline orchestrator
+  reporting/    26 report templates, duplicate detection, submission pipeline
 scripts/        CLI entry points
-tests/          95 tests (pytest)
+tests/          110 tests (pytest)
 docs/           Educational documentation, roadmap, ethics guidelines
 ```
 

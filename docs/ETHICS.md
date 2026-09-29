@@ -32,6 +32,14 @@ This document defines the mandatory ethical boundaries for all Wintermute operat
 - Chaining vulnerabilities in ways that produce destructive effects
 - Testing against production systems when staging/sandbox is available and specified
 
+### AI-Specific Testing Rules
+- Prompt injection tests use only safe canary strings — never instruct AI to perform harmful or destructive actions
+- Never attempt to exfiltrate real user data through AI agents — only test for the vulnerability's existence
+- Never instruct AI to modify, delete, or corrupt data even if prompt injection succeeds
+- System prompt extraction findings must redact any user data or internal secrets revealed
+- MCP/tool-use testing stays within the scope of the bug bounty program — never invoke tools that could affect production systems
+- AI endpoint rate limits are respected — many AI APIs have strict rate limits and cost implications
+
 ### Rate Limiting & Stewardship
 - Respect all rate limits published by the program or detected via HTTP headers
 - Default to conservative scan rates (no more than 5 requests/second unless program permits more)
@@ -83,4 +91,4 @@ This document is reviewed whenever:
 - A platform changes its terms of service
 - An incident occurs that reveals a gap in these rules
 
-Last updated: 2026-09-27
+Last updated: 2026-09-28

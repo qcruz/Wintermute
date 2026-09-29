@@ -22,6 +22,7 @@ from src.core.db import Finding, Program, Target, get_session
 from src.core.scope import ScopeChecker
 from src.platforms.hackerone import HackerOneClient, parse_scope
 from src.recon.headers import analyze_headers
+from src.scanner.ai_prompt_injection import check_ai_prompt_injection
 from src.scanner.auth_checks import check_auth
 from src.scanner.business_logic import analyze_business_logic
 from src.scanner.content_discovery import discover_content
@@ -78,7 +79,7 @@ ALL_CHECKS = [
     "subdomain_takeover", "cors", "ssl_tls", "exposed_files",
     "security_headers", "content_discovery", "injection",
     "auth_checks", "business_logic", "idor", "path_traversal",
-    "graphql", "js_analysis",
+    "graphql", "js_analysis", "ai_prompt_injection",
 ]
 
 # Lighter check set for quick scans (fast, low request count per target)
@@ -413,6 +414,22 @@ def run_scan(
                     ),
                 ))
 
+        # ── AI Prompt Injection ──
+        if "ai_prompt_injection" in enabled_checks:
+            ai_result = check_ai_prompt_injection(hostname)
+            result.checks_run["ai_prompt_injection"] = result.checks_run.get("ai_prompt_injection", 0) + 1
+            for finding in ai_result.findings:
+                result.findings.append(ScanFinding(
+                    hostname=hostname,
+                    vuln_type=finding.vuln_type,
+                    title=finding.title,
+                    severity=finding.severity,
+                    confidence=finding.confidence,
+                    description=finding.description,
+                    evidence=finding.evidence,
+                    remediation=_ai_remediation(finding.vuln_type),
+                ))
+
     # Step 4: Store findings in database
     _store_findings(session, target_map, result.findings)
     session.close()
@@ -515,6 +532,31 @@ def _business_remediation(vuln_type: str) -> str:
         ),
     }
     return remediations.get(vuln_type, "Review the application's security configuration.")
+
+
+def _ai_remediation(vuln_type: str) -> str:
+    """Generate remediation advice for AI security findings."""
+    remediations = {
+        "prompt_injection": (
+            "Implement robust input sanitization for all AI/LLM inputs. "
+            "Use system prompt hardening techniques: clear delimiters, "
+            "instruction hierarchy, and output validation. Consider using "
+            "a prompt injection detection layer before passing input to the LLM."
+        ),
+        "system_prompt_leak": (
+            "Harden the system prompt against extraction attempts. "
+            "Add explicit instructions to never reveal system prompts. "
+            "Implement output filtering to detect and block system prompt content "
+            "in responses. Consider the system prompt as non-secret defense-in-depth."
+        ),
+        "ai_endpoint_exposed": (
+            "Ensure all AI endpoints require proper authentication. "
+            "Implement rate limiting on AI endpoints to prevent abuse. "
+            "Add input validation and output filtering. Review the endpoint's "
+            "tool-use permissions and restrict to minimum necessary capabilities."
+        ),
+    }
+    return remediations.get(vuln_type, "Review AI endpoint security configuration.")
 
 
 def _store_findings(

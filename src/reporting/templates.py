@@ -718,6 +718,55 @@ A hardcoded secret was found in a publicly accessible JavaScript file on `{findi
     )
 
 
+def prompt_injection_report(finding) -> Report:
+    """Generate a report for an AI prompt injection finding."""
+    severity_map = {
+        "prompt_injection": "high",
+        "system_prompt_leak": "medium",
+        "ai_endpoint_exposed": "low",
+    }
+
+    cwe_map = {
+        "prompt_injection": (77, "CWE-77: Command Injection", "Prompt injection allows attackers to override AI system instructions, potentially causing the AI to perform unauthorized actions, leak sensitive data, or bypass safety controls. This is analogous to command injection but targets the AI's instruction-following mechanism rather than a shell."),
+        "system_prompt_leak": (200, "CWE-200: Exposure of Sensitive Information", "System prompt leakage reveals the AI's configuration, instructions, and operational boundaries. Attackers can use this information to craft more targeted prompt injection attacks, understand safety controls to bypass them, or extract proprietary business logic embedded in prompts."),
+        "ai_endpoint_exposed": (200, "CWE-200: Exposure of Sensitive Information", "Exposed AI endpoints without proper authentication allow unauthorized access to AI capabilities, which may include access to internal data, tool-use permissions, or privileged operations."),
+    }
+
+    cwe_id, cwe_name, impact = cwe_map.get(
+        finding.vuln_type,
+        (77, "CWE-77: Command Injection", "AI security vulnerability detected."),
+    )
+
+    return Report(
+        title=finding.title,
+        severity_rating=severity_map.get(finding.vuln_type, "medium"),
+        weakness_id=cwe_id,
+        vulnerability_information=f"""## Summary
+
+{finding.description}
+
+## Steps to Reproduce
+
+{finding.evidence}
+
+## Remediation
+
+- Implement input sanitization and prompt injection detection
+- Use system prompt hardening (clear delimiters, instruction hierarchy)
+- Add output validation to prevent sensitive data leakage
+- Require authentication on all AI endpoints
+- Implement rate limiting and abuse detection
+- Follow OWASP Top 10 for LLM Applications guidelines
+
+## References
+
+- [{cwe_name}](https://cwe.mitre.org/data/definitions/{cwe_id}.html)
+- [OWASP Top 10 for LLM Applications](https://owasp.org/www-project-top-10-for-large-language-model-applications/)
+- [OWASP LLM01: Prompt Injection](https://genai.owasp.org/llmrisk/llm01-prompt-injection/)""",
+        impact=impact,
+    )
+
+
 # ── Template dispatcher ─────────────────────────────────────────────
 
 TEMPLATE_MAP = {
@@ -744,4 +793,7 @@ TEMPLATE_MAP = {
     "path_traversal": path_traversal_report,
     "graphql_introspection": graphql_introspection_report,
     "js_secret": js_secret_report,
+    "prompt_injection": prompt_injection_report,
+    "system_prompt_leak": prompt_injection_report,
+    "ai_endpoint_exposed": prompt_injection_report,
 }

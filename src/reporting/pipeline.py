@@ -34,6 +34,7 @@ from src.reporting.templates import (
     graphql_introspection_report,
     js_secret_report,
     path_traversal_report,
+    prompt_injection_report,
     missing_security_header_report,
     ssl_tls_report,
     subdomain_takeover_report,
@@ -373,6 +374,9 @@ def _generate_report(finding: Finding, target: Target) -> Report | None:
 
         elif finding.vuln_type == "js_secret":
             return js_secret_report(finding)
+
+        elif finding.vuln_type in ("prompt_injection", "system_prompt_leak", "ai_endpoint_exposed"):
+            return prompt_injection_report(finding)
 
         elif finding.vuln_type in ("info_disclosure", "error_leak", "method_allowed", "clickjack", "cache_issue"):
             return business_logic_report(
