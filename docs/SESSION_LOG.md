@@ -4,6 +4,41 @@ Track what each session accomplished, what was found, and what's queued for next
 
 ---
 
+## Session 23 — 2026-09-29 (Scanning — Cycle 1)
+
+**Cycle step:** Scanning & Operations — Quora/Poe recon + targeted scan + catch-all validation
+
+**What was done:**
+- Ran recon on Quora/Poe: 206 subdomains discovered (172 quora.com, 34 poe.com), 205 in-scope targets
+- Deep scanned 7 high-value targets: gql.poe.com, developer.poe.com, corp.quora.com, tch.corp.quora.com, proddebug.quora.com, phabricator.net.quora.com, creator-monetization.poe.com
+- Quick scanned 3 poe.com targets (ww25.17173, hackathon, ww25.duowan)
+
+**Catch-all routing validation:**
+- corp.quora.com returns 403 for random paths → catch-all detection correctly did NOT fire
+- AI/MCP endpoint discoveries on corp.quora.com are legitimate (15 AI + 7 MCP, all return 401)
+- Catch-all detection working as designed — no false skips observed
+
+**Findings (33 total across 6 targets):**
+- **4 SSTI (all FPs)** — `{{7*7}}→49` on gql.poe.com, corp.quora.com, creator-monetization.poe.com. Verified: "49" appears in baseline response without payload. SSTI baseline fix (#2 R&D) confirmed as next priority.
+- **16 AI endpoint discoveries** on corp.quora.com — all auth-gated (401). Real endpoints including `/api/chat`, `/assistant`, `/ai`, `/copilot`. Needs auth scanning.
+- **7 MCP endpoint discoveries** on corp.quora.com — `/mcp`, `/mcp/sse`, `/mcp/stdio` etc. All auth-gated.
+- **5 missing HSTS** — noise, 95% dup probability
+- **1 clickjacking** on developer.poe.com — low impact (docs site)
+
+**Post-scan analysis:**
+- 0 reportable findings from Quora/Poe
+- corp.quora.com is the most interesting target — real AI/MCP infrastructure behind auth
+- SSTI baseline fix is now critical — 4 more FPs on top of 21 from Deriv = 25 total SSTI FPs
+- Updated STRATEGY.md with Quora/Poe in programs table
+
+**Identity verification:** Confirmed all HTTP requests use `Wintermute/0.1 (Security Research)` User-Agent consistently across all 16 scanner modules, recon, and pipeline. MCP client identifies as `wintermute-security-test`. No personal identity leaked in any requests.
+
+**Queued for next session:**
+- Cycle 2 (R&D): SSTI baseline comparison fix (#2 in queue — 25 FPs to eliminate)
+- Cycle 1 backlog: Wealthsimple deep scan, Deriv revisit, remaining Quora/Poe targets
+
+---
+
 ## Session 22 — 2026-09-29 (R&D — Cycle 2)
 
 **Cycle step:** Scanner R&D — Catch-all routing detection (FP fix #1)

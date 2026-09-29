@@ -17,6 +17,7 @@ Living document tracking progress, successes, failures, trends, and research to 
 | Hyatt | 291 (recon only) | Recon only | N/A | 0 | Too large, needs sliced scanning |
 | GitHub | 6 | Deep (4 targets) | GraphQL console (403), 86 FPs from catch-all routing | 0 | Needs auth scanning for Copilot; catch-all routing FP class discovered |
 | Notion | 8 | Quick + AI-focused | 17 real endpoint discoveries on retool (all auth-gated), 24 prompt injection FPs (catch-all) | 0 | Retool admin panel is high-value but needs auth; Notion AI needs auth |
+| Quora/Poe | 205 | Targeted (7 hosts deep scanned) | 16 AI + 7 MCP endpoint discoveries on corp.quora.com (all auth-gated), 4 SSTI FPs, clickjacking on developer.poe.com | 0 | SSTI baseline fix needed; corp.quora.com has real AI/MCP endpoints behind 401 |
 
 ### Submissions: 0 sent, 0 accepted
 

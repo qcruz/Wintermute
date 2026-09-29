@@ -29,9 +29,9 @@ Active scanning, program management, and operational improvements. This is the c
 
 ### Queue
 
-1. Quora/Poe — recon + scan poe.com for prompt injection (multi-model AI chatbot platform)
-2. Wealthsimple — deep scan remaining targets by keyword (staging, crypto, trade, cdn)
-3. Deriv — revisit with improved SSTI FP filter; verify any real findings
+1. Wealthsimple — deep scan remaining targets by keyword (staging, crypto, trade, cdn)
+2. Deriv — revisit with improved SSTI FP filter; verify any real findings
+3. Quora/Poe — revisit corp.quora.com with auth scanning (has real AI/MCP endpoints behind 401); scan remaining 198 targets in batches
 4. Review submission candidates — verify any high-confidence findings, submit if reproducible
 5. Multi-program batch run — scan 3 programs in sequence with `--quick`
 6. Hyatt — slice recon by domain subsets across sessions (61 base domains, 805 subdomains), then scan with `--limit 5 --filter`
