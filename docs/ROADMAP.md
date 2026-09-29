@@ -50,17 +50,16 @@ Research, prototype, and integrate new vulnerability detection capabilities. Eac
 
 ### Queue
 
-1. **JavaScript Analysis** — Parse JS files for hardcoded API keys, secrets, internal URLs, cloud credentials
-2. **SSRF Detection** — Test URL/webhook parameters for internal network access (requires callback server setup)
-3. **Host Header Injection** — Test for password reset poisoning and cache poisoning via Host header manipulation
-4. **Broken Rate Limiting** — Detect missing rate limits on login, password reset, and API endpoints
-5. **API Versioning Gaps** — Test older API versions (v1 when v2 exists) for deprecated, unpatched endpoints
-6. **AI/LLM Prompt Injection** — Detect prompt injection vulnerabilities in AI-integrated applications
-7. **WebSocket Testing** — Check for unauthenticated WebSocket connections and missing origin validation
-8. **Prototype Pollution** — Detect JavaScript prototype pollution via `__proto__` in JSON APIs
-9. **Cloud Metadata SSRF** — Test for AWS/GCP/Azure metadata endpoint access (169.254.169.254)
-10. **Race Conditions** — Detect TOCTOU issues on coupon/discount/balance endpoints
-11. **Cache Poisoning** — Test for web cache deception via path confusion and unkeyed headers
+1. **SSRF Detection** — Test URL/webhook parameters for internal network access (requires callback server setup)
+2. **Host Header Injection** — Test for password reset poisoning and cache poisoning via Host header manipulation
+3. **Broken Rate Limiting** — Detect missing rate limits on login, password reset, and API endpoints
+4. **API Versioning Gaps** — Test older API versions (v1 when v2 exists) for deprecated, unpatched endpoints
+5. **AI/LLM Prompt Injection** — Detect prompt injection vulnerabilities in AI-integrated applications
+6. **WebSocket Testing** — Check for unauthenticated WebSocket connections and missing origin validation
+7. **Prototype Pollution** — Detect JavaScript prototype pollution via `__proto__` in JSON APIs
+8. **Cloud Metadata SSRF** — Test for AWS/GCP/Azure metadata endpoint access (169.254.169.254)
+9. **Race Conditions** — Detect TOCTOU issues on coupon/discount/balance endpoints
+10. **Cache Poisoning** — Test for web cache deception via path confusion and unkeyed headers
 
 **Continuous items** (rotate to bottom after working):
 - Review HackerOne Hacktivity for new bug patterns to add
@@ -135,7 +134,7 @@ Session flow:
 - HackerOne API client (auth, scope, programs, submissions)
 - Scope checker with wildcard/CIDR matching, default deny, audit logging
 - SQLite database with SQLAlchemy ORM
-- 83 unit tests, ruff linting
+- 95 unit tests, ruff linting
 
 ### Recon Pipeline (Built)
 - Certificate Transparency subdomain enumeration (crt.sh)
@@ -143,7 +142,7 @@ Session flow:
 - HTTP header fingerprinting and technology detection
 - Scope-gated orchestration pipeline
 
-### Scanner Modules (12 Built)
+### Scanner Modules (13 Built)
 1. Subdomain takeover (20+ services, CNAME chain, HTTP fingerprint)
 2. CORS misconfiguration (origin reflection, null origin, credentials)
 3. SSL/TLS analysis (expiry, weak protocols, hostname mismatch)
@@ -156,9 +155,10 @@ Session flow:
 10. IDOR detection (sequential ID enumeration, sensitive field detection)
 11. Path traversal / LFI (traversal canaries, encoding bypasses, baseline comparison)
 12. GraphQL introspection (schema analysis, sensitive mutation/query detection)
+13. JavaScript analysis (secret detection, API keys, cloud credentials, internal URLs)
 
 ### Reporting Engine (Built)
-- 22 report templates with CWE references
+- 23 report templates with CWE references
 - Duplicate detection (internal DB + HackerOne API)
 - Interactive review queue with human approval
 - HackerOne API submission

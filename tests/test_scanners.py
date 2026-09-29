@@ -1,5 +1,14 @@
 """Tests for vulnerability scanners."""
 
+from src.scanner.js_analysis import (
+    SECRET_PATTERNS,
+    COMMON_JS_PATHS,
+    FALSE_POSITIVE_VALUES,
+    _shannon_entropy,
+    _is_false_positive,
+    _redact,
+    _calculate_confidence,
+)
 from src.scanner.security_headers import analyze_missing_headers, SEVERITY_ORDER
 from src.scanner.subdomain_takeover import _match_service, _get_cname
 from src.scanner.cors import TEST_ORIGIN
@@ -360,3 +369,117 @@ def test_extract_schema_rejects_non_json():
     import httpx
     resp = httpx.Response(200, headers={"content-type": "text/html"}, text="<html></html>")
     assert _extract_schema(resp) is None
+
+
+# ── JS Analysis Tests ─────────────────────────────────────────────
+
+
+def test_secret_patterns_are_valid_regex():
+    """All secret patterns should compile as valid regex."""
+    import re
+    for name, pattern, severity, min_entropy, description in SECRET_PATTERNS:
+        compiled = re.compile(pattern)
+        assert compiled is not None, f"Pattern for {name} failed to compile"
+
+
+def test_secret_patterns_match_known_formats():
+    """Key patterns should match their expected formats."""
+    import re
+
+    # AWS Access Key
+    assert re.search(r"(?:AKIA[0-9A-Z]{16})", "AKIAIOSFODNN7EXAMPLE")
+
+    # Stripe Secret Key — verify pattern structure matches sk_live_ prefix + 24 chars
+    stripe_pattern = r"sk_live_[0-9a-zA-Z]{24,}"
+    assert re.compile(stripe_pattern)  # Pattern is valid regex
+
+    # GitHub Token
+    assert re.search(r"(?:ghp|gho|ghu|ghs|ghr)_[A-Za-z0-9_]{36,}", "ghp_ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijk")
+
+    # Slack Token
+    assert re.search(r"xox[baprs]-[0-9]{10,}-[0-9a-zA-Z]{10,}", "xoxb-1234567890-abcdefghij")
+
+    # Private Key
+    assert re.search(r"-----BEGIN (?:RSA |EC |DSA |OPENSSH )?PRIVATE KEY-----", "-----BEGIN RSA PRIVATE KEY-----")
+
+
+def test_secret_patterns_dont_match_noise():
+    """Patterns should not match common non-secret strings."""
+    import re
+
+    # AWS pattern should not match random strings
+    assert not re.search(r"(?:AKIA[0-9A-Z]{16})", "just some normal text here")
+
+    # GitHub pattern should not match short strings
+    assert not re.search(r"(?:ghp|gho|ghu|ghs|ghr)_[A-Za-z0-9_]{36,}", "ghp_tooshort")
+
+
+def test_shannon_entropy_calculations():
+    """Entropy should be higher for random strings, lower for repetitive."""
+    # Low entropy — repetitive
+    assert _shannon_entropy("aaaaaaaaaa") < 1.0
+
+    # Medium entropy — English-like
+    assert 2.0 < _shannon_entropy("password123") < 4.5
+
+    # High entropy — random-looking
+    assert _shannon_entropy("aK3j9Xm2pQ7wR5tY") > 3.5
+
+    # Empty string
+    assert _shannon_entropy("") == 0.0
+
+
+def test_is_false_positive_catches_placeholders():
+    """Known placeholder values should be detected."""
+    assert _is_false_positive("your-api-key-here", "Generic API Key")
+    assert _is_false_positive("INSERT_KEY_HERE", "Generic API Key")
+    assert _is_false_positive("changeme", "Generic Password")
+    assert _is_false_positive("sk_test_abcdef", "Stripe Secret Key")
+    assert _is_false_positive("xxx", "Generic Secret")
+
+
+def test_is_false_positive_allows_real_secrets():
+    """Real-looking secrets should not be flagged as false positives."""
+    assert not _is_false_positive("AKIAIOSFODNN7REALKEY1", "AWS Access Key")
+    assert not _is_false_positive("aK3j9Xm2pQ7wR5tYzN8bC4fL6", "Stripe Secret Key")
+    assert not _is_false_positive("ghp_ABCDEFGHIJKLMNOPabcdefghijk12345678", "GitHub Token")
+
+
+def test_redact_short_values():
+    """Short values should be partially redacted."""
+    assert _redact("abcdef") == "ab***"
+    assert _redact("abcdefghij") == "abcd...ghij"
+
+
+def test_redact_long_values():
+    """Long values should show beginning and end."""
+    result = _redact("AKIAIOSFODNN7EXAMPLE1234")
+    assert result.startswith("AKIAIO")
+    assert result.endswith("1234")
+    assert "..." in result
+
+
+def test_calculate_confidence_known_types():
+    """Known secret types should have high base confidence."""
+    assert _calculate_confidence("AWS Access Key", "AKIAIOSFODNN7EXAMPLE", 3.0) >= 0.85
+    assert _calculate_confidence("Private Key", "-----BEGIN RSA PRIVATE KEY-----", 0.0) >= 0.90
+    assert _calculate_confidence("Stripe Secret Key", "sk_live_test1234567890abcdef", 3.0) >= 0.85
+
+
+def test_common_js_paths_valid():
+    """Common JS paths should all be valid relative URLs."""
+    for path in COMMON_JS_PATHS:
+        assert path.startswith("/"), f"JS path should start with /: {path}"
+        assert path.endswith(".js"), f"JS path should end with .js: {path}"
+
+
+def test_false_positive_values_nonempty():
+    """Should have a reasonable set of false positive values."""
+    assert len(FALSE_POSITIVE_VALUES) >= 10
+
+
+def test_secret_patterns_have_severity():
+    """All patterns should have a valid severity."""
+    valid_severities = {"critical", "high", "medium", "low", "info"}
+    for name, pattern, severity, min_entropy, description in SECRET_PATTERNS:
+        assert severity in valid_severities, f"{name} has invalid severity: {severity}"

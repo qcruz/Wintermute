@@ -4,6 +4,24 @@ Track what each session accomplished, what was found, and what's queued for next
 
 ---
 
+## Session 9 — 2026-09-28 (R&D — Cycle 2)
+
+**Cycle step:** Scanner R&D & Buildout
+
+**What was done:**
+- Built JavaScript Analysis module (13th scanner) — scans publicly served JS files for hardcoded secrets
+- 20+ regex patterns: AWS keys, Stripe, GitHub tokens, Slack, SendGrid, Google API, Azure, JWT, private keys, internal URLs, generic API keys/passwords
+- Shannon entropy validation to filter placeholder values (low-entropy strings)
+- False positive detection: known placeholder values, test keys, all-same-character strings
+- Full integration: pipeline scan loop, report template (CWE-798), reporting branch, 12 new tests (95 total), educational explainer
+- Updated README, CLAUDE.md, ROADMAP.md, vulnerability-detection.md — all counts updated to 13 modules, 23 templates, 95 tests
+
+**Queued for next session:**
+- Cycle 1: Deep scan Wealthsimple API targets with `--scan-only --limit 3 --filter api` (now includes JS analysis)
+- Cycle 2: SSRF Detection is next in R&D queue
+
+---
+
 ## Session 8 — 2026-09-28 (Scanning — Cycle 1)
 
 **Cycle step:** Scanning & Operations — Scout + scan fresh program

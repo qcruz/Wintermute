@@ -675,6 +675,49 @@ GraphQL introspection is enabled in production on `{finding.hostname}`, exposing
     )
 
 
+def js_secret_report(finding) -> Report:
+    """Generate a report for a JavaScript secret exposure finding."""
+    return Report(
+        title=finding.title,
+        severity_rating=finding.severity,
+        weakness_id=798,  # CWE-798: Use of Hard-coded Credentials
+        vulnerability_information=f"""## Summary
+
+A hardcoded secret was found in a publicly accessible JavaScript file on `{finding.hostname}`.
+
+## Description
+
+{finding.description}
+
+## Steps to Reproduce
+
+1. Visit `{finding.hostname}` in a browser
+2. Open Developer Tools → Sources tab
+3. Locate the JavaScript file containing the secret
+4. Search for the exposed credential
+
+## Evidence
+
+```
+{finding.evidence}
+```
+
+## Remediation
+
+- Remove all hardcoded secrets from client-side JavaScript
+- Use environment variables or a secrets management service
+- Rotate the exposed credential immediately — it should be considered compromised
+- Add secret scanning to your CI/CD pipeline (e.g., git-secrets, trufflehog)
+- Review git history for previously committed secrets
+
+## References
+
+- [CWE-798: Use of Hard-coded Credentials](https://cwe.mitre.org/data/definitions/798.html)
+- [OWASP: Sensitive Data Exposure](https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/01-Information_Gathering/05-Review_Webpage_Content_for_Information_Leakage)""",
+        impact=f"""Exposed secrets in JavaScript files are accessible to any visitor. Depending on the type of secret, an attacker could gain unauthorized access to cloud infrastructure, payment systems, email services, or internal APIs. Hardcoded credentials are a critical security risk because they cannot be rotated without deploying new code.""",
+    )
+
+
 # ── Template dispatcher ─────────────────────────────────────────────
 
 TEMPLATE_MAP = {
@@ -700,4 +743,5 @@ TEMPLATE_MAP = {
     "idor": idor_report,
     "path_traversal": path_traversal_report,
     "graphql_introspection": graphql_introspection_report,
+    "js_secret": js_secret_report,
 }

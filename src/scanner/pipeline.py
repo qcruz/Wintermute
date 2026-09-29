@@ -30,6 +30,7 @@ from src.scanner.exposed_files import ExposedFilesResult, check_exposed_files
 from src.scanner.idor import check_idor
 from src.scanner.injection import test_injection
 from src.scanner.graphql_introspection import check_graphql
+from src.scanner.js_analysis import check_js_secrets
 from src.scanner.path_traversal import check_path_traversal
 from src.scanner.security_headers import (
     HeaderAnalysisResult,
@@ -77,7 +78,7 @@ ALL_CHECKS = [
     "subdomain_takeover", "cors", "ssl_tls", "exposed_files",
     "security_headers", "content_discovery", "injection",
     "auth_checks", "business_logic", "idor", "path_traversal",
-    "graphql",
+    "graphql", "js_analysis",
 ]
 
 # Lighter check set for quick scans (fast, low request count per target)
@@ -388,6 +389,27 @@ def run_scan(
                         "servers support a configuration flag to disable it. Additionally, "
                         "implement authentication and authorization on all queries and "
                         "mutations, and consider query complexity limits to prevent abuse."
+                    ),
+                ))
+
+        # ── JavaScript Secret Analysis ──
+        if "js_analysis" in enabled_checks:
+            js_result = check_js_secrets(hostname)
+            result.checks_run["js_analysis"] = result.checks_run.get("js_analysis", 0) + 1
+            for finding in js_result.findings:
+                result.findings.append(ScanFinding(
+                    hostname=hostname,
+                    vuln_type=finding.vuln_type,
+                    title=finding.title,
+                    severity=finding.severity,
+                    confidence=finding.confidence,
+                    description=finding.description,
+                    evidence=finding.evidence,
+                    remediation=(
+                        "Remove hardcoded secrets from JavaScript files. Use environment "
+                        "variables or a secrets manager instead. Rotate any exposed "
+                        "credentials immediately — they should be considered compromised. "
+                        "Add secret scanning to your CI/CD pipeline to prevent future leaks."
                     ),
                 ))
 
