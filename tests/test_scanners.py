@@ -28,6 +28,7 @@ from src.scanner.ai_prompt_injection import (
     SYSTEM_PROMPT_LEAK_PATTERNS,
     _extract_ai_response,
 )
+from src.scanner.content_discovery import DISCOVERY_PATHS, DiscoveredEndpoint
 from src.scanner.cors import TEST_ORIGIN
 from src.scanner.graphql_introspection import (
     GRAPHQL_PATHS,
@@ -924,3 +925,39 @@ def test_detect_catchall_returns_false_on_connection_error():
     """_detect_catchall should return False when the host is unreachable."""
     result = _detect_catchall("this-host-does-not-exist-wintermute-test.invalid")
     assert result is False
+
+
+# ── Content Discovery ───────────────────────────────────────────────
+
+
+def test_critical_discovery_paths_have_fingerprints():
+    """Critical severity paths must have fingerprints to avoid FPs."""
+    for path, category, desc, fingerprints, severity in DISCOVERY_PATHS:
+        if severity == "critical":
+            assert fingerprints, (
+                f"{path} ({desc}) is critical severity but has no fingerprints — "
+                f"will produce false positives without content verification"
+            )
+
+
+def test_discovered_endpoint_evidence_types():
+    """DiscoveredEndpoint should support evidence_type field."""
+    ep = DiscoveredEndpoint(
+        path="/test",
+        evidence_type="fingerprint",
+        evidence="Content fingerprint matched: swagger-ui",
+    )
+    assert ep.evidence_type == "fingerprint"
+
+    ep2 = DiscoveredEndpoint(path="/admin", evidence_type="redirect_to_login")
+    assert ep2.evidence_type == "redirect_to_login"
+
+    ep3 = DiscoveredEndpoint(path="/api")
+    assert ep3.evidence_type == ""
+
+
+def test_discovery_paths_all_have_valid_severity():
+    """All discovery paths should use valid severity levels."""
+    valid = {"critical", "high", "medium", "low", "info"}
+    for path, category, desc, fingerprints, severity in DISCOVERY_PATHS:
+        assert severity in valid, f"{path} has invalid severity '{severity}'"

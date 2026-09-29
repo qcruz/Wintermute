@@ -4,6 +4,30 @@ Track what each session accomplished, what was found, and what's queued for next
 
 ---
 
+## Session 26 — 2026-09-29 (R&D — Cycle 2)
+
+**Cycle step:** Scanner R&D — Content discovery confidence tuning + catch-all redirect detection (FP fixes #3 & #4)
+
+**What was done:**
+- **Granular confidence scoring** for content discovery findings based on evidence quality:
+  - `fingerprint` (content matched known signatures) → 0.85 confidence
+  - `redirect_to_login` (path redirects to login page) → 0.5 confidence
+  - `forbidden` (403 on admin/API paths) → 0.5 confidence
+  - `status_only` (200 response, no fingerprint) → 0.4 confidence
+  - Only fingerprint-confirmed findings now exceed the 0.7 high-confidence threshold
+- **Catch-all redirect detection** — if the 404 baseline itself redirects to a login page, the entire host is skipped for content discovery (same approach as blanket-403 detection)
+- Added `evidence_type` field to `DiscoveredEndpoint` dataclass for pipeline to use
+- Verified fix against paymentcard.wealthsimple.com (correctly detected as catch-all redirect) and www.wealthsimple.com (correctly not flagged)
+- 151 tests pass (+3 new), ruff clean
+
+**Impact:** Eliminates 138+ content discovery FPs (the largest noise source at 41% of all findings). Catch-all redirect detection eliminates 18+ additional FPs from paymentcard.wealthsimple.com-type hosts. Total FPs caught: 557+.
+
+**Queued for next session:**
+- Cycle 1 (Scanning): Deriv revisit with improved SSTI filter (first item in queue)
+- Cycle 2 backlog: Authenticated scanning (#5 in queue)
+
+---
+
 ## Session 25 — 2026-09-29 (Scanning — Cycle 1)
 
 **Cycle step:** Scanning & Operations — Wealthsimple deep scan (remaining targets by keyword)

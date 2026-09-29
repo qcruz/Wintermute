@@ -57,8 +57,7 @@ Research, prototype, and integrate new vulnerability detection capabilities. Eac
 **False positive fixes (high priority — directly improves scan quality):**
 1. ~~**Catch-all routing detection**~~ ✅ DONE (Session 22) — Pipeline detects catch-all hosts and skips path-based discovery checks (content_discovery, ai_prompt_injection, ai_data_exfil, mcp_security). Fixes 110+ FPs across GitHub and Notion.
 2. ~~**SSTI baseline comparison**~~ ✅ DONE (Session 24) — Changed canary from `{{7*7}}→49` to `{{91*71}}→6461` (49 too common in Cloudflare tokens). Added non-200 status code filter. Fixes 25 SSTI FPs across Deriv and Quora/Poe.
-3. **Content discovery confidence tuning** — All 138 findings at 0.6 confidence; require content fingerprinting (not just HTTP 200) to raise confidence above threshold
-4. **Catch-all redirect detection** — Hosts that redirect every path to login (paymentcard.wealthsimple.com → my.wealthsimple.com/app/login) generate 18+ content discovery FPs. Detect redirect-to-login catch-all pattern alongside existing catch-all 200 detection.
+3. ~~**Content discovery confidence tuning**~~ ✅ DONE (Session 26) — Granular confidence: fingerprint=0.85, redirect-to-login=0.5, forbidden=0.5, status-only=0.4. Only fingerprint-confirmed findings exceed 0.7 threshold. Added catch-all redirect detection (skips hosts where 404 baseline redirects to login). Fixes 18+ FPs on paymentcard.wealthsimple.com and similar hosts.
 
 **Infrastructure & capability:**
 5. **Authenticated scanning** — Support cookie/token-based auth for scanning behind login walls; needed for GitHub Copilot, Notion AI, and any feature requiring a session

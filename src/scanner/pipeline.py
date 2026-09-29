@@ -300,12 +300,20 @@ def run_scan(
             for ep in content_result.endpoints:
                 if ep.severity in ("info",):
                     continue
+                # Confidence based on evidence quality
+                confidence_map = {
+                    "fingerprint": 0.85,
+                    "redirect_to_login": 0.5,
+                    "forbidden": 0.5,
+                    "status_only": 0.4,
+                }
+                confidence = confidence_map.get(ep.evidence_type, 0.5)
                 result.findings.append(ScanFinding(
                     hostname=hostname,
                     vuln_type="content_discovery",
                     title=f"Discovered {ep.description} at {hostname}{ep.path}",
                     severity=ep.severity,
-                    confidence=0.8 if ep.evidence and "fingerprint" in ep.evidence.lower() else 0.6,
+                    confidence=confidence,
                     description=(
                         f"Active content discovery found {ep.description} at "
                         f"{hostname}{ep.path} (category: {ep.category})."

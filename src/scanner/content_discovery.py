@@ -36,6 +36,7 @@ class DiscoveredEndpoint:
     description: str = ""
     severity: str = "info"
     evidence: str = ""
+    evidence_type: str = ""  # fingerprint, redirect_to_login, forbidden, status_only
     redirect_url: str = ""
 
 
@@ -163,11 +164,21 @@ def discover_content(hostname: str, max_paths: int = 30) -> ContentDiscoveryResu
     base_url = f"https://{hostname}"
 
     # Step 1: Get custom 404 baseline
-    not_found_body, not_found_length, baseline_status = _get_404_baseline(base_url)
+    not_found_body, not_found_length, baseline_status, baseline_redirect = _get_404_baseline(base_url)
 
     # Early exit: blanket-403 hosts return Forbidden for every path
     if baseline_status == 403:
         logger.debug("Skipping content discovery on %s — blanket 403 on all paths", hostname)
+        return result
+
+    # Early exit: catch-all redirect hosts redirect every path to login
+    if baseline_redirect and any(
+        kw in baseline_redirect.lower() for kw in ("login", "signin", "auth", "sso")
+    ):
+        logger.debug(
+            "Skipping content discovery on %s — catch-all redirect to login (%s)",
+            hostname, baseline_redirect,
+        )
         return result
 
     # Step 2: Early exit — detect third-party hosted sites
@@ -243,11 +254,12 @@ def _detect_third_party(base_url: str) -> str:
     return ""
 
 
-def _get_404_baseline(base_url: str) -> tuple[str, int, int]:
+def _get_404_baseline(base_url: str) -> tuple[str, int, int, str]:
     """Get the custom 404 response for comparison.
 
-    Returns (body, content_length, status_code). The status_code is used to
-    detect blanket-403 hosts where every path returns Forbidden.
+    Returns (body, content_length, status_code, redirect_url). The status_code
+    is used to detect blanket-403 hosts. The redirect_url detects catch-all
+    redirect hosts (every path redirects to login).
     """
     try:
         resp = httpx.get(
@@ -257,11 +269,14 @@ def _get_404_baseline(base_url: str) -> tuple[str, int, int]:
             headers={"User-Agent": "Wintermute/0.1 (Security Research)"},
         )
         if resp.status_code == 200:
-            return resp.text.lower(), len(resp.content), 200
-        return "", 0, resp.status_code
+            return resp.text.lower(), len(resp.content), 200, ""
+        if resp.status_code in (301, 302, 303, 307, 308):
+            location = resp.headers.get("location", "")
+            return "", 0, resp.status_code, location
+        return "", 0, resp.status_code, ""
     except Exception:
         pass
-    return "", 0, 0
+    return "", 0, 0, ""
 
 
 def _parse_robots_disallow(base_url: str) -> list[str]:
@@ -329,6 +344,7 @@ def _probe_path(
             # Admin/API paths that redirect to login are confirmed to exist
             if any(kw in location.lower() for kw in ("login", "signin", "auth", "sso")):
                 endpoint.evidence = f"Redirects to login: {location}"
+                endpoint.evidence_type = "redirect_to_login"
                 if category in ("admin", "api", "debug"):
                     logger.warning(
                         "CONTENT DISCOVERY: %s%s → redirects to login (%s)",
@@ -341,6 +357,7 @@ def _probe_path(
         # 403 = path exists but is protected — notable for admin/debug paths
         if category in ("admin", "api", "debug", "api_docs"):
             endpoint.evidence = "HTTP 403 Forbidden — endpoint exists but is access-restricted"
+            endpoint.evidence_type = "forbidden"
             endpoint.severity = "low"  # Downgrade since it's protected
             return endpoint
         return None
@@ -361,6 +378,7 @@ def _probe_path(
         matched = [fp for fp in fingerprints if fp.lower() in body]
         if matched:
             endpoint.evidence = f"Content fingerprint matched: {', '.join(matched)}"
+            endpoint.evidence_type = "fingerprint"
             logger.warning(
                 "CONTENT DISCOVERY: %s%s (%s)",
                 base_url.split("//")[1], path, description,
@@ -372,6 +390,7 @@ def _probe_path(
     # No fingerprints — for high-value categories, a 200 response is notable
     if category in ("api", "admin", "debug", "api_docs") and endpoint.content_length > 0:
         endpoint.evidence = f"HTTP 200, {endpoint.content_length} bytes"
+        endpoint.evidence_type = "status_only"
         # Lower confidence without fingerprint match
         endpoint.severity = "low" if endpoint.severity in ("info", "low") else "low"
         return endpoint

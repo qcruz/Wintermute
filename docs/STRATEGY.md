@@ -40,9 +40,9 @@ Living document tracking progress, successes, failures, trends, and research to 
 | JWT tokens in CDN signed URLs (Filestack) | 8 | Skip JWTs in URL query params with /cdn, /image, /file context |
 | localhost references in JS URL constructors | 3 | Skip Internal URL findings for localhost/127.0.0.1 |
 | Catch-all routing (gist.github.com, mail.notion.so) | 110+ | Pipeline-level catch-all detection skips path-based checks |
-| Catch-all redirect (paymentcard.wealthsimple.com) | 18 | **Not yet fixed** — every path redirects to login, content discovery thinks endpoints exist behind auth |
-| Blanket-403 content discovery (work-staging.wealthsimple.com) | 9 | Below threshold (0.60 confidence) — filtered from reports but still noise in DB |
-| **Total FPs caught and fixed** | **~401+** | |
+| Catch-all redirect (paymentcard.wealthsimple.com) | 18 | Catch-all redirect detection skips hosts where 404 baseline redirects to login |
+| Low-confidence content discovery (403, redirect, status-only) | 138+ | Granular confidence scoring: only fingerprint matches (0.85) exceed threshold; redirect/forbidden/status-only at 0.4–0.5 |
+| **Total FPs caught and fixed** | **~557+** | |
 
 Our false positive detection is improving with each scan. The pattern: scan a new program, discover a new FP class, fix it, move on.
 
