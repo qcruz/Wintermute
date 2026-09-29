@@ -18,6 +18,7 @@ Living document tracking progress, successes, failures, trends, and research to 
 | GitHub | 6 | Deep (4 targets) | GraphQL console (403), 86 FPs from catch-all routing | 0 | Needs auth scanning for Copilot; catch-all routing FP class discovered |
 | Notion | 8 | Quick + AI-focused | 17 real endpoint discoveries on retool (all auth-gated), 24 prompt injection FPs (catch-all) | 0 | Retool admin panel is high-value but needs auth; Notion AI needs auth |
 | Quora/Poe | 205 | Targeted (7 hosts deep scanned) | 16 AI + 7 MCP endpoint discoveries on corp.quora.com (all auth-gated), 4 SSTI FPs, clickjacking on developer.poe.com | 0 | SSTI baseline fix needed; corp.quora.com has real AI/MCP endpoints behind 401 |
+| Wealthsimple | 81 | Targeted (6 hosts deep scanned) | Insecure cookie on work-staging, 9 content discovery (blanket-403 FPs), 1 AI endpoint (info), 18 catch-all redirect FPs on paymentcard | 0 | Mostly locked-down staging; needs auth scanning for real coverage |
 
 ### Submissions: 0 sent, 0 accepted
 
@@ -39,6 +40,8 @@ Living document tracking progress, successes, failures, trends, and research to 
 | JWT tokens in CDN signed URLs (Filestack) | 8 | Skip JWTs in URL query params with /cdn, /image, /file context |
 | localhost references in JS URL constructors | 3 | Skip Internal URL findings for localhost/127.0.0.1 |
 | Catch-all routing (gist.github.com, mail.notion.so) | 110+ | Pipeline-level catch-all detection skips path-based checks |
+| Catch-all redirect (paymentcard.wealthsimple.com) | 18 | **Not yet fixed** — every path redirects to login, content discovery thinks endpoints exist behind auth |
+| Blanket-403 content discovery (work-staging.wealthsimple.com) | 9 | Below threshold (0.60 confidence) — filtered from reports but still noise in DB |
 | **Total FPs caught and fixed** | **~401+** | |
 
 Our false positive detection is improving with each scan. The pattern: scan a new program, discover a new FP class, fix it, move on.

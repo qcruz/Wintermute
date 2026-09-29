@@ -29,8 +29,7 @@ Active scanning, program management, and operational improvements. This is the c
 
 ### Queue
 
-1. Wealthsimple — deep scan remaining targets by keyword (staging, crypto, trade, cdn)
-2. Deriv — revisit with improved SSTI FP filter; verify any real findings
+1. Deriv — revisit with improved SSTI FP filter; verify any real findings
 3. Quora/Poe — revisit corp.quora.com with auth scanning (has real AI/MCP endpoints behind 401); scan remaining 198 targets in batches
 4. Review submission candidates — verify any high-confidence findings, submit if reproducible
 5. Multi-program batch run — scan 3 programs in sequence with `--quick`
@@ -38,8 +37,9 @@ Active scanning, program management, and operational improvements. This is the c
 7. CLEAR — rescan with AI modules (prompt injection, data exfil, MCP) now that they exist
 8. GitHub — revisit with auth scanning when capability exists; deep scan education.github.com, npmjs.com, classroom.github.com
 9. Notion — revisit with auth scanning (retool admin panel has real `/api/chat`, `/api/mcp` behind 401; Notion AI asset needs auth)
-10. Scout for new programs — run `scout`, evaluate 2-3 new candidates, quick-scan the best
-11. Scan a fresh program from scout results — pick one never scanned, full pipeline
+10. Wealthsimple — revisit with auth scanning; staging hosts are locked down, needs authenticated access for real coverage
+11. Scout for new programs — run `scout`, evaluate 2-3 new candidates, quick-scan the best
+12. Scan a fresh program from scout results — pick one never scanned, full pipeline
 
 **Continuous items** (rotate to bottom after working):
 - Scout for new programs
@@ -58,25 +58,26 @@ Research, prototype, and integrate new vulnerability detection capabilities. Eac
 1. ~~**Catch-all routing detection**~~ ✅ DONE (Session 22) — Pipeline detects catch-all hosts and skips path-based discovery checks (content_discovery, ai_prompt_injection, ai_data_exfil, mcp_security). Fixes 110+ FPs across GitHub and Notion.
 2. ~~**SSTI baseline comparison**~~ ✅ DONE (Session 24) — Changed canary from `{{7*7}}→49` to `{{91*71}}→6461` (49 too common in Cloudflare tokens). Added non-200 status code filter. Fixes 25 SSTI FPs across Deriv and Quora/Poe.
 3. **Content discovery confidence tuning** — All 138 findings at 0.6 confidence; require content fingerprinting (not just HTTP 200) to raise confidence above threshold
+4. **Catch-all redirect detection** — Hosts that redirect every path to login (paymentcard.wealthsimple.com → my.wealthsimple.com/app/login) generate 18+ content discovery FPs. Detect redirect-to-login catch-all pattern alongside existing catch-all 200 detection.
 
 **Infrastructure & capability:**
-4. **Authenticated scanning** — Support cookie/token-based auth for scanning behind login walls; needed for GitHub Copilot, Notion AI, and any feature requiring a session
-5. **Subdomain enumeration expansion** — Add sources beyond crt.sh (SecurityTrails, Subfinder, DNS brute-force); crt.sh found only 2 of GitHub's 27+ in-scope assets
-6. **Manual target injection** — CLI flag to add specific hostnames to a program's target list without relying on recon (workaround until enum is expanded)
+5. **Authenticated scanning** — Support cookie/token-based auth for scanning behind login walls; needed for GitHub Copilot, Notion AI, and any feature requiring a session
+6. **Subdomain enumeration expansion** — Add sources beyond crt.sh (SecurityTrails, Subfinder, DNS brute-force); crt.sh found only 2 of GitHub's 27+ in-scope assets
+7. **Manual target injection** — CLI flag to add specific hostnames to a program's target list without relying on recon (workaround until enum is expanded)
 
 **AI Agent Security (priority track):**
-7. **Insecure AI Integration** — Test for AI endpoints lacking auth, rate limiting, or input validation; LLM-powered APIs that pass unsanitized user input to backend systems
+8. **Insecure AI Integration** — Test for AI endpoints lacking auth, rate limiting, or input validation; LLM-powered APIs that pass unsanitized user input to backend systems
 
 **General web security:**
-8. **SSRF Detection** — Test URL/webhook parameters for internal network access (requires callback server setup)
-9. **Host Header Injection** — Test for password reset poisoning and cache poisoning via Host header manipulation
-10. **Broken Rate Limiting** — Detect missing rate limits on login, password reset, and API endpoints
-11. **API Versioning Gaps** — Test older API versions (v1 when v2 exists) for deprecated, unpatched endpoints
-12. **WebSocket Testing** — Check for unauthenticated WebSocket connections and missing origin validation
-13. **Prototype Pollution** — Detect JavaScript prototype pollution via `__proto__` in JSON APIs
-14. **Cloud Metadata SSRF** — Test for AWS/GCP/Azure metadata endpoint access (169.254.169.254)
-15. **Race Conditions** — Detect TOCTOU issues on coupon/discount/balance endpoints
-16. **Cache Poisoning** — Test for web cache deception via path confusion and unkeyed headers
+9. **SSRF Detection** — Test URL/webhook parameters for internal network access (requires callback server setup)
+10. **Host Header Injection** — Test for password reset poisoning and cache poisoning via Host header manipulation
+11. **Broken Rate Limiting** — Detect missing rate limits on login, password reset, and API endpoints
+12. **API Versioning Gaps** — Test older API versions (v1 when v2 exists) for deprecated, unpatched endpoints
+13. **WebSocket Testing** — Check for unauthenticated WebSocket connections and missing origin validation
+14. **Prototype Pollution** — Detect JavaScript prototype pollution via `__proto__` in JSON APIs
+15. **Cloud Metadata SSRF** — Test for AWS/GCP/Azure metadata endpoint access (169.254.169.254)
+16. **Race Conditions** — Detect TOCTOU issues on coupon/discount/balance endpoints
+17. **Cache Poisoning** — Test for web cache deception via path confusion and unkeyed headers
 
 **Continuous items** (rotate to bottom after working):
 - Review HackerOne Hacktivity for new bug patterns to add

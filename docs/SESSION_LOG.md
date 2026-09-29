@@ -4,6 +4,43 @@ Track what each session accomplished, what was found, and what's queued for next
 
 ---
 
+## Session 25 — 2026-09-29 (Scanning — Cycle 1)
+
+**Cycle step:** Scanning & Operations — Wealthsimple deep scan (remaining targets by keyword)
+
+**What was done:**
+- Deep scanned 6 high-value Wealthsimple targets: api.sandbox, crypto-trust, paymentcard, trade-service-staging, work-staging, i2c-payment-gateway-server-0
+- i2c-payment-gateway-server-0 timed out (locked-down server, stuck on content_discovery) — killed
+
+**Findings (31 total across 6 targets):**
+
+| Target | Findings | Assessment |
+|--------|----------|------------|
+| api.sandbox.wealthsimple.com | 0 | Clean |
+| crypto-trust.wealthsimple.com | 0 | Clean |
+| trade-service-staging.wealthsimple.com | 0 | Clean |
+| paymentcard.wealthsimple.com | 19 | 1 business logic (clickjacking), **18 catch-all redirect FPs** — every path redirects to login |
+| work-staging.wealthsimple.com | 12 | 1 insecure cookie (0.90), 9 content discovery (blanket-403 FPs), 1 AI endpoint (info), 1 dup |
+| i2c-payment-gateway-server-0 | — | Timed out |
+
+**New FP pattern discovered: catch-all redirect**
+- paymentcard.wealthsimple.com redirects every path to `my.wealthsimple.com/app/login` with path as query param
+- Content discovery module interprets this as "endpoint exists but requires auth" for all 18 admin/debug paths
+- Different from catch-all 200 (already handled) — this is catch-all 301/302
+- Added to R&D queue for fix
+
+**Post-scan analysis:**
+- 0 reportable findings from Wealthsimple deep scan — all staging/internal hosts are locked down
+- Insecure cookie on work-staging is real but low value (staging domain that redirects to www)
+- Wealthsimple's attack surface is well-hardened at the perimeter — real findings likely require auth scanning
+- Updated STRATEGY.md with Wealthsimple results and new FP patterns
+
+**Queued for next session:**
+- Cycle 2 (R&D): Content discovery confidence tuning (#3 FP fix) or catch-all redirect fix
+- Cycle 1 backlog: Deriv revisit, remaining Quora/Poe targets, review submission candidates
+
+---
+
 ## Session 24 — 2026-09-29 (R&D — Cycle 2)
 
 **Cycle step:** Scanner R&D — SSTI baseline comparison fix (FP fix #2)
