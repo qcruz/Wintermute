@@ -4,6 +4,26 @@ Track what each session accomplished, what was found, and what's queued for next
 
 ---
 
+## Session 18 — 2026-09-29 (R&D — Cycle 2)
+
+**Cycle step:** Scanner R&D & Buildout — AI Data Exfiltration module
+
+**What was done:**
+- Built AI Data Exfiltration module (16th scanner) — third AI-specific detection capability
+  - Context extraction probes: 5 prompts testing for user data, memory, RAG sources, tool configs, environment details
+  - Indirect exfiltration probes: 3 prompts testing context summary, JSON state export, debug mode
+  - Response analysis: PII patterns (email, phone, SSN, credit card), backend patterns (DB strings, internal IPs, API keys, AWS endpoints, bearer tokens), RAG source patterns, context leak patterns, tool config patterns
+  - Reuses AI endpoint discovery from prompt injection module
+- Full integration: pipeline scan loop with progress output, 4 report templates (CWE-200), reporting dispatch, 20 new tests (145 total)
+- Removed completed item from Cycle 2 queue
+
+**Queued for next session:**
+- Cycle 3 (Research): Analyze false positive rate
+- Then Cycle 4 (Docs): Case study doc
+- Cycle 1 backlog: GitHub Copilot scan, Notion, Quora/Poe
+
+---
+
 ## Session 17 — 2026-09-29 (Scanning — Cycle 1)
 
 **Cycle step:** Scanning & Operations — Deriv remaining targets

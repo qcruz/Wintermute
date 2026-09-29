@@ -105,10 +105,10 @@ src/
   core/         config, db models, scope checker, pipeline runner
   platforms/    HackerOne API client
   recon/        subdomain enum, header fingerprinting, recon pipeline
-  scanner/      15 check modules + pipeline orchestrator
-  reporting/    31 templates, dedup, reporting pipeline
+  scanner/      16 check modules + pipeline orchestrator
+  reporting/    35 templates, dedup, reporting pipeline
 scripts/        CLI entry points (wintermute, h1_explore, run_*)
-tests/          125 tests (pytest)
+tests/          145 tests (pytest)
 docs/           educational docs, roadmap, strategy, ethics, glossary
 ```
 

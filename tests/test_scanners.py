@@ -1,5 +1,24 @@
 """Tests for vulnerability scanners."""
 
+import re
+
+from src.scanner.ai_data_exfil import (
+    BACKEND_PATTERNS,
+    CONTEXT_EXTRACTION_PROMPTS,
+    CONTEXT_LEAK_PATTERNS,
+    INDIRECT_EXFIL_PROMPTS,
+    PII_PATTERNS,
+    RAG_PATTERNS,
+    TOOL_CONFIG_PATTERNS,
+    _analyze_response,
+    _classify_vuln_type,
+)
+from src.scanner.ai_data_exfil import (
+    _calculate_confidence as _exfil_confidence,
+)
+from src.scanner.ai_data_exfil import (
+    _extract_response_text as _exfil_extract_response,
+)
 from src.scanner.ai_prompt_injection import (
     AI_ENDPOINT_PATHS,
     AI_HTML_INDICATORS,
@@ -729,3 +748,152 @@ def test_secret_patterns_have_severity():
     valid_severities = {"critical", "high", "medium", "low", "info"}
     for name, pattern, severity, min_entropy, description in SECRET_PATTERNS:
         assert severity in valid_severities, f"{name} has invalid severity: {severity}"
+
+
+# ── AI Data Exfiltration Tests ──────────────────────────────────────
+
+
+def test_exfil_prompts_are_safe():
+    """All exfil prompts should be non-destructive questions."""
+    all_prompts = CONTEXT_EXTRACTION_PROMPTS + INDIRECT_EXFIL_PROMPTS
+    dangerous = ["delete", "drop", "execute", "rm ", "kill", "destroy", "shutdown"]
+    for probe in all_prompts:
+        prompt_lower = probe["prompt"].lower()
+        for word in dangerous:
+            assert word not in prompt_lower, f"Probe '{probe['name']}' contains dangerous word: {word}"
+
+
+def test_exfil_prompts_have_required_fields():
+    """All probes must have name, prompt, indicators, severity, description."""
+    all_prompts = CONTEXT_EXTRACTION_PROMPTS + INDIRECT_EXFIL_PROMPTS
+    for probe in all_prompts:
+        assert "name" in probe, "Missing 'name' in probe"
+        assert "prompt" in probe, f"Missing 'prompt' in {probe['name']}"
+        assert "indicators" in probe, f"Missing 'indicators' in {probe['name']}"
+        assert "severity" in probe, f"Missing 'severity' in {probe['name']}"
+        assert "description" in probe, f"Missing 'description' in {probe['name']}"
+
+
+def test_exfil_prompt_severities_valid():
+    """All probes should have valid severity values."""
+    valid = {"critical", "high", "medium", "low", "info"}
+    for probe in CONTEXT_EXTRACTION_PROMPTS + INDIRECT_EXFIL_PROMPTS:
+        assert probe["severity"] in valid, f"Probe '{probe['name']}' has invalid severity: {probe['severity']}"
+
+
+def test_pii_patterns_valid_regex():
+    """All PII patterns should be valid regex."""
+    for pattern, desc in PII_PATTERNS:
+        re.compile(pattern)
+
+
+def test_backend_patterns_valid_regex():
+    """All backend patterns should be valid regex."""
+    for pattern, desc in BACKEND_PATTERNS:
+        re.compile(pattern)
+
+
+def test_context_leak_patterns_valid_regex():
+    """All context leak patterns should be valid regex."""
+    for pattern, desc in CONTEXT_LEAK_PATTERNS:
+        re.compile(pattern)
+
+
+def test_rag_patterns_valid_regex():
+    """All RAG patterns should be valid regex."""
+    for pattern, desc in RAG_PATTERNS:
+        re.compile(pattern)
+
+
+def test_tool_config_patterns_valid_regex():
+    """All tool config patterns should be valid regex."""
+    for pattern, desc in TOOL_CONFIG_PATTERNS:
+        re.compile(pattern)
+
+
+def test_pii_detection_email():
+    """Should detect email addresses in responses."""
+    text = "The user's email is john@example.com and their account is active."
+    leaked = _analyze_response(text, "user_data")
+    assert any("Email" in item for item in leaked)
+
+
+def test_pii_detection_phone():
+    """Should detect phone numbers."""
+    text = "Contact number: 555-123-4567"
+    leaked = _analyze_response(text, "user_data")
+    assert any("Phone" in item for item in leaked)
+
+
+def test_backend_detection_db_string():
+    """Should detect database connection strings."""
+    text = "Connected to postgres://admin:pass@10.0.1.5:5432/users"
+    leaked = _analyze_response(text, "backend_data")
+    assert any("Database" in item or "Internal IP" in item for item in leaked)
+
+
+def test_backend_detection_internal_ip():
+    """Should detect internal IP addresses."""
+    text = "Server running at 192.168.1.100:8080"
+    leaked = _analyze_response(text, "backend_data")
+    assert any("Internal IP" in item for item in leaked)
+
+
+def test_rag_detection_source_citation():
+    """Should detect RAG source citations."""
+    text = "[Source 1] According to the internal document..."
+    leaked = _analyze_response(text, "rag_data")
+    assert any("RAG" in item or "source" in item.lower() for item in leaked)
+
+
+def test_context_leak_cross_session():
+    """Should detect cross-session data references."""
+    text = "The previous user asked about account balance."
+    leaked = _analyze_response(text, "session_data")
+    assert any("Cross-session" in item for item in leaked)
+
+
+def test_classify_vuln_type():
+    """Should map indicator types to vuln types correctly."""
+    assert _classify_vuln_type("user_data") == "ai_data_leak"
+    assert _classify_vuln_type("session_data") == "ai_data_leak"
+    assert _classify_vuln_type("tool_data") == "ai_context_exposure"
+    assert _classify_vuln_type("backend_data") == "ai_backend_leak"
+    assert _classify_vuln_type("rag_data") == "ai_rag_leak"
+
+
+def test_confidence_calculation():
+    """Should calculate higher confidence for more leaked items."""
+    low = _exfil_confidence(["one item"], "some text")
+    high = _exfil_confidence(["one", "two", "three", "four"], "some text")
+    assert high > low
+
+
+def test_confidence_pii_boost():
+    """PII detection should boost confidence."""
+    no_pii = _exfil_confidence(["Backend leak: something"], "text")
+    with_pii = _exfil_confidence(["PII detected: Email address"], "text")
+    assert with_pii > no_pii
+
+
+def test_exfil_extract_response_openai_format():
+    """Should extract text from OpenAI-style response."""
+    import json
+    data = {"choices": [{"message": {"content": "Hello, I am an AI assistant."}}]}
+    result = _exfil_extract_response(json.dumps(data))
+    assert "Hello" in result
+
+
+def test_exfil_extract_response_simple_format():
+    """Should extract text from simple response field."""
+    import json
+    data = {"response": "Here is your answer with some details."}
+    result = _exfil_extract_response(json.dumps(data))
+    assert "answer" in result
+
+
+def test_no_false_positive_on_generic_text():
+    """Generic non-sensitive text should not trigger leakage detection."""
+    text = "I can help you with your question about programming. What would you like to know?"
+    leaked = _analyze_response(text, "user_data")
+    assert len(leaked) == 0

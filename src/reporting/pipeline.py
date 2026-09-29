@@ -24,6 +24,7 @@ from src.platforms.hackerone import HackerOneClient
 from src.reporting.dedup import DedupResult, full_dedup_check
 from src.reporting.templates import (
     Report,
+    ai_data_exfil_report,
     auth_finding_report,
     business_logic_report,
     content_discovery_report,
@@ -380,6 +381,9 @@ def _generate_report(finding: Finding, target: Target) -> Report | None:
 
         elif finding.vuln_type in ("prompt_injection", "system_prompt_leak", "ai_endpoint_exposed"):
             return prompt_injection_report(finding)
+
+        elif finding.vuln_type in ("ai_data_leak", "ai_context_exposure", "ai_backend_leak", "ai_rag_leak"):
+            return ai_data_exfil_report(finding)
 
         elif finding.vuln_type in ("mcp_auth_bypass", "mcp_dangerous_tools", "mcp_tool_poisoning", "mcp_path_traversal", "mcp_exposed"):
             return mcp_security_report(finding)

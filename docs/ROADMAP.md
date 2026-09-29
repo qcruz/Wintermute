@@ -53,8 +53,7 @@ Research, prototype, and integrate new vulnerability detection capabilities. Eac
 ### Queue
 
 **AI Agent Security (priority track):**
-3. **AI Data Exfiltration** — Detect scenarios where AI agents can be tricked into leaking training data, system prompts, or user data through crafted inputs
-4. **Insecure AI Integration** — Test for AI endpoints lacking auth, rate limiting, or input validation; LLM-powered APIs that pass unsanitized user input to backend systems
+3. **Insecure AI Integration** — Test for AI endpoints lacking auth, rate limiting, or input validation; LLM-powered APIs that pass unsanitized user input to backend systems
 
 **General web security:**
 5. **SSRF Detection** — Test URL/webhook parameters for internal network access (requires callback server setup)
@@ -149,7 +148,7 @@ Session flow:
 - HTTP header fingerprinting and technology detection
 - Scope-gated orchestration pipeline
 
-### Scanner Modules (15 Built)
+### Scanner Modules (16 Built)
 1. Subdomain takeover (20+ services, CNAME chain, HTTP fingerprint)
 2. CORS misconfiguration (origin reflection, null origin, credentials)
 3. SSL/TLS analysis (expiry, weak protocols, hostname mismatch)
@@ -165,9 +164,10 @@ Session flow:
 13. JavaScript analysis (secret detection, API keys, cloud credentials, internal URLs)
 14. AI prompt injection (endpoint discovery, canary injection, system prompt extraction)
 15. MCP security (server discovery, auth bypass, dangerous tool detection, tool poisoning, path traversal)
+16. AI data exfiltration (context extraction, PII detection, backend leak detection, RAG source exposure)
 
 ### Reporting Engine (Built)
-- 31 report templates with CWE references
+- 35 report templates with CWE references
 - Duplicate detection (internal DB + HackerOne API)
 - Interactive review queue with human approval
 - HackerOne API submission

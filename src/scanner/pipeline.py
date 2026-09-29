@@ -21,6 +21,7 @@ from src.core.db import Finding, Program, Target, get_session
 from src.core.scope import ScopeChecker
 from src.platforms.hackerone import HackerOneClient, parse_scope
 from src.recon.headers import analyze_headers
+from src.scanner.ai_data_exfil import check_ai_data_exfil
 from src.scanner.ai_prompt_injection import check_ai_prompt_injection
 from src.scanner.auth_checks import check_auth
 from src.scanner.business_logic import analyze_business_logic
@@ -78,7 +79,7 @@ ALL_CHECKS = [
     "subdomain_takeover", "cors", "ssl_tls", "exposed_files",
     "security_headers", "content_discovery", "injection",
     "auth_checks", "business_logic", "idor", "path_traversal",
-    "graphql", "js_analysis", "ai_prompt_injection", "mcp_security",
+    "graphql", "js_analysis", "ai_prompt_injection", "ai_data_exfil", "mcp_security",
 ]
 
 # Lighter check set for quick scans (fast, low request count per target)
@@ -453,6 +454,23 @@ def run_scan(
                     remediation=_ai_remediation(finding.vuln_type),
                 ))
 
+        # ── AI Data Exfiltration ──
+        if "ai_data_exfil" in enabled_checks:
+            _prog("ai_data_exfil")
+            exfil_result = check_ai_data_exfil(hostname)
+            result.checks_run["ai_data_exfil"] = result.checks_run.get("ai_data_exfil", 0) + 1
+            for finding in exfil_result.findings:
+                result.findings.append(ScanFinding(
+                    hostname=hostname,
+                    vuln_type=finding.vuln_type,
+                    title=finding.title,
+                    severity=finding.severity,
+                    confidence=finding.confidence,
+                    description=finding.description,
+                    evidence=finding.evidence,
+                    remediation=_ai_exfil_remediation(finding.vuln_type),
+                ))
+
         # ── MCP Security ──
         if "mcp_security" in enabled_checks:
             _prog("mcp_security")
@@ -632,6 +650,35 @@ def _ai_remediation(vuln_type: str) -> str:
         ),
     }
     return remediations.get(vuln_type, "Review AI endpoint security configuration.")
+
+
+def _ai_exfil_remediation(vuln_type: str) -> str:
+    """Generate remediation advice for AI data exfiltration findings."""
+    remediations = {
+        "ai_data_leak": (
+            "Implement output filtering to prevent the AI from including sensitive "
+            "user data in responses. Restrict the AI's access to user data to only "
+            "what is needed for the current query. Never include PII, credentials, "
+            "or internal identifiers in the AI's context window."
+        ),
+        "ai_context_exposure": (
+            "Treat the AI's context window as potentially visible to users. "
+            "Do not include sensitive configuration, credentials, or internal "
+            "documentation in the system prompt or context. Use retrieval-based "
+            "approaches with access control rather than stuffing data into context."
+        ),
+        "ai_backend_leak": (
+            "Filter AI responses for internal infrastructure details (IP addresses, "
+            "database strings, service names). Implement output guardrails that "
+            "detect and redact sensitive patterns before returning to users."
+        ),
+        "ai_rag_leak": (
+            "Implement access control on RAG retrieval — only return documents "
+            "the current user is authorized to view. Strip source metadata from "
+            "AI responses unless explicitly intended to be shared."
+        ),
+    }
+    return remediations.get(vuln_type, "Review AI data access controls and output filtering.")
 
 
 def _store_findings(

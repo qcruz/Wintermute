@@ -820,6 +820,56 @@ def prompt_injection_report(finding) -> Report:
     )
 
 
+def ai_data_exfil_report(finding) -> Report:
+    """Generate a report for an AI data exfiltration finding."""
+    severity_map = {
+        "ai_data_leak": "high",
+        "ai_context_exposure": "high",
+        "ai_backend_leak": "medium",
+        "ai_rag_leak": "medium",
+    }
+
+    cwe_map = {
+        "ai_data_leak": (200, "CWE-200: Exposure of Sensitive Information", "The AI endpoint leaks sensitive user data (PII, credentials, identifiers) in its responses when prompted with crafted inputs. This can lead to unauthorized access to personal information."),
+        "ai_context_exposure": (200, "CWE-200: Exposure of Sensitive Information", "The AI exposes hidden context data including tool configurations, system state, or internal instructions. Attackers can use this to understand the system's capabilities and craft more targeted attacks."),
+        "ai_backend_leak": (200, "CWE-200: Exposure of Sensitive Information", "The AI reveals backend infrastructure details such as internal IP addresses, database connection strings, service endpoints, or API keys in its responses."),
+        "ai_rag_leak": (200, "CWE-200: Exposure of Sensitive Information", "The AI exposes its retrieval-augmented generation (RAG) sources, revealing internal documents, knowledge base entries, or restricted content that should not be accessible to the user."),
+    }
+
+    cwe_id, cwe_name, impact = cwe_map.get(
+        finding.vuln_type,
+        (200, "CWE-200: Exposure of Sensitive Information", "AI data leakage detected."),
+    )
+
+    return Report(
+        title=finding.title,
+        severity_rating=severity_map.get(finding.vuln_type, "medium"),
+        weakness_id=cwe_id,
+        vulnerability_information=f"""## Summary
+
+{finding.description}
+
+## Steps to Reproduce
+
+{finding.evidence}
+
+## Remediation
+
+- Implement output filtering to detect and redact sensitive data patterns
+- Restrict the AI's context window to only necessary, non-sensitive data
+- Apply access controls to RAG retrieval — only return documents the user can access
+- Never include credentials, PII, or internal infrastructure details in AI context
+- Add guardrails that scan AI responses before returning to users
+
+## References
+
+- [{cwe_name}](https://cwe.mitre.org/data/definitions/{cwe_id}.html)
+- [OWASP LLM02: Sensitive Information Disclosure](https://genai.owasp.org/llmrisk/llm02-sensitive-information-disclosure/)
+- [OWASP LLM07: Hidden Context Exposure](https://genai.owasp.org/llmrisk/llm07/)""",
+        impact=impact,
+    )
+
+
 # ── Template dispatcher ─────────────────────────────────────────────
 
 TEMPLATE_MAP = {
@@ -854,4 +904,8 @@ TEMPLATE_MAP = {
     "mcp_tool_poisoning": mcp_security_report,
     "mcp_path_traversal": mcp_security_report,
     "mcp_exposed": mcp_security_report,
+    "ai_data_leak": ai_data_exfil_report,
+    "ai_context_exposure": ai_data_exfil_report,
+    "ai_backend_leak": ai_data_exfil_report,
+    "ai_rag_leak": ai_data_exfil_report,
 }

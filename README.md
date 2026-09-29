@@ -27,7 +27,7 @@ Built to explore whether an individual equipped with AI agents and open-source t
 
 ## Scanner Architecture
 
-Wintermute runs 15 vulnerability check modules against discovered targets. Each module is independent, safe (read-only / GET-only), and produces findings with confidence scores.
+Wintermute runs 16 vulnerability check modules against discovered targets. Each module is independent, safe (read-only / GET-only), and produces findings with confidence scores.
 
 ### Quick Checks (fast, low request count)
 
@@ -81,7 +81,7 @@ Every finding includes a confidence score (0.0 - 1.0):
 
 Findings that pass confidence thresholds are turned into professional reports:
 
-- **31 report templates** covering all vulnerability classes
+- **35 report templates** covering all vulnerability classes
 - **Duplicate detection** — checks internal DB and HackerOne API for prior submissions
 - **Duplicate probability scoring** — flags common/low-value findings (e.g., missing HSTS: 95% likely duplicate)
 - **Interactive review** — human always previews and approves before submission
@@ -120,10 +120,10 @@ src/
   core/         Config, DB models (SQLAlchemy/SQLite), scope checker, pipeline runner
   platforms/    HackerOne API client (auth, scope, submissions)
   recon/        Subdomain enumeration (crt.sh), DNS validation, header fingerprinting
-  scanner/      15 vulnerability check modules + scan pipeline orchestrator
-  reporting/    31 report templates, duplicate detection, submission pipeline
+  scanner/      16 vulnerability check modules + scan pipeline orchestrator
+  reporting/    35 report templates, duplicate detection, submission pipeline
 scripts/        CLI entry points
-tests/          125 tests (pytest)
+tests/          145 tests (pytest)
 docs/           Educational documentation, roadmap, ethics guidelines
 ```
 
