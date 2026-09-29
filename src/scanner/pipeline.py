@@ -142,17 +142,28 @@ def run_scan(
     )
 
     # Step 3: Run each check type
-    for hostname in hostnames:
+    total_targets = len(hostnames)
+    checks_list = sorted(enabled_checks)
+    total_checks = len(checks_list)
+
+    for target_idx, hostname in enumerate(hostnames, 1):
         # Re-verify scope (defense in depth)
         scope_result = checker.check(hostname)
         if not scope_result.allowed:
             logger.warning("Skipping %s — failed scope re-check", hostname)
             continue
 
+        print(f"\n  [{target_idx}/{total_targets}] {hostname}")
         result.targets_scanned += 1
+        check_num = [0]
+
+        def _prog(name):
+            check_num[0] += 1
+            print(f"    ({check_num[0]}/{total_checks}) {name}...", flush=True)
 
         # ── Subdomain Takeover ───────────────────────────────────
         if "subdomain_takeover" in enabled_checks:
+            _prog("subdomain_takeover")
             takeover = check_takeover(hostname)
             result.checks_run["subdomain_takeover"] = result.checks_run.get("subdomain_takeover", 0) + 1
             if takeover.vulnerable:
@@ -175,6 +186,7 @@ def run_scan(
 
         # ── CORS Misconfiguration ────────────────────────────────
         if "cors" in enabled_checks:
+            _prog("cors")
             cors = check_cors(hostname)
             result.checks_run["cors"] = result.checks_run.get("cors", 0) + 1
             if cors.vulnerable:
@@ -194,6 +206,7 @@ def run_scan(
 
         # ── SSL/TLS Issues ───────────────────────────────────────
         if "ssl_tls" in enabled_checks:
+            _prog("ssl_tls")
             ssl_result = check_ssl(hostname)
             result.checks_run["ssl_tls"] = result.checks_run.get("ssl_tls", 0) + 1
             for issue in ssl_result.issues:
@@ -218,6 +231,7 @@ def run_scan(
 
         # ── Exposed Files ────────────────────────────────────────
         if "exposed_files" in enabled_checks:
+            _prog("exposed_files")
             files_result = check_exposed_files(hostname)
             result.checks_run["exposed_files"] = result.checks_run.get("exposed_files", 0) + 1
             for finding in files_result.findings:
@@ -238,6 +252,7 @@ def run_scan(
 
         # ── Security Headers ─────────────────────────────────────
         if "security_headers" in enabled_checks:
+            _prog("security_headers")
             header_analysis = analyze_headers(hostname)
             result.checks_run["security_headers"] = result.checks_run.get("security_headers", 0) + 1
             if header_analysis.missing_security_headers:
@@ -259,6 +274,7 @@ def run_scan(
 
         # ── Content Discovery ─────────────────────────────────────
         if "content_discovery" in enabled_checks:
+            _prog("content_discovery")
             content_result = discover_content(hostname)
             result.checks_run["content_discovery"] = result.checks_run.get("content_discovery", 0) + 1
             for ep in content_result.endpoints:
@@ -283,6 +299,7 @@ def run_scan(
 
         # ── Injection Testing ─────────────────────────────────────
         if "injection" in enabled_checks:
+            _prog("injection")
             injection_result = test_injection(hostname)
             result.checks_run["injection"] = result.checks_run.get("injection", 0) + 1
             for finding in injection_result.findings:
@@ -299,6 +316,7 @@ def run_scan(
 
         # ── Authentication Checks ─────────────────────────────────
         if "auth_checks" in enabled_checks:
+            _prog("auth_checks")
             auth_result = check_auth(hostname)
             result.checks_run["auth_checks"] = result.checks_run.get("auth_checks", 0) + 1
             for finding in auth_result.findings:
@@ -315,6 +333,7 @@ def run_scan(
 
         # ── Business Logic Analysis ───────────────────────────────
         if "business_logic" in enabled_checks:
+            _prog("business_logic")
             biz_result = analyze_business_logic(hostname)
             result.checks_run["business_logic"] = result.checks_run.get("business_logic", 0) + 1
             for finding in biz_result.findings:
@@ -331,6 +350,7 @@ def run_scan(
 
         # ── IDOR Detection ──────────────────────────────────────────
         if "idor" in enabled_checks:
+            _prog("idor")
             idor_result = check_idor(hostname)
             result.checks_run["idor"] = result.checks_run.get("idor", 0) + 1
             for finding in idor_result.findings:
@@ -352,6 +372,7 @@ def run_scan(
 
         # ── Path Traversal / LFI ──
         if "path_traversal" in enabled_checks:
+            _prog("path_traversal")
             traversal_result = check_path_traversal(hostname)
             result.checks_run["path_traversal"] = result.checks_run.get("path_traversal", 0) + 1
             for finding in traversal_result.findings:
@@ -373,6 +394,7 @@ def run_scan(
 
         # ── GraphQL Introspection ──
         if "graphql" in enabled_checks:
+            _prog("graphql")
             gql_result = check_graphql(hostname)
             result.checks_run["graphql"] = result.checks_run.get("graphql", 0) + 1
             for finding in gql_result.findings:
@@ -394,6 +416,7 @@ def run_scan(
 
         # ── JavaScript Secret Analysis ──
         if "js_analysis" in enabled_checks:
+            _prog("js_analysis")
             js_result = check_js_secrets(hostname)
             result.checks_run["js_analysis"] = result.checks_run.get("js_analysis", 0) + 1
             for finding in js_result.findings:
@@ -415,6 +438,7 @@ def run_scan(
 
         # ── AI Prompt Injection ──
         if "ai_prompt_injection" in enabled_checks:
+            _prog("ai_prompt_injection")
             ai_result = check_ai_prompt_injection(hostname)
             result.checks_run["ai_prompt_injection"] = result.checks_run.get("ai_prompt_injection", 0) + 1
             for finding in ai_result.findings:
@@ -431,6 +455,7 @@ def run_scan(
 
         # ── MCP Security ──
         if "mcp_security" in enabled_checks:
+            _prog("mcp_security")
             mcp_result = check_mcp_security(hostname)
             result.checks_run["mcp_security"] = result.checks_run.get("mcp_security", 0) + 1
             for finding in mcp_result.findings:

@@ -4,6 +4,26 @@ Track what each session accomplished, what was found, and what's queued for next
 
 ---
 
+## Session 17 — 2026-09-29 (Scanning — Cycle 1)
+
+**Cycle step:** Scanning & Operations — Deriv remaining targets
+
+**What was done:**
+- Scanned all 13 Deriv targets — program fully complete (94 total findings)
+- Added scan progress output to pipeline — shows `[1/3] hostname` and `(1/15) check_name...` for every target and check
+- 21 SSTI findings across api-core, cashier, smarttrader — almost certainly FPs (same `{{7*7}}→49` pattern across all parameters on every host)
+- No high-value submission candidates — reportable findings are clickjacking, internal URLs, missing HSTS/HTTPS, dangerous HTTP methods
+
+**Lesson learned:** Always set hard time limits on scans. Never chain multiple scans in one command. Use Bash tool timeout parameter (120000ms for single targets).
+
+**Queued for next session:**
+- Cycle 2 (R&D): AI Data Exfiltration module
+- Then Cycle 3 (Research): Analyze false positive rate
+- Then Cycle 4 (Docs): Case study doc
+- Cycle 1 backlog: GitHub Copilot scan, Notion, Quora/Poe
+
+---
+
 ## Session 16 — 2026-09-29 (Docs — Cycle 4)
 
 **Cycle step:** Project Organization & Docs — Create GitHub Actions CI pipeline
