@@ -29,14 +29,14 @@ Active scanning, program management, and operational improvements. This is the c
 
 ### Queue
 
-1. CLEAR — re-scan with IDOR and path traversal checks on interesting hosts (corpsupport, api)
-3. Deriv — scan remaining 8 targets with full checks in `--limit 3` batches
-4. Wealthsimple — deep scan remaining targets by keyword (staging, crypto, trade, cdn)
-5. Review submission candidates — verify any high-confidence findings, submit if reproducible
-6. Multi-program batch run — scan 3 programs in sequence with `--quick`
-7. Hyatt — slice recon by domain subsets across sessions (61 base domains, 805 subdomains), then scan with `--limit 5 --filter`
-8. Scout for new programs — run `scout`, evaluate 2-3 new candidates, quick-scan the best
-9. Scan a fresh program from scout results — pick one never scanned, full pipeline
+1. Deriv — scan remaining 7 targets with full checks in `--limit 3` batches
+2. GitHub — recon + scan, focus on Copilot endpoints (AI security target: Copilot, Copilot Chat, Copilot Coding Agent, Copilot Spaces all in scope)
+3. Wealthsimple — deep scan remaining targets by keyword (staging, crypto, trade, cdn)
+4. Review submission candidates — verify any high-confidence findings, submit if reproducible
+5. Multi-program batch run — scan 3 programs in sequence with `--quick`
+6. Hyatt — slice recon by domain subsets across sessions (61 base domains, 805 subdomains), then scan with `--limit 5 --filter`
+7. Scout for new programs — run `scout`, evaluate 2-3 new candidates, quick-scan the best
+8. Scan a fresh program from scout results — pick one never scanned, full pipeline
 
 **Continuous items** (rotate to bottom after working):
 - Scout for new programs

@@ -247,6 +247,8 @@ def _submit_report(
 
 def _generate_report(finding: Finding, target: Target) -> Report | None:
     """Generate a report from a finding using the appropriate template."""
+    # Attach hostname for templates that expect it (DB Finding doesn't have it natively)
+    finding.hostname = target.hostname
     try:
         if finding.vuln_type == "subdomain_takeover":
             # Extract CNAME and service from evidence/description

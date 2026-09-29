@@ -432,6 +432,14 @@ def _analyze_js_file(js_url: str, hostname: str) -> list[SecretFinding]:
             end = min(len(body), match.end() + 60)
             context = body[start:end].replace("\n", " ").strip()
 
+            # Skip JWT/tokens embedded in URLs as query parameters —
+            # these are typically CDN signed URLs or OAuth redirects, not leaked credentials
+            if name == "JWT Token":
+                pre_context = body[max(0, match.start() - 30):match.start()]
+                if re.search(r'[?&]token=\s*$', pre_context) or re.search(r'[?&]\w+=\s*$', pre_context):
+                    if "/cdn" in context or "/image" in context or "/file" in context:
+                        continue
+
             # Redact the actual secret value for safety
             redacted = _redact(value)
 
@@ -483,6 +491,12 @@ def _is_false_positive(value: str, secret_type: str) -> bool:
     # Common programming patterns that aren't secrets
     if value in ("undefined", "null", "true", "false", "none", "empty"):
         return True
+
+    # Internal URLs: localhost references are almost always URL-parsing fallbacks
+    # in JS code (e.g., new URL(path, "http://localhost")), not real internal endpoints
+    if secret_type == "Internal URL":
+        if "localhost" in lower or "127.0.0.1" in lower:
+            return True
 
     return False
 

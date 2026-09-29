@@ -4,6 +4,38 @@ Track what each session accomplished, what was found, and what's queued for next
 
 ---
 
+## Session 13 — 2026-09-28 (Scanning — Cycle 1)
+
+**Cycle step:** Scanning & Operations — Deep scan CLEAR and Deriv with new checks + AI module
+
+**What was done:**
+- Deep scanned CLEAR corpsupport.clearme.com with IDOR, path traversal, GraphQL, JS analysis, AI prompt injection (1m 46s)
+  - 13 JS secret findings — all JWT tokens embedded in Filestack CDN image URLs (false positives)
+  - No IDOR, path traversal, GraphQL, or AI endpoints found
+- Deep scanned Deriv in 2 batches (6 targets total, 11m 42s total):
+  - Batch 1 (ct, secure-dfadmin, home): 5 findings — internal URL localhost references in JS (false positives)
+  - Batch 2 (api, api.derivws, staging-api.derivws): 4 findings — AI module discovered `/ai-hub/` on api.deriv.com (redirects to developer portal, not exploitable)
+- Scouted 74 programs — identified GitHub (Copilot in scope), Spotify, PayPal as AI-rich targets
+- Fixed reporting bug: `Finding` object missing `hostname` attribute — added `finding.hostname = target.hostname` in report generation
+- Fixed 2 JS analysis false positive patterns:
+  1. JWT tokens in CDN URL query parameters (`?token=eyJ...`) — not standalone credentials
+  2. `http://localhost` references — standard JS URL-parsing fallbacks, not real internal endpoints
+
+**Findings:** 0 new exploitable findings. CLEAR and Deriv are well-secured for these check classes.
+
+**False positives caught:**
+- CDN signed URL tokens (Filestack) flagged as JWT exposure — 8 instances on CLEAR
+- `http://localhost` in URL constructors flagged as internal URL — 3 instances on Deriv
+- Developer docs page flagged as AI endpoint — `/ai-hub/` is a docs redirect, not a chat API
+
+**Queued for next session:**
+- Cycle 1: Scan remaining Deriv targets (cashier, app, smarttrader, deriv.partners, api-core), then move to fresh programs
+- Cycle 1: GitHub has Copilot, Copilot Chat, Copilot Coding Agent, Copilot Spaces all in scope — prime AI security target
+- Cycle 2 (R&D): MCP security testing module next
+- Consider: Programs scanned so far are well-secured. Fresh programs or AI-specific targets may yield more.
+
+---
+
 ## Session 12 — 2026-09-28 (R&D — Cycle 2 + Strategic Analysis)
 
 **Cycle step:** Scanner R&D & Buildout — AI/LLM Prompt Injection module
