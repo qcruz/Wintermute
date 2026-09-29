@@ -56,7 +56,7 @@ Research, prototype, and integrate new vulnerability detection capabilities. Eac
 
 **False positive fixes (high priority — directly improves scan quality):**
 1. ~~**Catch-all routing detection**~~ ✅ DONE (Session 22) — Pipeline detects catch-all hosts and skips path-based discovery checks (content_discovery, ai_prompt_injection, ai_data_exfil, mcp_security). Fixes 110+ FPs across GitHub and Notion.
-2. **SSTI baseline comparison** — Request the target without SSTI payload first; if "49" appears in the baseline response, skip the SSTI finding (fixes 21 FPs on Deriv)
+2. ~~**SSTI baseline comparison**~~ ✅ DONE (Session 24) — Changed canary from `{{7*7}}→49` to `{{91*71}}→6461` (49 too common in Cloudflare tokens). Added non-200 status code filter. Fixes 25 SSTI FPs across Deriv and Quora/Poe.
 3. **Content discovery confidence tuning** — All 138 findings at 0.6 confidence; require content fingerprinting (not just HTTP 200) to raise confidence above threshold
 
 **Infrastructure & capability:**

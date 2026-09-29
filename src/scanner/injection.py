@@ -89,9 +89,11 @@ SQLI_ERROR_PATTERNS = [
 # Open redirect: if the app redirects to this URL, it's vulnerable
 REDIRECT_CANARY = "https://wintermute-redirect-test.example.com"
 
-# SSTI: if the app evaluates this, we'll see "49" in the response
-SSTI_CANARY = "{{7*7}}"
-SSTI_RESULT = "49"
+# SSTI: if the app evaluates this, we'll see "6461" in the response.
+# Using 91*71 instead of 7*7 because "49" appears too often in Cloudflare
+# tokens and page content, causing false positives.
+SSTI_CANARY = "{{91*71}}"
+SSTI_RESULT = "6461"
 
 # Common parameter names worth testing (when we can't discover them from forms).
 # Keep this short — each param generates multiple HTTP requests.
@@ -411,10 +413,14 @@ def _test_ssti(base_url: str, param: str) -> InjectionFinding | None:
             headers={"User-Agent": "Wintermute/0.1 (Security Research)"},
         )
 
+        # Skip non-200 responses — SSTI on error pages (403, 503) is not real
+        if resp.status_code != 200:
+            return None
+
         body = resp.text
 
-        # If {{7*7}} was evaluated to 49, template injection exists
-        # But we need to make sure "49" isn't just coincidental
+        # If the template expression was evaluated, the result appears in the body
+        # but the original canary does not (it was consumed by the template engine)
         if SSTI_RESULT in body and SSTI_CANARY not in body:
             # The expression was evaluated (canary gone, result present)
 
@@ -450,7 +456,7 @@ def _test_ssti(base_url: str, param: str) -> InjectionFinding | None:
                 confidence=0.85,
                 description=(
                     f"Server-Side Template Injection in parameter '{param}' — "
-                    f"expression {{{{7*7}}}} was evaluated to 49"
+                    f"expression {SSTI_CANARY} was evaluated to {SSTI_RESULT}"
                 ),
                 evidence=f"Template expression evaluated: {SSTI_CANARY} → {SSTI_RESULT}",
                 payload_used=SSTI_CANARY,

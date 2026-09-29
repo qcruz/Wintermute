@@ -4,6 +4,26 @@ Track what each session accomplished, what was found, and what's queued for next
 
 ---
 
+## Session 24 — 2026-09-29 (R&D — Cycle 2)
+
+**Cycle step:** Scanner R&D — SSTI baseline comparison fix (FP fix #2)
+
+**What was done:**
+- Root-caused the SSTI false positive: `{{7*7}}→49` fails because "49" appears randomly in Cloudflare tokens and page content. The existing baseline check and confirmation re-request weren't sufficient because tokens change per request and "49" is a very common 2-digit string.
+- **Fix 1:** Changed SSTI canary from `{{7*7}}→49` to `{{91*71}}→6461`. "6461" is far less likely to appear randomly.
+- **Fix 2:** Skip SSTI detection entirely on non-200 responses. Template injection on 403/503 error pages is not real — the template engine isn't processing user input.
+- Verified fix against all 3 known FP targets: gql.poe.com, corp.quora.com, creator-monetization.poe.com — all correctly filtered now.
+- 148 tests pass, ruff clean.
+- Updated ROADMAP.md (marked SSTI fix as ✅ DONE) and STRATEGY.md (updated FP count to 401+).
+
+**Impact:** Eliminates 25 SSTI false positives across Deriv (21) and Quora/Poe (4).
+
+**Queued for next session:**
+- Cycle 1 (Scanning): Wealthsimple deep scan (first item in queue)
+- Cycle 2 backlog: Content discovery confidence tuning (#3 FP fix)
+
+---
+
 ## Session 23 — 2026-09-29 (Scanning — Cycle 1)
 
 **Cycle step:** Scanning & Operations — Quora/Poe recon + targeted scan + catch-all validation

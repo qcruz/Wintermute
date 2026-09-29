@@ -34,12 +34,12 @@ Living document tracking progress, successes, failures, trends, and research to 
 | Google Sites third-party redirects | 90 | Third-party detection in 3 modules |
 | DB duplicate findings | 55 | Dedup check in `_store_findings()` |
 | Blanket-403 content discovery | 90 | Baseline status check |
-| SSTI random token ("49" in Cloudflare tokens) | 2 | Confirmation re-request |
+| SSTI random token ("49" in Cloudflare tokens) | 25 | Changed canary to `{{91*71}}→6461` + skip non-200 responses |
 | Open redirect on Google login redirects | ~20 | Require `location.startswith(canary)` |
 | JWT tokens in CDN signed URLs (Filestack) | 8 | Skip JWTs in URL query params with /cdn, /image, /file context |
 | localhost references in JS URL constructors | 3 | Skip Internal URL findings for localhost/127.0.0.1 |
 | Catch-all routing (gist.github.com, mail.notion.so) | 110+ | Pipeline-level catch-all detection skips path-based checks |
-| **Total FPs caught and fixed** | **~378+** | |
+| **Total FPs caught and fixed** | **~401+** | |
 
 Our false positive detection is improving with each scan. The pattern: scan a new program, discover a new FP class, fix it, move on.
 
