@@ -194,8 +194,8 @@ Based on research, these are the attack classes we should build detection for, o
 |----------|-------------|-------------|----------------------|---------------|
 | 1 | **Direct Prompt Injection** | $500-$15K | High — send canary prompts, check responses | **Built** (14th module) |
 | 2 | **System Prompt Extraction** | $500-$5K | High — well-known extraction phrases | **Built** (part of Prompt Injection module) |
-| 3 | **MCP Auth Bypass** | $500-$10K | High — probe MCP endpoints without auth | Planned (Cycle 2 queue #2) |
-| 4 | **MCP Path Traversal** | $500-$10K | High — reuse existing traversal patterns | Planned (Cycle 2 queue #2) |
+| 3 | **MCP Auth Bypass** | $500-$10K | High — probe MCP endpoints without auth | **Built** (15th module) |
+| 4 | **MCP Path Traversal** | $500-$10K | High — reuse existing traversal patterns | **Built** (15th module) |
 | 5 | **Indirect Prompt Injection** | $1K-$15K | Medium — requires understanding what content the AI consumes | Planned (Cycle 2 queue #1) |
 | 6 | **AI Data Exfiltration** | $1K-$10K | Medium — need to detect information leakage in AI responses | Planned (Cycle 2 queue #3) |
 | 7 | **Excessive Agency Testing** | $500-$5K | Medium — need to map agent capabilities first | Planned (Cycle 2 queue #4) |

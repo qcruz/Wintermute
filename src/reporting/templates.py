@@ -718,6 +718,59 @@ A hardcoded secret was found in a publicly accessible JavaScript file on `{findi
     )
 
 
+def mcp_security_report(finding) -> Report:
+    """Generate a report for an MCP security finding."""
+    severity_map = {
+        "mcp_auth_bypass": "high",
+        "mcp_dangerous_tools": "high",
+        "mcp_tool_poisoning": "critical",
+        "mcp_path_traversal": "critical",
+        "mcp_exposed": "low",
+    }
+
+    cwe_map = {
+        "mcp_auth_bypass": (306, "CWE-306: Missing Authentication for Critical Function", "Unauthenticated access to MCP tool listings allows attackers to discover all available tools and their capabilities, enabling targeted attacks against the AI agent's tool-use interface. Combined with prompt injection, an attacker could invoke arbitrary tools."),
+        "mcp_dangerous_tools": (250, "CWE-250: Execution with Unnecessary Privileges", "MCP servers exposing dangerous tools (file system access, command execution, database queries) without proper access controls allow AI agents — and by extension, prompt injection attackers — to perform privileged operations on the server."),
+        "mcp_tool_poisoning": (94, "CWE-94: Improper Control of Generation of Code", "Tool poisoning is the highest-leverage attack on AI agent systems. Malicious instructions hidden in tool descriptions override agent behavior, causing the agent to perform attacker-controlled actions whenever it reads the tool schema."),
+        "mcp_path_traversal": (22, "CWE-22: Improper Limitation of a Pathname to a Restricted Directory", "Path traversal in MCP file tools allows reading arbitrary files from the server filesystem through the AI agent interface, exposing credentials, configuration, and source code."),
+        "mcp_exposed": (200, "CWE-200: Exposure of Sensitive Information", "Exposed MCP endpoints reveal the AI agent's tool-use infrastructure."),
+    }
+
+    cwe_id, cwe_name, impact = cwe_map.get(
+        finding.vuln_type,
+        (306, "CWE-306: Missing Authentication", "MCP security vulnerability detected."),
+    )
+
+    return Report(
+        title=finding.title,
+        severity_rating=severity_map.get(finding.vuln_type, "medium"),
+        weakness_id=cwe_id,
+        vulnerability_information=f"""## Summary
+
+{finding.description}
+
+## Steps to Reproduce
+
+{finding.evidence}
+
+## Remediation
+
+- Implement OAuth 2.0 or mutual TLS authentication on MCP endpoints
+- Apply least-privilege to tool capabilities (restrict file paths, commands)
+- Validate all tool input parameters server-side
+- Audit tool descriptions for hidden instructions (tool poisoning)
+- Follow NSA/CISA MCP Security Design Guidance (June 2026)
+- Monitor for unauthorized tool invocations
+
+## References
+
+- [{cwe_name}](https://cwe.mitre.org/data/definitions/{cwe_id}.html)
+- [OWASP Top 10 for LLM Applications](https://owasp.org/www-project-top-10-for-large-language-model-applications/)
+- [NSA/CISA MCP Security Guidance](https://www.nsa.gov/Press-Room/Press-Releases-Statements/)""",
+        impact=impact,
+    )
+
+
 def prompt_injection_report(finding) -> Report:
     """Generate a report for an AI prompt injection finding."""
     severity_map = {
@@ -796,4 +849,9 @@ TEMPLATE_MAP = {
     "prompt_injection": prompt_injection_report,
     "system_prompt_leak": prompt_injection_report,
     "ai_endpoint_exposed": prompt_injection_report,
+    "mcp_auth_bypass": mcp_security_report,
+    "mcp_dangerous_tools": mcp_security_report,
+    "mcp_tool_poisoning": mcp_security_report,
+    "mcp_path_traversal": mcp_security_report,
+    "mcp_exposed": mcp_security_report,
 }

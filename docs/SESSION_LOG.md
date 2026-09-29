@@ -4,6 +4,28 @@ Track what each session accomplished, what was found, and what's queued for next
 
 ---
 
+## Session 14 — 2026-09-28 (R&D — Cycle 2)
+
+**Cycle step:** Scanner R&D & Buildout — MCP Security module
+
+**What was done:**
+- Built MCP Security module (15th scanner) — second AI-specific detection capability
+  - MCP endpoint discovery: 25+ path probes (JSON-RPC, SSE, REST, .well-known config)
+  - Auth bypass testing: unauthenticated JSON-RPC `tools/list` and `initialize` requests
+  - Dangerous tool detection: 15+ patterns for file/shell/DB/credential/code access
+  - Tool poisoning detection: 7 patterns for malicious instructions in tool descriptions
+  - Path traversal via MCP file tools: safe read-only payloads through JSON-RPC `tools/call`
+- Full integration: pipeline scan loop, 5 report templates (CWE-306/250/94/22/200), reporting dispatch, 15 new tests (125 total)
+- Updated vulnerability-detection.md with Section 15 explainer
+- Updated README, CLAUDE.md, ROADMAP.md — all counts updated to 15 modules, 31 templates, 125 tests
+
+**Queued for next session:**
+- Cycle 1 (Scanning): Test both AI modules against real targets — GitHub (Copilot in scope), or scan remaining Deriv targets
+- Cycle 2 (R&D): AI Data Exfiltration module next in queue
+- Cycle 4 (Docs): Consider CI pipeline setup (first item in Cycle 4 queue)
+
+---
+
 ## Session 13 — 2026-09-28 (Scanning — Cycle 1)
 
 **Cycle step:** Scanning & Operations — Deep scan CLEAR and Deriv with new checks + AI module

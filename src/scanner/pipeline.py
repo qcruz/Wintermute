@@ -24,6 +24,7 @@ from src.platforms.hackerone import HackerOneClient, parse_scope
 from src.recon.headers import analyze_headers
 from src.scanner.ai_prompt_injection import check_ai_prompt_injection
 from src.scanner.auth_checks import check_auth
+from src.scanner.mcp_security import check_mcp_security
 from src.scanner.business_logic import analyze_business_logic
 from src.scanner.content_discovery import discover_content
 from src.scanner.cors import CORSCheck, check_cors
@@ -79,7 +80,7 @@ ALL_CHECKS = [
     "subdomain_takeover", "cors", "ssl_tls", "exposed_files",
     "security_headers", "content_discovery", "injection",
     "auth_checks", "business_logic", "idor", "path_traversal",
-    "graphql", "js_analysis", "ai_prompt_injection",
+    "graphql", "js_analysis", "ai_prompt_injection", "mcp_security",
 ]
 
 # Lighter check set for quick scans (fast, low request count per target)
@@ -430,6 +431,22 @@ def run_scan(
                     remediation=_ai_remediation(finding.vuln_type),
                 ))
 
+        # ── MCP Security ──
+        if "mcp_security" in enabled_checks:
+            mcp_result = check_mcp_security(hostname)
+            result.checks_run["mcp_security"] = result.checks_run.get("mcp_security", 0) + 1
+            for finding in mcp_result.findings:
+                result.findings.append(ScanFinding(
+                    hostname=hostname,
+                    vuln_type=finding.vuln_type,
+                    title=finding.title,
+                    severity=finding.severity,
+                    confidence=finding.confidence,
+                    description=finding.description,
+                    evidence=finding.evidence,
+                    remediation=_mcp_remediation(finding.vuln_type),
+                ))
+
     # Step 4: Store findings in database
     _store_findings(session, target_map, result.findings)
     session.close()
@@ -532,6 +549,41 @@ def _business_remediation(vuln_type: str) -> str:
         ),
     }
     return remediations.get(vuln_type, "Review the application's security configuration.")
+
+
+def _mcp_remediation(vuln_type: str) -> str:
+    """Generate remediation advice for MCP security findings."""
+    remediations = {
+        "mcp_auth_bypass": (
+            "Implement authentication on all MCP server endpoints. Use OAuth 2.0 "
+            "or mutual TLS for client authentication. Never expose tool listings "
+            "to unauthenticated clients. Follow NSA/CISA MCP security guidance."
+        ),
+        "mcp_dangerous_tools": (
+            "Review exposed tool capabilities and apply least-privilege principles. "
+            "Restrict file system, command execution, and network tools to specific "
+            "paths and commands. Implement input validation on all tool parameters. "
+            "Use allowlists for file paths and commands rather than denylists."
+        ),
+        "mcp_tool_poisoning": (
+            "Review all tool descriptions for hidden instructions. Tool descriptions "
+            "should only contain factual information about the tool's purpose and "
+            "parameters. Implement content scanning on tool metadata. Monitor for "
+            "changes to tool descriptions over time (rug-pull detection)."
+        ),
+        "mcp_path_traversal": (
+            "Implement path validation in file-access tools. Use realpath() to "
+            "resolve paths and verify they remain within allowed directories. "
+            "Reject traversal sequences (../, ..\\, URL-encoded variants). "
+            "Run MCP servers with minimal filesystem permissions."
+        ),
+        "mcp_exposed": (
+            "Ensure MCP server endpoints are not publicly accessible unless intended. "
+            "Place MCP servers behind authentication and network controls. "
+            "Monitor access logs for unauthorized tool invocations."
+        ),
+    }
+    return remediations.get(vuln_type, "Review MCP server security configuration.")
 
 
 def _ai_remediation(vuln_type: str) -> str:

@@ -52,7 +52,6 @@ Research, prototype, and integrate new vulnerability detection capabilities. Eac
 ### Queue
 
 **AI Agent Security (priority track):**
-1. **AI Tool-Use / MCP Exploits** — Test AI agent tool-calling interfaces for authorization bypass, parameter injection, and unsafe tool chaining (e.g., MCP servers exposing privileged operations)
 3. **AI Data Exfiltration** — Detect scenarios where AI agents can be tricked into leaking training data, system prompts, or user data through crafted inputs
 4. **Insecure AI Integration** — Test for AI endpoints lacking auth, rate limiting, or input validation; LLM-powered APIs that pass unsanitized user input to backend systems
 
@@ -142,7 +141,7 @@ Session flow:
 - HackerOne API client (auth, scope, programs, submissions)
 - Scope checker with wildcard/CIDR matching, default deny, audit logging
 - SQLite database with SQLAlchemy ORM
-- 110 unit tests, ruff linting
+- 125 unit tests, ruff linting
 
 ### Recon Pipeline (Built)
 - Certificate Transparency subdomain enumeration (crt.sh)
@@ -150,7 +149,7 @@ Session flow:
 - HTTP header fingerprinting and technology detection
 - Scope-gated orchestration pipeline
 
-### Scanner Modules (14 Built)
+### Scanner Modules (15 Built)
 1. Subdomain takeover (20+ services, CNAME chain, HTTP fingerprint)
 2. CORS misconfiguration (origin reflection, null origin, credentials)
 3. SSL/TLS analysis (expiry, weak protocols, hostname mismatch)
@@ -165,9 +164,10 @@ Session flow:
 12. GraphQL introspection (schema analysis, sensitive mutation/query detection)
 13. JavaScript analysis (secret detection, API keys, cloud credentials, internal URLs)
 14. AI prompt injection (endpoint discovery, canary injection, system prompt extraction)
+15. MCP security (server discovery, auth bypass, dangerous tool detection, tool poisoning, path traversal)
 
 ### Reporting Engine (Built)
-- 26 report templates with CWE references
+- 31 report templates with CWE references
 - Duplicate detection (internal DB + HackerOne API)
 - Interactive review queue with human approval
 - HackerOne API submission

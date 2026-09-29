@@ -33,6 +33,7 @@ from src.reporting.templates import (
     injection_report,
     graphql_introspection_report,
     js_secret_report,
+    mcp_security_report,
     path_traversal_report,
     prompt_injection_report,
     missing_security_header_report,
@@ -379,6 +380,9 @@ def _generate_report(finding: Finding, target: Target) -> Report | None:
 
         elif finding.vuln_type in ("prompt_injection", "system_prompt_leak", "ai_endpoint_exposed"):
             return prompt_injection_report(finding)
+
+        elif finding.vuln_type in ("mcp_auth_bypass", "mcp_dangerous_tools", "mcp_tool_poisoning", "mcp_path_traversal", "mcp_exposed"):
+            return mcp_security_report(finding)
 
         elif finding.vuln_type in ("info_disclosure", "error_leak", "method_allowed", "clickjack", "cache_issue"):
             return business_logic_report(
