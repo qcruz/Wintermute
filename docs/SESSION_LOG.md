@@ -4,6 +4,31 @@ Track what each session accomplished, what was found, and what's queued for next
 
 ---
 
+## Session 11 — 2026-09-28 (Research — Cycle 3)
+
+**Cycle step:** Research & Strategic Planning — Study AI/LLM attack surface landscape
+
+**What was done:**
+- Deep research on AI agent security landscape — three areas investigated:
+  1. **OWASP Top 10 for LLMs 2026** — Excessive Agency rose to #3 (from #6), Unbounded Consumption rose to #6 (from #10), System Prompt Leakage broadened to "Hidden Context Exposure." Key shift: from "protecting the conversation" to "containing the consequences" as agents gain tool-use capabilities
+  2. **HackerOne AI bounties** — 540% YoY increase in prompt injection reports, HackerOne launched "Agentic Prompt Injection Testing" (March 2026), Anthropic went public on H1 (May 2026, up to $15K). Real incidents: Claude Code, Gemini CLI, GitHub Copilot agents hijacked via prompt injection
+  3. **MCP security** — 30+ CVEs in 60 days, CVE-2026-33032 at CVSS 9.8 actively exploited, OX Security found command execution in Anthropic's official MCP SDKs (~200K vulnerable instances), 82% path traversal risk, only 8.5% use OAuth, NSA/CISA published guidance (June 2026)
+- Updated `docs/STRATEGY.md` with comprehensive AI attack surface analysis, attack taxonomy for scanner development, and revised strategic priorities
+- Established AI agent security as project specialty focus (updated CLAUDE.md, ROADMAP.md in prior session)
+
+**Key findings:**
+- Tool poisoning is the highest-leverage attack on enterprise AI agents — malicious instructions in tool metadata
+- Indirect prompt injection via stored content (repos, docs, web pages) is the most common real-world attack vector
+- MCP security is extremely weak — designed for functionality, not security
+- Anthropic's HackerOne program is a natural first target for our AI security scanners
+
+**Queued for next session:**
+- Cycle 1 (Scanning): Deep scan remaining Wealthsimple targets or move to next program (Deriv, fresh scout)
+- Cycle 2 (R&D): AI/LLM Prompt Injection module — first in priority track
+- Consider: Scout for programs with AI features in scope
+
+---
+
 ## Session 10 — 2026-09-28 (Scanning — Cycle 1)
 
 **Cycle step:** Scanning & Operations — Deep scan Wealthsimple

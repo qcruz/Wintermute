@@ -80,14 +80,14 @@ Market research, competitive analysis, and strategic direction. Feeds into R&D p
 
 ### Queue
 
-1. Study AI/LLM attack surface landscape — OWASP Top 10 for LLMs, prompt injection taxonomy, AI agent authorization models, MCP security gaps
-2. Scout HackerOne programs with AI features — identify targets with chatbots, AI assistants, LLM APIs, AI-powered search
-3. Analyze our false positive rate — which modules generate the most noise? Prioritize fixes
-4. Review bounty payout trends — which programs pay well, which are responsive, which to avoid
-5. Competitive analysis — what are other automated scanners (Nuclei, Burp, etc.) detecting that we're not?
-6. Research AI agent attack patterns — tool-use abuse, indirect prompt injection via stored content, data exfiltration through AI responses
-7. Update `docs/STRATEGY.md` with findings, adjust cycle priorities
-8. Research current HackerOne Hacktivity — what bug types are getting accepted and paid this month?
+1. Scout HackerOne programs with AI features — identify targets with chatbots, AI assistants, LLM APIs, AI-powered search
+2. Analyze our false positive rate — which modules generate the most noise? Prioritize fixes
+3. Review bounty payout trends — which programs pay well, which are responsive, which to avoid
+4. Competitive analysis — what are other automated scanners (Nuclei, Burp, etc.) detecting that we're not?
+5. Research AI agent attack patterns — tool-use abuse, indirect prompt injection via stored content, data exfiltration through AI responses
+6. Update `docs/STRATEGY.md` with findings, adjust cycle priorities
+7. Research current HackerOne Hacktivity — what bug types are getting accepted and paid this month?
+8. Study AI/LLM attack surface landscape — OWASP Top 10 for LLMs, prompt injection taxonomy, AI agent authorization models, MCP security gaps
 
 **Continuous items** (all — rotate after working):
 - All items in this cycle are continuous research tasks
