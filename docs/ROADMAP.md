@@ -31,12 +31,14 @@ Active scanning, program management, and operational improvements. This is the c
 
 1. Deriv — scan remaining 7 targets with full checks in `--limit 3` batches
 2. GitHub — recon + scan, focus on Copilot endpoints (AI security target: Copilot, Copilot Chat, Copilot Coding Agent, Copilot Spaces all in scope)
-3. Wealthsimple — deep scan remaining targets by keyword (staging, crypto, trade, cdn)
-4. Review submission candidates — verify any high-confidence findings, submit if reproducible
-5. Multi-program batch run — scan 3 programs in sequence with `--quick`
-6. Hyatt — slice recon by domain subsets across sessions (61 base domains, 805 subdomains), then scan with `--limit 5 --filter`
-7. Scout for new programs — run `scout`, evaluate 2-3 new candidates, quick-scan the best
-8. Scan a fresh program from scout results — pick one never scanned, full pipeline
+3. Notion — recon + scan with AI-focused checks (explicit `AI_MODEL` asset: Notion AI)
+4. Quora/Poe — recon + scan poe.com for prompt injection (multi-model AI chatbot platform)
+5. Wealthsimple — deep scan remaining targets by keyword (staging, crypto, trade, cdn)
+6. Review submission candidates — verify any high-confidence findings, submit if reproducible
+7. Multi-program batch run — scan 3 programs in sequence with `--quick`
+8. Hyatt — slice recon by domain subsets across sessions (61 base domains, 805 subdomains), then scan with `--limit 5 --filter`
+9. Scout for new programs — run `scout`, evaluate 2-3 new candidates, quick-scan the best
+10. Scan a fresh program from scout results — pick one never scanned, full pipeline
 
 **Continuous items** (rotate to bottom after working):
 - Scout for new programs
@@ -78,14 +80,14 @@ Market research, competitive analysis, and strategic direction. Feeds into R&D p
 
 ### Queue
 
-1. Scout HackerOne programs with AI features — identify targets with chatbots, AI assistants, LLM APIs, AI-powered search
-2. Analyze our false positive rate — which modules generate the most noise? Prioritize fixes
-3. Review bounty payout trends — which programs pay well, which are responsive, which to avoid
-4. Competitive analysis — what are other automated scanners (Nuclei, Burp, etc.) detecting that we're not?
-5. Research AI agent attack patterns — tool-use abuse, indirect prompt injection via stored content, data exfiltration through AI responses
-6. Update `docs/STRATEGY.md` with findings, adjust cycle priorities
-7. Research current HackerOne Hacktivity — what bug types are getting accepted and paid this month?
-8. Study AI/LLM attack surface landscape — OWASP Top 10 for LLMs, prompt injection taxonomy, AI agent authorization models, MCP security gaps
+1. Analyze our false positive rate — which modules generate the most noise? Prioritize fixes
+2. Review bounty payout trends — which programs pay well, which are responsive, which to avoid
+3. Competitive analysis — what are other automated scanners (Nuclei, Burp, etc.) detecting that we're not?
+4. Research AI agent attack patterns — tool-use abuse, indirect prompt injection via stored content, data exfiltration through AI responses
+5. Update `docs/STRATEGY.md` with findings, adjust cycle priorities
+6. Research current HackerOne Hacktivity — what bug types are getting accepted and paid this month?
+7. Study AI/LLM attack surface landscape — OWASP Top 10 for LLMs, prompt injection taxonomy, AI agent authorization models, MCP security gaps
+8. Scout HackerOne programs with AI features — identify targets with chatbots, AI assistants, LLM APIs, AI-powered search
 
 **Continuous items** (all — rotate after working):
 - All items in this cycle are continuous research tasks

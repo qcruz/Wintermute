@@ -228,7 +228,7 @@ Based on research, these programs have AI features in scope:
 5. **Scan AI-integrated targets** — run the new AI prompt injection module against programs with AI features
 6. **SSRF detection** — test URL parameters with callback canaries (requires callback server setup)
 7. **Hyatt sliced scanning** — large attack surface, slice recon by domain subsets
-8. **Scout AI-focused programs** — find HackerOne programs with chatbots, AI assistants, LLM APIs in scope
+8. ~~**Scout AI-focused programs**~~ — **DONE (Session 15)**: GitHub (Copilot), Notion (AI_MODEL asset), Quora/Poe identified as Tier 1 AI targets
 
 ### Medium-term (10-20 Sessions)
 9. **AI Data Exfiltration module** — detect AI agents leaking data through crafted inputs
@@ -242,6 +242,53 @@ Based on research, these programs have AI features in scope:
 - Contribute findings back to the security community via write-ups
 - Open-source the tooling so others can learn and contribute
 - Explore whether AI agents can autonomously identify novel vulnerability patterns
+
+---
+
+## AI Target Scouting — HackerOne Programs with AI Features (Session 15)
+
+Scouted HackerOne programs for AI-integrated features to test our prompt injection and MCP security modules against real targets. Programs evaluated based on: explicit AI assets in scope, large attack surface with AI-powered features, and bounty eligibility.
+
+### Tier 1 — High-Priority AI Targets
+
+| Program | AI Features | Scope Highlights | Why It's Good |
+|---------|------------|------------------|---------------|
+| **GitHub** | Copilot, Copilot Chat, Copilot Coding Agent, Copilot Spaces, GitHub Spark | 27 in-scope assets: `github.com`, `api.github.com`, `*.githubapp.com`, `*.github.net` | Most AI-integrated dev platform; Copilot endpoints are explicit bounty targets; enormous attack surface for prompt injection and MCP testing |
+| **Notion** | **Notion AI** (explicit `AI_MODEL` asset type) | 12 assets: Product API, Public API, Notion Frontend, Notion Integrations | Only program found with dedicated `AI_MODEL` scope type; they specifically want data access bugs in Notion AI; prompt injection is directly relevant |
+| **Quora** | **Poe** (`poe.com` in scope) — multi-model AI chatbot platform | `*.quora.com` wildcard + `poe.com` | Poe hosts multiple LLM providers; ideal for prompt injection testing; AI chatbot is the core product |
+
+### Tier 2 — AI-Adjacent Targets
+
+| Program | AI Features | Scope Highlights | Notes |
+|---------|------------|------------------|-------|
+| **Shopify** | Shopify Inbox (chat), Shop app (AI recommendations), Sidekick AI assistant | 30 assets: `*.shopify.com`, `admin.shopify.com`, `shop.app`, GitHub repos | AI features exist but aren't explicitly called out in scope; large attack surface worth exploring |
+| **Automattic** | WordPress AI features (Jetpack AI), Tumblr, Akismet (ML spam detection) | 43 assets: `wordpress.com`, `*.tumblr.com`, Jetpack, WooCommerce | Large surface; WordPress ecosystem increasingly AI-integrated; Jetpack AI block is testable |
+| **Grab** | AI-powered matching, payment fraud detection, in-app features | 33 assets: `*.grab.com`, `*.grabtaxi.com`, `*.grabpay.com` | AI powering backend services; less direct chatbot surface but potential for API-level AI testing |
+
+### Tier 3 — Evaluated but Lower Priority
+
+| Program | Notes |
+|---------|-------|
+| **PayPal** | 49 assets, large surface, but AI features (fraud ML) are backend-only — not testable with our modules |
+| **Spotify** | 45 assets, ML recommendations are backend — no exposed AI endpoints for prompt injection |
+| **GoodRx** | Small scope (3 assets), no visible AI features |
+
+### Recommended Scan Priority
+
+1. **GitHub** — Already in Cycle 1 queue. Copilot endpoints are the single best target for our AI modules. Run prompt injection + MCP security checks against `github.com`, `api.github.com`, and Copilot-specific paths.
+2. **Notion** — Add to Cycle 1 queue. The explicit `AI_MODEL` asset type means they expect and reward AI security findings. Run full pipeline + AI-focused deep checks.
+3. **Quora/Poe** — Add to Cycle 1 queue. Poe's multi-model chatbot interface is a rich prompt injection surface. Test system prompt extraction and instruction override.
+4. **Shopify** — Large surface, AI features are growing. Good for batch scanning with `--filter` on AI-related subdomains.
+
+### Key Insight
+
+Programs with **explicit AI assets in scope** (GitHub Copilot, Notion AI, Quora/Poe) are far more valuable targets than programs that merely use AI internally. Explicit scope means:
+- The program expects AI-related reports
+- There's a clear attack surface to test
+- Findings are more likely to be accepted and rewarded
+- Less competition because few researchers have AI-specific tooling
+
+This validates our R&D investment in AI-specific scanner modules. The next step is to run these modules against Tier 1 targets.
 
 ---
 
@@ -344,3 +391,5 @@ Update this document every 3-4 sessions or after significant events (first submi
 | 2026-09-28 | Wealthsimple deep scan (3 batches) | 27 findings, 0 high-confidence — well-secured |
 | 2026-09-28 | AI Prompt Injection module built | 14th scanner, first AI-specific detection capability, 15 new tests |
 | 2026-09-28 | Differentiation framework written | Long-term strategy for unique specialization in AI agent security |
+| 2026-09-28 | MCP Security module built | 15th scanner, second AI-specific capability, 15 new tests |
+| 2026-09-29 | AI target scouting complete | GitHub (Copilot), Notion (AI_MODEL), Quora/Poe identified as Tier 1 AI targets |

@@ -4,6 +4,31 @@ Track what each session accomplished, what was found, and what's queued for next
 
 ---
 
+## Session 15 — 2026-09-29 (Research — Cycle 3)
+
+**Cycle step:** Research & Strategic Planning — Scout HackerOne programs with AI features
+
+**What was done:**
+- Scouted HackerOne programs for AI-integrated features to match against our prompt injection and MCP security modules
+- Evaluated 12 programs: GitHub, Quora, Spotify, GoodRx, PayPal, Grab, Shopify, Notion, Automattic, Grammarly, Canva, Adobe
+- Identified 3 Tier 1 AI targets:
+  - **GitHub** — Copilot, Copilot Chat, Copilot Coding Agent, Copilot Spaces, GitHub Spark all in scope (27 assets)
+  - **Notion** — Explicit `AI_MODEL` asset type for "Notion AI" with bounties; they specifically want data access bugs in AI
+  - **Quora/Poe** — `poe.com` (multi-model AI chatbot platform) in scope alongside `*.quora.com`
+- Identified 3 Tier 2 targets: Shopify (Sidekick AI, Inbox chat), Automattic (Jetpack AI, WordPress AI), Grab (AI-powered backend)
+- Wrote full analysis to `docs/STRATEGY.md` — AI Target Scouting section with tiered recommendations
+- Updated Cycle 1 queue: added Notion and Quora/Poe as scan targets after GitHub
+- Rotated Cycle 3 queue: moved scouting to bottom
+
+**Key insight:** Programs with explicit AI assets in scope (GitHub Copilot, Notion AI, Poe) are far more valuable than programs using AI internally. Explicit scope = expected reports, clear attack surface, less competition.
+
+**Queued for next session:**
+- Cycle 4 (Docs): CI pipeline setup (first item in Cycle 4 queue)
+- Then Cycle 1 (Scanning): Deriv remaining targets, then GitHub Copilot scan
+- Then Cycle 2 (R&D): AI Data Exfiltration module
+
+---
+
 ## Session 14 — 2026-09-28 (R&D — Cycle 2)
 
 **Cycle step:** Scanner R&D & Buildout — MCP Security module
