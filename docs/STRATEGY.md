@@ -39,6 +39,27 @@ Living document tracking progress, successes, failures, trends, and research to 
 
 Our false positive detection is improving with each scan. The pattern: scan a new program, discover a new FP class, fix it, move on.
 
+### False Positive & Noise Analysis (Session 19)
+
+Full analysis of 333 findings across 6 programs. Ranked by noise generation:
+
+| Module | Findings | Signal Quality | Issue |
+|--------|----------|---------------|-------|
+| **content_discovery** | 138 (41%) | **Low** — all at 0.6 confidence, 120/138 are low severity | Generates most noise. Many are generic paths returning 200 but no actionable content. Needs content fingerprinting to separate real endpoints from generic responses. |
+| **missing_security_header** | 57 (17%) | **Low** — all are "Missing HSTS", 95%+ duplicated on HackerOne | Pure noise for submissions. Every target triggers this. Consider downgrading or filtering from reports entirely. |
+| **exposed_file** | 46 (14%) | **Low** — 39/46 are info-level (robots.txt, security.txt) | Info-level files aren't vulnerabilities. Only critical-level (4 found: .git, .env) are worth reporting. |
+| **ssl_tls** | 36 (11%) | **Medium** — mostly cert issues | Real findings but rarely bounty-worthy unless expired/self-signed on critical endpoints. |
+| **ssti** | 21 (6%) | **Zero** — all FPs | All 21 are `{{7*7}}→49` Cloudflare token pattern across 3 Deriv hosts, 7 parameters each. Confirmation re-request isn't filtering these. **Fix needed: check if "49" appears in baseline response without SSTI payload.** |
+| **js_secret** | 11 (3%) | **Medium-High** — 8 high severity | After FP fixes (CDN tokens, localhost), remaining findings have decent signal. Review individually. |
+| **subdomain_takeover** | 4 (1%) | **High** — 0.9 confidence | Low volume, high signal. These are worth manual verification. |
+| **cors** | 2 (0.6%) | **High** | Low volume, high signal when found. |
+
+**Key takeaways:**
+1. **72% of findings come from 3 modules** (content_discovery, missing_security_header, exposed_file) that generate almost zero actionable signal
+2. **SSTI is 100% false positive** on Deriv — needs a baseline comparison fix
+3. **High-signal modules** (subdomain_takeover, cors, js_secret) generate very few findings but they're worth investigating
+4. **Immediate fix priorities:** (a) SSTI baseline comparison, (b) content_discovery confidence tuning, (c) filter info-level exposed_files from reports
+
 ---
 
 ## Lessons Learned
@@ -393,3 +414,5 @@ Update this document every 3-4 sessions or after significant events (first submi
 | 2026-09-28 | Differentiation framework written | Long-term strategy for unique specialization in AI agent security |
 | 2026-09-28 | MCP Security module built | 15th scanner, second AI-specific capability, 15 new tests |
 | 2026-09-29 | AI target scouting complete | GitHub (Copilot), Notion (AI_MODEL), Quora/Poe identified as Tier 1 AI targets |
+| 2026-09-29 | AI Data Exfiltration module built | 16th scanner, context/PII/backend/RAG leak detection, 145 tests |
+| 2026-09-29 | FP analysis complete (333 findings) | 72% of findings from 3 low-signal modules; SSTI 100% FP; content_discovery, headers, exposed_files need tuning |

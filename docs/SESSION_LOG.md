@@ -4,6 +4,26 @@ Track what each session accomplished, what was found, and what's queued for next
 
 ---
 
+## Session 19 — 2026-09-29 (Research — Cycle 3)
+
+**Cycle step:** Research & Strategic Planning — Analyze false positive rate
+
+**What was done:**
+- Analyzed all 333 findings across 6 programs for noise vs. signal
+- Top noise generators: content_discovery (138, all 0.6 confidence), missing_security_header (57, all HSTS), exposed_file (46, 39 info-level)
+- SSTI module: 21 findings, **100% false positive** — all `{{7*7}}→49` Cloudflare token pattern on Deriv
+- High-signal modules identified: subdomain_takeover (4, 0.9 conf), cors (2), js_secret (11 after FP fixes)
+- 72% of findings come from 3 modules that generate near-zero actionable signal
+- Wrote full analysis to STRATEGY.md with fix priorities
+- Fix priorities: (1) SSTI baseline comparison, (2) content_discovery confidence tuning, (3) filter info-level exposed_files from reports
+
+**Queued for next session:**
+- Cycle 4 (Docs): Case study doc (or combine with FP fixes)
+- Cycle 1: GitHub Copilot scan, Notion, Quora/Poe
+- Cycle 2: Insecure AI Integration module, or SSTI FP fix
+
+---
+
 ## Session 18 — 2026-09-29 (R&D — Cycle 2)
 
 **Cycle step:** Scanner R&D & Buildout — AI Data Exfiltration module
