@@ -71,6 +71,8 @@ Each session:
 - If recon alone takes >5 min, let it finish and save scanning for the next session
 - The user will specify when a long scan can run. Don't assume.
 - Progress is cumulative — findings persist in the DB across sessions, so there's no rush
+- **Scanning cycles must produce results.** Work through multiple targets/programs until there are reportable findings or solid data to evaluate. Don't run one scan and move on.
+- **Post-scan analysis is mandatory.** After every scan cycle: analyze results, document new FP patterns in STRATEGY.md, add capability gaps to the R&D queue in ROADMAP.md, and note what to revisit. Never remove a program from the scan list.
 
 ## Key Commands
 

@@ -25,19 +25,21 @@ See `CLAUDE.md` for the session startup checklist that drives this.
 
 ## Cycle 1: Scanning & Operations
 
-Active scanning, program management, and operational improvements. This is the core revenue-generating activity.
+Active scanning, program management, and operational improvements. This is the core revenue-generating activity. **After every scan cycle:** analyze results, document new FP patterns, add capability gaps to the R&D queue, and update STRATEGY.md with findings. Never remove a program from the scan list — the list grows continuously.
 
 ### Queue
 
-1. Notion — recon + scan with AI-focused checks (explicit `AI_MODEL` asset: Notion AI) (AI security target: Copilot, Copilot Chat, Copilot Coding Agent, Copilot Spaces all in scope)
-3. Notion — recon + scan with AI-focused checks (explicit `AI_MODEL` asset: Notion AI)
-4. Quora/Poe — recon + scan poe.com for prompt injection (multi-model AI chatbot platform)
-5. Wealthsimple — deep scan remaining targets by keyword (staging, crypto, trade, cdn)
-6. Review submission candidates — verify any high-confidence findings, submit if reproducible
-7. Multi-program batch run — scan 3 programs in sequence with `--quick`
-8. Hyatt — slice recon by domain subsets across sessions (61 base domains, 805 subdomains), then scan with `--limit 5 --filter`
-9. Scout for new programs — run `scout`, evaluate 2-3 new candidates, quick-scan the best
-10. Scan a fresh program from scout results — pick one never scanned, full pipeline
+1. Quora/Poe — recon + scan poe.com for prompt injection (multi-model AI chatbot platform)
+2. Wealthsimple — deep scan remaining targets by keyword (staging, crypto, trade, cdn)
+3. Deriv — revisit with improved SSTI FP filter; verify any real findings
+4. Review submission candidates — verify any high-confidence findings, submit if reproducible
+5. Multi-program batch run — scan 3 programs in sequence with `--quick`
+6. Hyatt — slice recon by domain subsets across sessions (61 base domains, 805 subdomains), then scan with `--limit 5 --filter`
+7. CLEAR — rescan with AI modules (prompt injection, data exfil, MCP) now that they exist
+8. GitHub — revisit with auth scanning when capability exists; deep scan education.github.com, npmjs.com, classroom.github.com
+9. Notion — revisit with auth scanning (retool admin panel has real `/api/chat`, `/api/mcp` behind 401; Notion AI asset needs auth)
+10. Scout for new programs — run `scout`, evaluate 2-3 new candidates, quick-scan the best
+11. Scan a fresh program from scout results — pick one never scanned, full pipeline
 
 **Continuous items** (rotate to bottom after working):
 - Scout for new programs
@@ -52,19 +54,29 @@ Research, prototype, and integrate new vulnerability detection capabilities. Eac
 
 ### Queue
 
+**False positive fixes (high priority — directly improves scan quality):**
+1. **Catch-all routing detection** — Before testing discovered paths, request a random nonsense path; if it returns 200, skip all path-based discoveries for that host (fixes 86 FPs on gist.github.com alone)
+2. **SSTI baseline comparison** — Request the target without SSTI payload first; if "49" appears in the baseline response, skip the SSTI finding (fixes 21 FPs on Deriv)
+3. **Content discovery confidence tuning** — All 138 findings at 0.6 confidence; require content fingerprinting (not just HTTP 200) to raise confidence above threshold
+
+**Infrastructure & capability:**
+4. **Authenticated scanning** — Support cookie/token-based auth for scanning behind login walls; needed for GitHub Copilot, Notion AI, and any feature requiring a session
+5. **Subdomain enumeration expansion** — Add sources beyond crt.sh (SecurityTrails, Subfinder, DNS brute-force); crt.sh found only 2 of GitHub's 27+ in-scope assets
+6. **Manual target injection** — CLI flag to add specific hostnames to a program's target list without relying on recon (workaround until enum is expanded)
+
 **AI Agent Security (priority track):**
-3. **Insecure AI Integration** — Test for AI endpoints lacking auth, rate limiting, or input validation; LLM-powered APIs that pass unsanitized user input to backend systems
+7. **Insecure AI Integration** — Test for AI endpoints lacking auth, rate limiting, or input validation; LLM-powered APIs that pass unsanitized user input to backend systems
 
 **General web security:**
-5. **SSRF Detection** — Test URL/webhook parameters for internal network access (requires callback server setup)
-6. **Host Header Injection** — Test for password reset poisoning and cache poisoning via Host header manipulation
-7. **Broken Rate Limiting** — Detect missing rate limits on login, password reset, and API endpoints
-8. **API Versioning Gaps** — Test older API versions (v1 when v2 exists) for deprecated, unpatched endpoints
-9. **WebSocket Testing** — Check for unauthenticated WebSocket connections and missing origin validation
-10. **Prototype Pollution** — Detect JavaScript prototype pollution via `__proto__` in JSON APIs
-11. **Cloud Metadata SSRF** — Test for AWS/GCP/Azure metadata endpoint access (169.254.169.254)
-12. **Race Conditions** — Detect TOCTOU issues on coupon/discount/balance endpoints
-13. **Cache Poisoning** — Test for web cache deception via path confusion and unkeyed headers
+8. **SSRF Detection** — Test URL/webhook parameters for internal network access (requires callback server setup)
+9. **Host Header Injection** — Test for password reset poisoning and cache poisoning via Host header manipulation
+10. **Broken Rate Limiting** — Detect missing rate limits on login, password reset, and API endpoints
+11. **API Versioning Gaps** — Test older API versions (v1 when v2 exists) for deprecated, unpatched endpoints
+12. **WebSocket Testing** — Check for unauthenticated WebSocket connections and missing origin validation
+13. **Prototype Pollution** — Detect JavaScript prototype pollution via `__proto__` in JSON APIs
+14. **Cloud Metadata SSRF** — Test for AWS/GCP/Azure metadata endpoint access (169.254.169.254)
+15. **Race Conditions** — Detect TOCTOU issues on coupon/discount/balance endpoints
+16. **Cache Poisoning** — Test for web cache deception via path confusion and unkeyed headers
 
 **Continuous items** (rotate to bottom after working):
 - Review HackerOne Hacktivity for new bug patterns to add
@@ -100,8 +112,9 @@ Code quality, documentation, testing, infrastructure. Keeps the project maintain
 
 1. Write case study doc for first accepted bounty (when it happens)
 2. Review and update all docs for accuracy after recent changes
-5. Add CLI dashboard showing pipeline status, program coverage, finding stats
-6. Implement submission outcome tracking — log accepted/rejected/duplicate results
+3. Add CLI dashboard showing pipeline status, program coverage, finding stats
+4. Implement submission outcome tracking — log accepted/rejected/duplicate results
+5. Document authenticated scanning workflow once built (setup, credentials, session management)
 
 **Continuous items** (rotate to bottom after working):
 - Review and update all docs for accuracy after recent changes

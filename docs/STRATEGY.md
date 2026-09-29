@@ -15,6 +15,8 @@ Living document tracking progress, successes, failures, trends, and research to 
 | Algolia | 4 | Quick + deep | HTTP methods (PUT/DELETE/TRACE) | 0 | SSTI was FP (Cloudflare tokens) |
 | Kiwi.com | 6 | Quick + deep | CORS on tequila.kiwi.com | 0 | Not reproducible on re-verify |
 | Hyatt | 291 (recon only) | Recon only | N/A | 0 | Too large, needs sliced scanning |
+| GitHub | 6 | Deep (4 targets) | GraphQL console (403), 86 FPs from catch-all routing | 0 | Needs auth scanning for Copilot; catch-all routing FP class discovered |
+| Notion | 8 | Quick + AI-focused | 17 real endpoint discoveries on retool (all auth-gated), 24 prompt injection FPs (catch-all) | 0 | Retool admin panel is high-value but needs auth; Notion AI needs auth |
 
 ### Submissions: 0 sent, 0 accepted
 
@@ -70,6 +72,33 @@ Full analysis of 333 findings across 6 programs. Ranked by noise generation:
 Result: 86 FPs on gist.github.com alone (72 prompt injection, 9 content discovery, 5 AI endpoint exposed).
 
 **Fix needed:** Before testing a discovered path, verify it's not a catch-all by requesting a random nonsense path (e.g., `/wintermute-random-404-check-xyz`) — if that also returns 200, the host has catch-all routing and all path-based discoveries should be discarded.
+
+**Second occurrence (Session 21 — Notion scan):** mail.notion.so also has catch-all routing — returns HTTP 200 for any path. This generated 24 "high severity" prompt injection FPs and 3 endpoint discovery FPs on fake `/chatbot`, `/copilot`, `/api/llm` paths. Same fix applies.
+
+### Notion Scan Analysis (Session 21)
+
+**Targets discovered:** 8 subdomains of mail.notion.so and calendar.notion.so via crt.sh. Missing key targets: notion.so, www.notion.so, api.notion.so (same subdomain enum gap as GitHub).
+
+**Scan results across 8 targets:**
+
+| Target | Findings | Assessment |
+|--------|----------|------------|
+| mail.notion.so | 27 | **All FPs** — catch-all routing, no real AI endpoints |
+| retool.mail.notion.so | 17 | **Legitimate discoveries** — Retool admin panel with real `/api/chat` (401), `/api/mcp` (401), robots.txt reveals `/embedded/`. All auth-gated. |
+| cspreports.mail.notion.so | 2 | Missing HSTS + 1 AI endpoint (likely FP) — 95% dup probability |
+| mg.mail.notion.so | 1 | Missing HSTS — 95% dup probability |
+| Others (4 targets) | 0 | Clean |
+
+**Key findings:**
+1. **retool.mail.notion.so is a real Retool admin panel** with authenticated AI/MCP endpoints (`/api/chat`, `/api/mcp` return 401). This is a high-value target IF we had authenticated scanning.
+2. **mail.notion.so catch-all routing** confirms the fix for this FP class is critical — affects both GitHub and Notion scans.
+3. **Notion AI** (the main AI asset listed in the program) requires authenticated access to test. Without auth scanning, we can only discover endpoints, not test them.
+4. **HSTS findings are noise** — these are effectively untouchable on HackerOne at this point.
+
+**Capability gaps exposed:**
+- Authenticated scanning (blocked on retool admin panel, Notion AI, all API endpoints)
+- Catch-all routing detection (24 FPs on mail.notion.so alone)
+- Base domain enumeration (missing notion.so, api.notion.so)
 
 ---
 

@@ -6,24 +6,35 @@ Track what each session accomplished, what was found, and what's queued for next
 
 ## Session 21 — 2026-09-29 (Scanning — Cycle 1)
 
-**Cycle step:** Scanning & Operations — GitHub recon + scan
+**Cycle step:** Scanning & Operations — GitHub + Notion scans
 
 **What was done:**
-- Ran recon on GitHub — crt.sh found only 2 subdomains (gist, classroom), manually added 4 key in-scope domains (github.com, api.github.com, education.github.com, npmjs.com)
-- Scanned api.github.com: 1 finding — GraphQL console at /graphql/console (403, low value)
-- Scanned gist.github.com: **86 findings, ALL false positives** — catch-all routing returns 200 for every path
-  - AI endpoint discovery flagged `/assistant`, `/ai`, `/chatbot`, `/sse` as AI endpoints (actually user profile pages)
-  - Content discovery flagged `/graphiql`, `/cpanel/`, `/actuator` as admin panels (same issue)
-  - Prompt injection sprayed 8 parameters against each fake endpoint
-- Discovered new FP class: **catch-all routing sites** — need random-path baseline check before testing discoveries
-- Wrote analysis to STRATEGY.md
 
-**Key insight:** GitHub itself is heavily hardened — 0 real findings across github.com and api.github.com. The real AI testing opportunity (Copilot endpoints) requires authenticated testing which our scanner doesn't support yet.
+*GitHub scan:*
+- Ran recon — crt.sh found only 2 subdomains (gist, classroom), manually added 4 key in-scope domains
+- Scanned api.github.com: 1 finding — GraphQL console at /graphql/console (403, low value)
+- Scanned gist.github.com: **86 findings, ALL false positives** — catch-all routing
+- Discovered new FP class: **catch-all routing sites**
+
+*Notion scan:*
+- Recon found 8 in-scope targets (subdomains of mail.notion.so and calendar.notion.so)
+- Quick scan: only 2 HSTS findings (95% dup probability)
+- Deep scan on 3 priority targets (mcp.mail.notion.so, retool.mail.notion.so, api.mail.notion.so)
+- AI-focused scan (ai_prompt_injection, ai_data_exfil, mcp_security) across all 7 alive targets
+- **retool.mail.notion.so** — 17 legitimate findings: Retool admin panel with real `/api/chat` (401), `/api/mcp` (401), `/api/mcp/sse` (401), robots.txt reveals `/embedded/`. All auth-gated.
+- **mail.notion.so** — 27 findings, ALL false positives from catch-all routing (second occurrence of this FP class)
+- Verified catch-all vs real endpoints: mail.notion.so returns 200 for random paths; retool returns 401 for real API paths
+
+**Post-scan analysis:**
+- Updated STRATEGY.md with Notion analysis, programs table, catch-all routing second occurrence
+- Catch-all routing fix is #1 R&D priority — 110+ FPs across 2 programs
+- Authenticated scanning is the key blocker for all real AI endpoints found
+- Base domain enumeration gap confirmed again (crt.sh misses notion.so like it missed github.com)
+- No reportable findings from either program
 
 **Queued for next session:**
-- Cycle 2 (R&D): Fix catch-all routing FPs or build Insecure AI Integration module
-- Cycle 3 (Research): Review bounty payout trends
-- Cycle 1 backlog: Notion scan, Quora/Poe scan
+- Cycle 2 (R&D): Fix catch-all routing FPs (first item in queue)
+- Cycle 1 backlog: Quora/Poe, Wealthsimple, Deriv revisit
 
 ---
 
