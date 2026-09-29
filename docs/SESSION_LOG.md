@@ -4,6 +4,27 @@ Track what each session accomplished, what was found, and what's queued for next
 
 ---
 
+## Session 10 — 2026-09-28 (Scanning — Cycle 1)
+
+**Cycle step:** Scanning & Operations — Deep scan Wealthsimple
+
+**What was done:**
+- Deep scanned 8 Wealthsimple targets across 3 batches (all 13 checks including new JS analysis):
+  - Batch 1: `api.production`, `api.sandbox`, `api-legacy` — 18 findings, 0 high-confidence
+  - Batch 2: `trade-service-staging`, `trade-service`, `tradehelp` — 9 findings, 0 high-confidence
+  - Batch 3: `crypto-trust-staging`, `crypto-trust` — 0 findings
+- Content discovery found 9 interesting endpoints on both `api.production` and `trade-service`
+- Total scan time: ~13 min across 3 batches (~2 min/target average)
+
+**Findings:** 27 below-threshold findings (content discovery, low-confidence). 0 high-confidence vulnerabilities. Wealthsimple's API/trade/crypto infrastructure is well-secured.
+
+**Queued for next session:**
+- Cycle 1: Deep scan remaining Wealthsimple targets (cs-tools, staging, my, www) or move to next program
+- Cycle 2 (R&D): SSRF Detection is next
+- Consider: Wealthsimple may be too well-defended — try Deriv or scout fresh programs
+
+---
+
 ## Session 9 — 2026-09-28 (R&D — Cycle 2)
 
 **Cycle step:** Scanner R&D & Buildout

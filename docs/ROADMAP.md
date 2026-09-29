@@ -27,8 +27,7 @@ Active scanning, program management, and operational improvements. This is the c
 
 ### Queue
 
-1. Wealthsimple — deep scan API targets with `--scan-only --limit 3 --filter api` (6 API endpoints, fintech)
-2. CLEAR — re-scan with IDOR and path traversal checks on interesting hosts (corpsupport, api)
+1. CLEAR — re-scan with IDOR and path traversal checks on interesting hosts (corpsupport, api)
 3. Deriv — scan remaining 8 targets with full checks in `--limit 3` batches
 4. Wealthsimple — deep scan remaining targets by keyword (staging, crypto, trade, cdn)
 5. Review submission candidates — verify any high-confidence findings, submit if reproducible
