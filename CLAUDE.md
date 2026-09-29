@@ -4,6 +4,8 @@
 
 Wintermute is an automated bug bounty hunting pipeline. It discovers programs on HackerOne, enumerates attack surfaces, scans for vulnerabilities, and generates professional reports for submission. The GitHub repo is the public-facing, educational release.
 
+**Specialty focus: AI agent security.** The long-term goal is to develop expertise in vulnerabilities specifically exposed by AI agents — prompt injection, tool-use abuse, agent authorization flaws, MCP server exploits, insecure AI integrations, and emerging AI-specific attack surfaces. This is a growing area (prompt injection reports +540% on HackerOne in 2026) and represents the project's strategic differentiation. General web security scanning remains the foundation, but AI-targeted capabilities are the priority for R&D investment.
+
 - **Owner**: quanahcruz (HackerOne: cruzquanahs)
 - **Platform**: HackerOne (API v1, basic auth)
 - **Language**: Python 3.14, virtualenv at `.venv/`

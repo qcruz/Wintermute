@@ -4,6 +4,8 @@
 
 Explore whether an individual layman, equipped with subscription-based AI agents and open-source tooling, can meaningfully contribute to internet security by identifying and responsibly disclosing vulnerabilities through public bug bounty programs.
 
+**Specialty focus: AI agent security.** As AI agents become ubiquitous in web applications, a new class of vulnerabilities is emerging — prompt injection, tool-use abuse, agent authorization flaws, MCP server exploits, and insecure AI integrations. Wintermute aims to develop specialized detection capabilities for these AI-specific attack surfaces, making this its long-term strategic differentiator while maintaining strong general web security scanning as the foundation.
+
 This project is educational and ethical by design. Every component respects program scope, rate limits, and disclosure guidelines.
 
 ---
@@ -49,16 +51,22 @@ Research, prototype, and integrate new vulnerability detection capabilities. Eac
 
 ### Queue
 
-1. **SSRF Detection** — Test URL/webhook parameters for internal network access (requires callback server setup)
-2. **Host Header Injection** — Test for password reset poisoning and cache poisoning via Host header manipulation
-3. **Broken Rate Limiting** — Detect missing rate limits on login, password reset, and API endpoints
-4. **API Versioning Gaps** — Test older API versions (v1 when v2 exists) for deprecated, unpatched endpoints
-5. **AI/LLM Prompt Injection** — Detect prompt injection vulnerabilities in AI-integrated applications
-6. **WebSocket Testing** — Check for unauthenticated WebSocket connections and missing origin validation
-7. **Prototype Pollution** — Detect JavaScript prototype pollution via `__proto__` in JSON APIs
-8. **Cloud Metadata SSRF** — Test for AWS/GCP/Azure metadata endpoint access (169.254.169.254)
-9. **Race Conditions** — Detect TOCTOU issues on coupon/discount/balance endpoints
-10. **Cache Poisoning** — Test for web cache deception via path confusion and unkeyed headers
+**AI Agent Security (priority track):**
+1. **AI/LLM Prompt Injection** — Detect prompt injection in AI-integrated apps (chatbots, AI assistants, AI-powered search). Test for direct injection, indirect injection via user content, and system prompt extraction
+2. **AI Tool-Use / MCP Exploits** — Test AI agent tool-calling interfaces for authorization bypass, parameter injection, and unsafe tool chaining (e.g., MCP servers exposing privileged operations)
+3. **AI Data Exfiltration** — Detect scenarios where AI agents can be tricked into leaking training data, system prompts, or user data through crafted inputs
+4. **Insecure AI Integration** — Test for AI endpoints lacking auth, rate limiting, or input validation; LLM-powered APIs that pass unsanitized user input to backend systems
+
+**General web security:**
+5. **SSRF Detection** — Test URL/webhook parameters for internal network access (requires callback server setup)
+6. **Host Header Injection** — Test for password reset poisoning and cache poisoning via Host header manipulation
+7. **Broken Rate Limiting** — Detect missing rate limits on login, password reset, and API endpoints
+8. **API Versioning Gaps** — Test older API versions (v1 when v2 exists) for deprecated, unpatched endpoints
+9. **WebSocket Testing** — Check for unauthenticated WebSocket connections and missing origin validation
+10. **Prototype Pollution** — Detect JavaScript prototype pollution via `__proto__` in JSON APIs
+11. **Cloud Metadata SSRF** — Test for AWS/GCP/Azure metadata endpoint access (169.254.169.254)
+12. **Race Conditions** — Detect TOCTOU issues on coupon/discount/balance endpoints
+13. **Cache Poisoning** — Test for web cache deception via path confusion and unkeyed headers
 
 **Continuous items** (rotate to bottom after working):
 - Review HackerOne Hacktivity for new bug patterns to add
@@ -72,12 +80,14 @@ Market research, competitive analysis, and strategic direction. Feeds into R&D p
 
 ### Queue
 
-1. Analyze our false positive rate — which modules generate the most noise? Prioritize fixes
-2. Study AI/LLM attack surface landscape — OWASP Top 10 for LLMs, emerging patterns
-3. Review bounty payout trends — which programs pay well, which are responsive, which to avoid
-4. Competitive analysis — what are other automated scanners (Nuclei, Burp, etc.) detecting that we're not?
-5. Update `docs/STRATEGY.md` with findings, adjust cycle priorities
-6. Research current HackerOne Hacktivity — what bug types are getting accepted and paid this month?
+1. Study AI/LLM attack surface landscape — OWASP Top 10 for LLMs, prompt injection taxonomy, AI agent authorization models, MCP security gaps
+2. Scout HackerOne programs with AI features — identify targets with chatbots, AI assistants, LLM APIs, AI-powered search
+3. Analyze our false positive rate — which modules generate the most noise? Prioritize fixes
+4. Review bounty payout trends — which programs pay well, which are responsive, which to avoid
+5. Competitive analysis — what are other automated scanners (Nuclei, Burp, etc.) detecting that we're not?
+6. Research AI agent attack patterns — tool-use abuse, indirect prompt injection via stored content, data exfiltration through AI responses
+7. Update `docs/STRATEGY.md` with findings, adjust cycle priorities
+8. Research current HackerOne Hacktivity — what bug types are getting accepted and paid this month?
 
 **Continuous items** (all — rotate after working):
 - All items in this cycle are continuous research tasks
