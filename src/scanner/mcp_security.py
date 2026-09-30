@@ -32,6 +32,7 @@ from __future__ import annotations
 import json
 import logging
 import re
+import time
 from dataclasses import dataclass, field
 
 import httpx
@@ -41,6 +42,8 @@ from src.core.http_client import AuthConfig, make_client
 logger = logging.getLogger(__name__)
 
 MCP_TIMEOUT = 15.0
+# Maximum total time for the entire MCP security check on one host
+MCP_MODULE_TIMEOUT = 300  # 5 minutes
 HEADERS = {"User-Agent": "Wintermute/0.1 (Security Research)"}
 
 
@@ -200,6 +203,7 @@ def check_mcp_security(
     """
     result = MCPSecurityResult(hostname=hostname)
     base_url = f"https://{hostname}"
+    start_time = time.monotonic()
 
     # Step 1: Discover MCP endpoints
     mcp_endpoints = _discover_mcp_endpoints(base_url, auth=auth)
@@ -213,6 +217,15 @@ def check_mcp_security(
 
     # Step 2: Test each endpoint
     for endpoint_path, endpoint_desc, endpoint_type in mcp_endpoints:
+        # Check module timeout
+        elapsed = time.monotonic() - start_time
+        if elapsed > MCP_MODULE_TIMEOUT:
+            logger.warning(
+                "MCP security check on %s hit %ds timeout after %d/%d endpoints",
+                hostname, MCP_MODULE_TIMEOUT, mcp_endpoints.index((endpoint_path, endpoint_desc, endpoint_type)),
+                len(mcp_endpoints),
+            )
+            break
         # Report the MCP endpoint itself
         result.findings.append(MCPFinding(
             hostname=hostname,
@@ -260,6 +273,7 @@ def _discover_mcp_endpoints(
     type is "jsonrpc", "sse", "rest", or "config".
     """
     endpoints = []
+    discovery_start = time.monotonic()
     client = make_client(auth=auth, timeout=MCP_TIMEOUT, follow_redirects=False)
 
     # Get 404 baseline
@@ -274,6 +288,11 @@ def _discover_mcp_endpoints(
         baseline_length = 0
 
     for path, description in MCP_PATHS:
+        # Timeout discovery after 2 minutes
+        if time.monotonic() - discovery_start > 120:
+            logger.debug("MCP endpoint discovery timeout on %s after 2 min", base_url)
+            break
+
         try:
             resp = client.get(
                 f"{base_url}{path}",

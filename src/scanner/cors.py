@@ -90,11 +90,14 @@ def check_cors(hostname: str) -> CORSCheck:
                 logger.warning("CORS vuln: %s reflects arbitrary origin", hostname)
                 return result
 
-        # Check 2: Wildcard with credentials (browsers block this, but still bad config)
+        # Check 2: Wildcard with credentials
+        # Browsers block credentials with ACAO:* — this is NOT exploitable.
+        # Log it for awareness but don't mark as vulnerable.
         if acao == "*" and acac == "true":
-            result.vulnerable = True
-            result.issue = "Wildcard origin with credentials (browser-blocked but misconfigured)"
-            result.confidence = 0.5
+            logger.debug(
+                "CORS on %s: ACAO:* with credentials (non-exploitable, browser blocks creds with wildcard)",
+                hostname,
+            )
             return result
 
     except Exception as e:

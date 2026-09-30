@@ -61,10 +61,10 @@ Research, prototype, and integrate new vulnerability detection capabilities. Eac
 2. ~~**SSTI baseline comparison**~~ ✅ DONE (Session 24) — Changed canary from `{{7*7}}→49` to `{{91*71}}→6461` (49 too common in Cloudflare tokens). Added non-200 status code filter. Fixes 25 SSTI FPs across Deriv and Quora/Poe.
 3. ~~**Content discovery confidence tuning**~~ ✅ DONE (Session 26) — Granular confidence: fingerprint=0.85, redirect-to-login=0.5, forbidden=0.5, status-only=0.4. Only fingerprint-confirmed findings exceed 0.7 threshold. Added catch-all redirect detection (skips hosts where 404 baseline redirects to login). Fixes 18+ FPs on paymentcard.wealthsimple.com and similar hosts.
 
-**FP fixes & scanner quality (Session 29):**
-4. **CORS origin reflection check** — Current scanner flags `ACAO: *` + `ACAC: true` as misconfiguration, but it's not exploitable (browsers block). Should test if server reflects attacker origin instead.
-5. **AI endpoint discovery heuristic** — `chat_param` type too loose, flagged CSS file as AI endpoint. Tighten to require actual API-like response (JSON, HTML with chat widget).
-6. **MCP security timeout** — Module took 90 min on auth-stg.ovofinansial.com. Add per-module timeout (e.g., 5 min max).
+**FP fixes & scanner quality (Session 29-30):**
+4. ~~**CORS wildcard+credentials fix**~~ ✅ DONE (Session 30) — `ACAO: *` with `ACAC: true` no longer flagged as vulnerable (browsers block credentials with wildcard origin). Only origin reflection is a real finding.
+5. ~~**AI endpoint discovery heuristic**~~ ✅ DONE (Session 30) — Static assets (.css, .js, .png, etc.) and static directories (/static/, /assets/, /dist/) filtered from AI endpoint link discovery. Fixes CSS-file-as-AI-endpoint FP.
+6. ~~**MCP security timeout**~~ ✅ DONE (Session 30) — Added 5-minute module timeout and 2-minute discovery timeout. Prevents 90+ minute scans on slow/unresponsive hosts.
 
 **Infrastructure & capability:**
 7. ~~**Authenticated scanning**~~ ✅ DONE (Session 28) — `--auth` flag loads cookies/headers from `.auth/<handle>.json`. Wired through pipeline to content_discovery, ai_prompt_injection, ai_data_exfil, mcp_security. Shared HTTP client in `src/core/http_client.py`.

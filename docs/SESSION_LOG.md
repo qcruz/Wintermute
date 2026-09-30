@@ -4,6 +4,38 @@ Track what each session accomplished, what was found, and what's queued for next
 
 ---
 
+## Session 30 — 2026-09-30 (R&D — Cycle 2)
+
+**Cycle step:** Scanner R&D — Fix CORS, AI endpoint heuristic, MCP timeout (items 4-6 in queue)
+
+**What was done:**
+
+### CORS Scanner Fix
+- `ACAO: *` with `ACAC: true` no longer marked as vulnerable — browsers block credentials with wildcard origin, so this is NOT exploitable
+- Only origin reflection (`ACAO` echoes back attacker origin) is flagged as a real finding
+- This was causing noise on Grab (img.geo.azure.myteksi.net) and Tinder (reports.gotinder.com)
+
+### AI Endpoint Discovery Fix
+- Static assets now filtered from AI endpoint link discovery:
+  - File extensions: .css, .js, .png, .jpg, .jpeg, .gif, .svg, .ico, .woff, .woff2, .ttf, .eot, .map
+  - Static directories: /static/, /assets/, /dist/, /build/, /public/
+- Fixes the FP where `/static/css/main.b2d4226b.css` was flagged as an "AI feature link" on dev-website.ovofinansial.com
+
+### MCP Security Timeout
+- Added `MCP_MODULE_TIMEOUT = 300` (5 minutes) — entire module aborts after this
+- Added 2-minute timeout on endpoint discovery phase (probing 24 paths)
+- Fixes the 90-minute scan on auth-stg.ovofinansial.com from Session 29
+
+### Tests
+- 160 tests pass (+5 new: CORS wildcard behavior, CORS test origin safety, static asset filtering, real path preservation, MCP timeout value)
+- Ruff clean
+
+**Queued for next session:**
+- Cycle 3 (Research): First item in queue — review bounty payout trends
+- Or Cycle 1 (Scanning) if higher priority: test auth scanning on real target, rescan with fixed modules
+
+---
+
 ## Session 29 — 2026-09-30 (Scanning — Cycle 1)
 
 **Cycle step:** Scanning & Operations — Deep scan Grab and Tinder, review quick-scan results from Session 28

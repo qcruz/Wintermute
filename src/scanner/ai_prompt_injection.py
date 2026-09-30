@@ -371,8 +371,17 @@ def _discover_ai_endpoints(
             homepage.text,
             re.IGNORECASE,
         )
+        # File extensions that are NOT AI endpoints
+        static_extensions = (".css", ".js", ".png", ".jpg", ".jpeg", ".gif", ".svg",
+                             ".ico", ".woff", ".woff2", ".ttf", ".eot", ".map")
         for link in ai_links[:5]:  # Limit to avoid noise
             if link.startswith("/") and "?" not in link:
+                # Skip static assets — CSS/JS/images are not AI endpoints
+                if any(link.lower().endswith(ext) for ext in static_extensions):
+                    continue
+                # Skip paths that are clearly static asset directories
+                if any(seg in link.lower() for seg in ("/static/", "/assets/", "/dist/", "/build/", "/public/")):
+                    continue
                 endpoints.append((link, "AI feature link", "chat_param"))
 
     except Exception as e:
