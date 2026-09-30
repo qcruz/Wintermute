@@ -90,6 +90,9 @@ python -m scripts.wintermute <handle> --quick
 python -m scripts.wintermute <handle> --scan-only --limit 5 --filter api
 python -m scripts.wintermute <handle> --checks injection,auth_checks
 
+# Authenticated scan (requires .auth/<handle>.json with cookies/headers)
+python -m scripts.wintermute <handle> --auth --scan-only --filter api
+
 # Scout for new programs
 python -m scripts.wintermute scout
 

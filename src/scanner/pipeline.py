@@ -21,6 +21,7 @@ from dataclasses import dataclass, field
 import httpx
 
 from src.core.db import Finding, Program, Target, get_session
+from src.core.http_client import AuthConfig
 from src.core.scope import ScopeChecker
 from src.platforms.hackerone import HackerOneClient, parse_scope
 from src.recon.headers import analyze_headers
@@ -102,6 +103,7 @@ def run_scan(
     max_targets: int = 0,
     checks: list[str] | None = None,
     hostname_filter: str = "",
+    auth: AuthConfig | None = None,
 ) -> ScanResult:
     """Run vulnerability checks against a program's discovered targets.
 
@@ -110,6 +112,7 @@ def run_scan(
         max_targets: Limit number of targets to scan (0 = all)
         checks: List of check names to run (None = all). Use QUICK_CHECKS for fast scans.
         hostname_filter: Only scan hostnames containing this substring
+        auth: Optional auth config for authenticated scanning
 
     Prerequisites: recon pipeline must have been run first (targets in DB).
     """
@@ -295,7 +298,7 @@ def run_scan(
         # ── Content Discovery ─────────────────────────────────────
         if "content_discovery" in active_checks:
             _prog("content_discovery")
-            content_result = discover_content(hostname)
+            content_result = discover_content(hostname, auth=auth)
             result.checks_run["content_discovery"] = result.checks_run.get("content_discovery", 0) + 1
             for ep in content_result.endpoints:
                 if ep.severity in ("info",):
@@ -467,7 +470,7 @@ def run_scan(
         # ── AI Prompt Injection ──
         if "ai_prompt_injection" in active_checks:
             _prog("ai_prompt_injection")
-            ai_result = check_ai_prompt_injection(hostname)
+            ai_result = check_ai_prompt_injection(hostname, auth=auth)
             result.checks_run["ai_prompt_injection"] = result.checks_run.get("ai_prompt_injection", 0) + 1
             for finding in ai_result.findings:
                 result.findings.append(ScanFinding(
@@ -484,7 +487,7 @@ def run_scan(
         # ── AI Data Exfiltration ──
         if "ai_data_exfil" in active_checks:
             _prog("ai_data_exfil")
-            exfil_result = check_ai_data_exfil(hostname)
+            exfil_result = check_ai_data_exfil(hostname, auth=auth)
             result.checks_run["ai_data_exfil"] = result.checks_run.get("ai_data_exfil", 0) + 1
             for finding in exfil_result.findings:
                 result.findings.append(ScanFinding(
@@ -501,7 +504,7 @@ def run_scan(
         # ── MCP Security ──
         if "mcp_security" in active_checks:
             _prog("mcp_security")
-            mcp_result = check_mcp_security(hostname)
+            mcp_result = check_mcp_security(hostname, auth=auth)
             result.checks_run["mcp_security"] = result.checks_run.get("mcp_security", 0) + 1
             for finding in mcp_result.findings:
                 result.findings.append(ScanFinding(

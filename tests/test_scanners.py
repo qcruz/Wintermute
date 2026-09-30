@@ -961,3 +961,34 @@ def test_discovery_paths_all_have_valid_severity():
     valid = {"critical", "high", "medium", "low", "info"}
     for path, category, desc, fingerprints, severity in DISCOVERY_PATHS:
         assert severity in valid, f"{path} has invalid severity '{severity}'"
+
+
+# ── Auth Config ─────────────────────────────────────────────────────
+
+
+def test_auth_config_empty_by_default():
+    """AuthConfig should not be configured when empty."""
+    from src.core.http_client import AuthConfig
+    auth = AuthConfig()
+    assert not auth.is_configured
+
+
+def test_auth_config_with_cookies():
+    """AuthConfig with cookies should be configured."""
+    from src.core.http_client import AuthConfig
+    auth = AuthConfig(cookies={"session": "abc123"})
+    assert auth.is_configured
+
+
+def test_auth_config_with_headers():
+    """AuthConfig with headers should be configured."""
+    from src.core.http_client import AuthConfig
+    auth = AuthConfig(headers={"Authorization": "Bearer xyz"})
+    assert auth.is_configured
+
+
+def test_load_auth_missing_program():
+    """load_auth should return empty config for unknown programs."""
+    from src.core.http_client import load_auth
+    auth = load_auth("nonexistent-program-wintermute-test")
+    assert not auth.is_configured

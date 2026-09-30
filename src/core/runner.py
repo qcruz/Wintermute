@@ -10,6 +10,7 @@ import logging
 from dataclasses import dataclass
 from datetime import datetime, timezone
 
+from src.core.http_client import load_auth
 from src.recon.pipeline import ReconResult, run_recon
 from src.reporting.pipeline import ReportingResult, generate_reports
 from src.scanner.pipeline import ScanResult, run_scan
@@ -48,6 +49,7 @@ def run_full_pipeline(
     max_targets: int = 0,
     checks: list[str] | None = None,
     hostname_filter: str = "",
+    use_auth: bool = False,
 ) -> PipelineResult:
     """Run the complete Wintermute pipeline against a program.
 
@@ -91,12 +93,18 @@ def run_full_pipeline(
     logger.info("=" * 50)
     logger.info("PHASE 2: VULNERABILITY SCANNING")
     logger.info("=" * 50)
+    # Load auth config if requested
+    auth = load_auth(program_handle) if use_auth else None
+    if auth and auth.is_configured:
+        logger.info("Authenticated scanning enabled for %s", program_handle)
+
     try:
         result.scan = run_scan(
             program_handle,
             max_targets=max_targets,
             checks=checks,
             hostname_filter=hostname_filter,
+            auth=auth,
         )
         logger.info(
             "Scan complete: %d targets, %d findings",

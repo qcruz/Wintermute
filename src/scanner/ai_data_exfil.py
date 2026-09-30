@@ -40,6 +40,8 @@ from dataclasses import dataclass, field
 
 import httpx
 
+from src.core.http_client import AuthConfig, make_client
+
 logger = logging.getLogger(__name__)
 
 AI_TIMEOUT = 15.0
@@ -180,19 +182,25 @@ TOOL_CONFIG_PATTERNS = [
 ]
 
 
-def check_ai_data_exfil(hostname: str) -> AIDataExfilResult:
+def check_ai_data_exfil(
+    hostname: str,
+    auth: AuthConfig | None = None,
+) -> AIDataExfilResult:
     """Test a hostname for AI data exfiltration vulnerabilities.
 
     Flow:
       1. Discover AI endpoints (reuses prompt injection discovery paths)
       2. Send data exfiltration probes
       3. Analyze responses for sensitive data leakage
+
+    Args:
+        auth: Optional auth config for authenticated scanning.
     """
     result = AIDataExfilResult(hostname=hostname)
     base_url = f"https://{hostname}"
 
     # Step 1: Discover AI endpoints
-    ai_endpoints = _discover_ai_endpoints(base_url)
+    ai_endpoints = _discover_ai_endpoints(base_url, auth=auth)
     result.endpoints_tested = len(ai_endpoints)
 
     if not ai_endpoints:
@@ -217,7 +225,10 @@ def check_ai_data_exfil(hostname: str) -> AIDataExfilResult:
     return result
 
 
-def _discover_ai_endpoints(base_url: str) -> list[tuple[str, str]]:
+def _discover_ai_endpoints(
+    base_url: str,
+    auth: AuthConfig | None = None,
+) -> list[tuple[str, str]]:
     """Discover AI endpoints that accept user prompts.
 
     Returns list of (path, type) tuples where type is 'api' or 'chat_param'.
@@ -226,7 +237,7 @@ def _discover_ai_endpoints(base_url: str) -> list[tuple[str, str]]:
     from src.scanner.ai_prompt_injection import AI_ENDPOINT_PATHS, AI_RESPONSE_INDICATORS
 
     endpoints = []
-    client = httpx.Client(timeout=AI_TIMEOUT, headers=HEADERS, verify=False, follow_redirects=True)
+    client = make_client(auth=auth, timeout=AI_TIMEOUT)
 
     try:
         for path, desc in AI_ENDPOINT_PATHS:

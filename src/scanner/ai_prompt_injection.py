@@ -34,6 +34,9 @@ from dataclasses import dataclass, field
 
 import httpx
 
+from src.core.http_client import AuthConfig
+from src.core.http_client import get as auth_get
+
 logger = logging.getLogger(__name__)
 
 # Timeout for AI endpoint requests (they can be slow)
@@ -201,19 +204,25 @@ SYSTEM_PROMPT_LEAK_PATTERNS = [
 ]
 
 
-def check_ai_prompt_injection(hostname: str) -> AIPromptInjectionResult:
+def check_ai_prompt_injection(
+    hostname: str,
+    auth: AuthConfig | None = None,
+) -> AIPromptInjectionResult:
     """Test a hostname for AI prompt injection vulnerabilities.
 
     Flow:
       1. Discover AI endpoints via path probing and HTML analysis
       2. Test discovered endpoints with injection canaries
       3. Test for system prompt extraction
+
+    Args:
+        auth: Optional auth config for authenticated scanning.
     """
     result = AIPromptInjectionResult(hostname=hostname)
     base_url = f"https://{hostname}"
 
     # Step 1: Discover AI endpoints
-    ai_endpoints = _discover_ai_endpoints(base_url, hostname)
+    ai_endpoints = _discover_ai_endpoints(base_url, hostname, auth=auth)
     result.ai_endpoints_found = len(ai_endpoints)
 
     if not ai_endpoints:
@@ -256,7 +265,9 @@ def check_ai_prompt_injection(hostname: str) -> AIPromptInjectionResult:
 
 
 def _discover_ai_endpoints(
-    base_url: str, hostname: str
+    base_url: str,
+    hostname: str,
+    auth: AuthConfig | None = None,
 ) -> list[tuple[str, str, str]]:
     """Discover AI endpoints via path probing and HTML analysis.
 
@@ -267,11 +278,11 @@ def _discover_ai_endpoints(
 
     # Get 404 baseline
     try:
-        not_found = httpx.get(
+        not_found = auth_get(
             f"{base_url}/wintermute-ai-check-nonexistent-q7k2",
+            auth=auth,
             timeout=AI_TIMEOUT,
             follow_redirects=False,
-            headers=HEADERS,
         )
         baseline_status = not_found.status_code
         baseline_length = len(not_found.content)
@@ -282,11 +293,11 @@ def _discover_ai_endpoints(
     # Probe known AI endpoint paths
     for path, description in AI_ENDPOINT_PATHS:
         try:
-            resp = httpx.get(
+            resp = auth_get(
                 f"{base_url}{path}",
+                auth=auth,
                 timeout=AI_TIMEOUT,
                 follow_redirects=False,
-                headers=HEADERS,
             )
 
             # Skip if it matches the 404 baseline
@@ -333,11 +344,11 @@ def _discover_ai_endpoints(
 
     # Also check homepage HTML for AI feature indicators
     try:
-        homepage = httpx.get(
+        homepage = auth_get(
             base_url,
+            auth=auth,
             timeout=AI_TIMEOUT,
             follow_redirects=True,
-            headers=HEADERS,
         )
         body = homepage.text.lower()
 

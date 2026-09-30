@@ -4,6 +4,40 @@ Track what each session accomplished, what was found, and what's queued for next
 
 ---
 
+## Session 28 — 2026-09-29 (R&D + Scanning — Cycles 2 & 1)
+
+**Cycle steps:** R&D — Build authenticated scanning infrastructure; Scanning — Scout and quick-scan fresh programs
+
+**What was done:**
+
+### Auth Scanning (Cycle 2 — R&D)
+- Built `src/core/http_client.py` — shared HTTP client with auth support:
+  - `AuthConfig` dataclass (cookies + headers)
+  - `load_auth(program_handle)` — loads from `.auth/<handle>.json`
+  - `make_client(auth)` — creates httpx client with auth injected
+  - `get(url, auth)` — convenience function for one-off authenticated requests
+- Wired auth through the full pipeline:
+  - CLI: `--auth` flag on `wintermute.py`
+  - Runner: `run_full_pipeline(use_auth=True)` loads auth from config
+  - Pipeline: `run_scan(auth=auth)` passes to scanner modules
+  - Modules updated: `content_discovery`, `ai_prompt_injection`, `ai_data_exfil`, `mcp_security`
+- Created `.auth/` directory (gitignored) with example config
+- 155 tests pass (+4 auth tests), ruff clean
+
+### Program Scouting (Cycle 1 — Scanning)
+- Evaluated 9 new bounty programs: Spotify, AT&T, PayPal, Flipkart, Grab, Tinder, Starbucks, Goldman Sachs, GoodRx
+- **Top picks:**
+  - **Grab** — 100+ targets discovered (hungrygowhere.com has admin, staging, QA, API, merchant panels). Huge attack surface with test/staging environments.
+  - **Tinder** — 59 targets (staging domains explicitly in scope)
+- Quick scans launched for both (running in background, results in DB for next session)
+- crt.sh had intermittent 502 errors — some domains not fully enumerated
+
+**Queued for next session:**
+- Cycle 1 (Scanning): Review Tinder and Grab quick-scan results, deep scan most promising targets
+- Cycle 2 backlog: Test auth scanning against corp.quora.com or Notion retool (need to obtain session cookies first)
+
+---
+
 ## Session 27 — 2026-09-29 (Scanning — Cycle 1)
 
 **Cycle step:** Scanning & Operations — Deriv revisit with improved SSTI filter

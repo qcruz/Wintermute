@@ -6,6 +6,7 @@
 credentials.json
 secrets.yaml
 Keys/
+.auth/
 
 # Scan results (may contain sensitive target data)
 results/

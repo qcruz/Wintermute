@@ -10,6 +10,7 @@ Usage:
   python -m scripts.wintermute <handle> --limit 5              # Scan only 5 targets
   python -m scripts.wintermute <handle> --filter api           # Only targets containing "api"
   python -m scripts.wintermute <handle> --checks cors,injection  # Only specific checks
+  python -m scripts.wintermute <handle> --auth                   # Authenticated scan (.auth/<handle>.json)
   python -m scripts.wintermute status                          # Show database status
   python -m scripts.wintermute programs                        # List available programs
   python -m scripts.wintermute scout                           # Discover new programs to work
@@ -187,6 +188,7 @@ def main() -> None:
         print("  python -m scripts.wintermute <handle> --limit N          Scan N targets max")
         print("  python -m scripts.wintermute <handle> --filter TERM      Only matching hostnames")
         print("  python -m scripts.wintermute <handle> --checks a,b,c     Only specific checks")
+        print("  python -m scripts.wintermute <handle> --auth              Authenticated scanning")
         print("  python -m scripts.wintermute status                      DB status")
         print("  python -m scripts.wintermute programs                    List programs")
         print("  python -m scripts.wintermute scout                       Find new programs")
@@ -218,6 +220,7 @@ def main() -> None:
 
     scan_only = "--scan-only" in args
     quick = "--quick" in args
+    use_auth = "--auth" in args
 
     # Parse --limit N
     limit_str = _parse_arg(args, "--limit")
@@ -248,6 +251,8 @@ def main() -> None:
         print(f"  Hostname filter: *{hostname_filter}*")
     if checks:
         print(f"  Checks: {', '.join(sorted(checks))}")
+    if use_auth:
+        print("  Auth: enabled (.auth/<handle>.json)")
     if scan_only:
         print("  Mode: scan-only (skip recon)")
     print("=" * 60)
@@ -258,6 +263,7 @@ def main() -> None:
         max_targets=max_targets,
         checks=checks,
         hostname_filter=hostname_filter,
+        use_auth=use_auth,
     )
 
     print_summary(result)

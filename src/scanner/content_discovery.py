@@ -20,7 +20,8 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass, field
 
-import httpx
+from src.core.http_client import AuthConfig
+from src.core.http_client import get as auth_get
 
 logger = logging.getLogger(__name__)
 
@@ -151,7 +152,11 @@ DISCOVERY_PATHS = [
 ]
 
 
-def discover_content(hostname: str, max_paths: int = 30) -> ContentDiscoveryResult:
+def discover_content(
+    hostname: str,
+    max_paths: int = 30,
+    auth: AuthConfig | None = None,
+) -> ContentDiscoveryResult:
     """Actively discover hidden endpoints and API paths on a hostname.
 
     Safe: only sends GET requests with standard headers.
@@ -159,6 +164,7 @@ def discover_content(hostname: str, max_paths: int = 30) -> ContentDiscoveryResu
     Args:
         max_paths: Maximum number of paths to probe (default 30 for speed).
                    High-value paths are checked first.
+        auth: Optional auth config for authenticated scanning.
     """
     result = ContentDiscoveryResult(hostname=hostname)
     base_url = f"https://{hostname}"
@@ -207,7 +213,7 @@ def discover_content(hostname: str, max_paths: int = 30) -> ContentDiscoveryResu
     for path, category, description, fingerprints, severity in all_checks[:max_paths]:
         endpoint = _probe_path(
             base_url, path, category, description, fingerprints, severity,
-            not_found_body, not_found_length,
+            not_found_body, not_found_length, auth=auth,
         )
         if endpoint:
             result.endpoints.append(endpoint)
@@ -238,11 +244,10 @@ def _detect_third_party(base_url: str) -> str:
     Returns the third-party domain name, or empty string if not detected.
     """
     try:
-        resp = httpx.get(
+        resp = auth_get(
             f"{base_url}/wintermute-third-party-check",
             timeout=8.0,
             follow_redirects=False,
-            headers={"User-Agent": "Wintermute/0.1 (Security Research)"},
         )
         if resp.status_code in (301, 302, 303, 307, 308):
             location = resp.headers.get("location", "").lower()
@@ -262,11 +267,10 @@ def _get_404_baseline(base_url: str) -> tuple[str, int, int, str]:
     redirect hosts (every path redirects to login).
     """
     try:
-        resp = httpx.get(
+        resp = auth_get(
             f"{base_url}/wintermute-nonexistent-path-7f3a9b2c",
             timeout=10.0,
             follow_redirects=False,
-            headers={"User-Agent": "Wintermute/0.1 (Security Research)"},
         )
         if resp.status_code == 200:
             return resp.text.lower(), len(resp.content), 200, ""
@@ -283,11 +287,10 @@ def _parse_robots_disallow(base_url: str) -> list[str]:
     """Parse robots.txt for Disallow entries that might reveal hidden paths."""
     paths = []
     try:
-        resp = httpx.get(
+        resp = auth_get(
             f"{base_url}/robots.txt",
             timeout=10.0,
             follow_redirects=False,
-            headers={"User-Agent": "Wintermute/0.1 (Security Research)"},
         )
         if resp.status_code != 200:
             return paths
@@ -315,14 +318,15 @@ def _probe_path(
     severity: str,
     not_found_body: str,
     not_found_length: int,
+    auth: AuthConfig | None = None,
 ) -> DiscoveredEndpoint | None:
     """Probe a single path and determine if it's interesting."""
     try:
-        resp = httpx.get(
+        resp = auth_get(
             f"{base_url}{path}",
+            auth=auth,
             timeout=10.0,
             follow_redirects=False,
-            headers={"User-Agent": "Wintermute/0.1 (Security Research)"},
         )
     except Exception:
         return None

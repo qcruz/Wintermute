@@ -36,6 +36,8 @@ from dataclasses import dataclass, field
 
 import httpx
 
+from src.core.http_client import AuthConfig, make_client
+
 logger = logging.getLogger(__name__)
 
 MCP_TIMEOUT = 15.0
@@ -180,7 +182,10 @@ FILE_SIGNATURES = [
 ]
 
 
-def check_mcp_security(hostname: str) -> MCPSecurityResult:
+def check_mcp_security(
+    hostname: str,
+    auth: AuthConfig | None = None,
+) -> MCPSecurityResult:
     """Test a hostname for MCP server security vulnerabilities.
 
     Flow:
@@ -189,12 +194,15 @@ def check_mcp_security(hostname: str) -> MCPSecurityResult:
       3. Analyze tool schemas for dangerous capabilities
       4. Check for tool poisoning indicators
       5. Test file tools for path traversal
+
+    Args:
+        auth: Optional auth config for authenticated scanning.
     """
     result = MCPSecurityResult(hostname=hostname)
     base_url = f"https://{hostname}"
 
     # Step 1: Discover MCP endpoints
-    mcp_endpoints = _discover_mcp_endpoints(base_url)
+    mcp_endpoints = _discover_mcp_endpoints(base_url, auth=auth)
     result.mcp_endpoints_found = len(mcp_endpoints)
 
     if not mcp_endpoints:
@@ -244,6 +252,7 @@ def check_mcp_security(hostname: str) -> MCPSecurityResult:
 
 def _discover_mcp_endpoints(
     base_url: str,
+    auth: AuthConfig | None = None,
 ) -> list[tuple[str, str, str]]:
     """Discover MCP server endpoints via path probing.
 
@@ -251,14 +260,12 @@ def _discover_mcp_endpoints(
     type is "jsonrpc", "sse", "rest", or "config".
     """
     endpoints = []
+    client = make_client(auth=auth, timeout=MCP_TIMEOUT, follow_redirects=False)
 
     # Get 404 baseline
     try:
-        not_found = httpx.get(
+        not_found = client.get(
             f"{base_url}/wintermute-mcp-check-nonexistent-m3k8",
-            timeout=MCP_TIMEOUT,
-            follow_redirects=False,
-            headers=HEADERS,
         )
         baseline_status = not_found.status_code
         baseline_length = len(not_found.content)
@@ -268,11 +275,8 @@ def _discover_mcp_endpoints(
 
     for path, description in MCP_PATHS:
         try:
-            resp = httpx.get(
+            resp = client.get(
                 f"{base_url}{path}",
-                timeout=MCP_TIMEOUT,
-                follow_redirects=False,
-                headers=HEADERS,
             )
 
             # Skip 404 baseline matches
@@ -334,6 +338,8 @@ def _discover_mcp_endpoints(
 
         except Exception as e:
             logger.debug("MCP probe failed for %s%s: %s", base_url, path, e)
+
+    client.close()
 
     # Deduplicate
     seen = set()

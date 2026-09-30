@@ -60,7 +60,7 @@ Research, prototype, and integrate new vulnerability detection capabilities. Eac
 3. ~~**Content discovery confidence tuning**~~ ✅ DONE (Session 26) — Granular confidence: fingerprint=0.85, redirect-to-login=0.5, forbidden=0.5, status-only=0.4. Only fingerprint-confirmed findings exceed 0.7 threshold. Added catch-all redirect detection (skips hosts where 404 baseline redirects to login). Fixes 18+ FPs on paymentcard.wealthsimple.com and similar hosts.
 
 **Infrastructure & capability:**
-5. **Authenticated scanning** — Support cookie/token-based auth for scanning behind login walls; needed for GitHub Copilot, Notion AI, and any feature requiring a session
+5. ~~**Authenticated scanning**~~ ✅ DONE (Session 28) — `--auth` flag loads cookies/headers from `.auth/<handle>.json`. Wired through pipeline to content_discovery, ai_prompt_injection, ai_data_exfil, mcp_security. Shared HTTP client in `src/core/http_client.py`.
 6. **Subdomain enumeration expansion** — Add sources beyond crt.sh (SecurityTrails, Subfinder, DNS brute-force); crt.sh found only 2 of GitHub's 27+ in-scope assets
 7. **Manual target injection** — CLI flag to add specific hostnames to a program's target list without relying on recon (workaround until enum is expanded)
 
