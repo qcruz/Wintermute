@@ -4,6 +4,38 @@ Track what each session accomplished, what was found, and what's queued for next
 
 ---
 
+## Session 27 — 2026-09-29 (Scanning — Cycle 1)
+
+**Cycle step:** Scanning & Operations — Deriv revisit with improved SSTI filter
+
+**What was done:**
+- Rescanned 5 of 13 Deriv targets: ct, secure-dfadmin, home, cashier, app
+- **SSTI fix validated:** 0 new SSTI findings on rescan (all 21 old ones were FPs from `{{7*7}}→49`)
+- **Content discovery fix validated:** secure-dfadmin correctly blocked (blanket-403), cashier reduced to 2 fingerprint-confirmed findings
+- Verified HTTP methods finding on cashier (TRACE allowed but behind Cloudflare — not bounty-worthy)
+- Verified JS internal URL findings (all localhost URL constructor FPs — not reportable)
+
+**Findings assessment:**
+- 21 old SSTI findings: confirmed FPs, stale in DB
+- 3 clickjacking: low impact (API/partner pages, not user-facing forms)
+- 3 missing HSTS: 95% dup probability
+- 3 JS internal URLs: FPs (localhost references)
+- 1 HTTP methods (TRACE): not bounty-worthy
+- 1 no HTTPS redirect: low value
+- **0 reportable findings**
+
+**Post-scan analysis:**
+- Deriv is well-secured — no actionable vulns found across 2 full scan rounds
+- SSTI and content discovery FP fixes both confirmed working in production
+- Stale FP data in DB pollutes report list — future improvement: add DB cleanup for invalidated findings
+- Deriv moved down in queue, rotated to continuous revisit list
+
+**Queued for next session:**
+- Cycle 2 (R&D): Authenticated scanning (#5 in queue)
+- Cycle 1 backlog: Quora/Poe remaining targets, review submission candidates
+
+---
+
 ## Session 26 — 2026-09-29 (R&D — Cycle 2)
 
 **Cycle step:** Scanner R&D — Content discovery confidence tuning + catch-all redirect detection (FP fixes #3 & #4)

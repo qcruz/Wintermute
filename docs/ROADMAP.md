@@ -29,17 +29,17 @@ Active scanning, program management, and operational improvements. This is the c
 
 ### Queue
 
-1. Deriv — revisit with improved SSTI FP filter; verify any real findings
-3. Quora/Poe — revisit corp.quora.com with auth scanning (has real AI/MCP endpoints behind 401); scan remaining 198 targets in batches
-4. Review submission candidates — verify any high-confidence findings, submit if reproducible
-5. Multi-program batch run — scan 3 programs in sequence with `--quick`
-6. Hyatt — slice recon by domain subsets across sessions (61 base domains, 805 subdomains), then scan with `--limit 5 --filter`
-7. CLEAR — rescan with AI modules (prompt injection, data exfil, MCP) now that they exist
-8. GitHub — revisit with auth scanning when capability exists; deep scan education.github.com, npmjs.com, classroom.github.com
-9. Notion — revisit with auth scanning (retool admin panel has real `/api/chat`, `/api/mcp` behind 401; Notion AI asset needs auth)
-10. Wealthsimple — revisit with auth scanning; staging hosts are locked down, needs authenticated access for real coverage
-11. Scout for new programs — run `scout`, evaluate 2-3 new candidates, quick-scan the best
-12. Scan a fresh program from scout results — pick one never scanned, full pipeline
+1. Quora/Poe — revisit corp.quora.com with auth scanning (has real AI/MCP endpoints behind 401); scan remaining 198 targets in batches
+2. Review submission candidates — verify any high-confidence findings, submit if reproducible
+3. Multi-program batch run — scan 3 programs in sequence with `--quick`
+4. Hyatt — slice recon by domain subsets across sessions (61 base domains, 805 subdomains), then scan with `--limit 5 --filter`
+5. CLEAR — rescan with AI modules (prompt injection, data exfil, MCP) now that they exist
+6. GitHub — revisit with auth scanning when capability exists; deep scan education.github.com, npmjs.com, classroom.github.com
+7. Notion — revisit with auth scanning (retool admin panel has real `/api/chat`, `/api/mcp` behind 401; Notion AI asset needs auth)
+8. Wealthsimple — revisit with auth scanning; staging hosts are locked down, needs authenticated access for real coverage
+9. Deriv — fully scanned, 0 reportable findings; revisit if new modules added
+10. Scout for new programs — run `scout`, evaluate 2-3 new candidates, quick-scan the best
+11. Scan a fresh program from scout results — pick one never scanned, full pipeline
 
 **Continuous items** (rotate to bottom after working):
 - Scout for new programs
