@@ -135,22 +135,71 @@ Result: 86 FPs on gist.github.com alone (72 prompt injection, 9 content discover
 
 ### What's Paying in 2026
 
-Based on HackerOne Hacktivity, public disclosures, and bounty trends:
+Based on HackerOne Hacktivity, public disclosures, and bounty trends. Updated 2026-09-30 with latest research.
 
 | Bug Class | Avg Bounty | Our Detection | Gap |
 |-----------|-----------|---------------|-----|
-| **IDOR / Broken Access Control** | $500-5,000 | **Built** (12 modules) | 30 API patterns, sequential ID testing, PII detection |
+| **IDOR / Broken Access Control** | $500-5,000 | **Built** (16 modules) | 30 API patterns, sequential ID testing, PII detection |
 | **SSRF** | $1,000-10,000 | None | Need URL parameter testing with canary callbacks |
 | **Stored XSS** | $500-3,000 | Reflected only | Need form submission testing (POST), DOM analysis |
 | **Authentication Bypass** | $1,000-10,000 | Basic cookie/JWT checks | Need token manipulation, privilege escalation patterns |
 | **Information Disclosure via API** | $200-2,000 | Partial (missing auth check) | Need response content analysis, PII detection |
 | **Subdomain Takeover** | $200-1,000 | Good | Working well, but common/competitive |
-| **CORS with impact** | $200-1,000 | Good | Need to verify authenticated data exposure, not just header reflection |
-| **GraphQL vulnerabilities** | $500-5,000 | **Built** (12 modules) | Introspection query, mutation/query analysis, severity classification |
+| **CORS with impact** | $200-1,000 | **Improved** (Session 30) | Now correctly tests origin reflection; wildcard+credentials no longer flagged |
+| **GraphQL vulnerabilities** | $500-5,000 | **Built** (16 modules) | Introspection query, mutation/query analysis, severity classification |
 | **Race Conditions** | $500-5,000 | None | Complex — needs concurrent request testing |
-| **Path Traversal / LFI** | $500-5,000 | **Built** (12 modules) | Traversal canaries, 5 encoding bypasses, baseline comparison |
-| **Prompt Injection (AI)** | $500-15,000 | None (priority R&D) | AI vuln reports up 210%, prompt injection up 540% — fastest growing category, Anthropic pays up to $15K |
-| **MCP Server Vulnerabilities** | $500-10,000 | None (priority R&D) | 30+ CVEs in 60 days, 82% have path traversal, only 8.5% use OAuth |
+| **Path Traversal / LFI** | $500-5,000 | **Built** (16 modules) | Traversal canaries, 5 encoding bypasses, baseline comparison |
+| **Prompt Injection (AI)** | $500-20,000 | **Built** (3 AI modules) | Median payout $500-$2,500; Anthropic up to $20K, OpenAI up to $100K for exceptional findings |
+| **MCP Server Vulnerabilities** | $500-10,000 | **Built** (MCP module) | 30+ CVEs in 60 days, 82% have path traversal, only 8.5% use OAuth |
+
+### Platform & Program Trends (Session 31 Research)
+
+**Major shifts in 2026:**
+
+1. **HackerOne IBB payouts slashed** — Critical dropped from $9,250 to $2,257 (76% reduction). Medium dropped 84%. IBB program currently paused. Impact: less incentive for open-source vuln research.
+
+2. **GitHub two-tier system (July 2026)** — Public payouts halved (Critical: $10K down from $20-30K). New invite-only VIP tier pays $30K+ for critical. Qualification: 1 critical, 2 high, 4 medium, or 7 low findings. Quality over quantity. GitHub is NOT a good first target for us.
+
+3. **AI-generated report flood** — Programs like Coinbase removing low/medium from public bounty path. GitHub demanding working PoC + demonstrated impact. Trend: triage teams are overwhelmed, raising the bar for acceptance.
+
+4. **AI bug bounties maturing** — 1,121 programs now include AI in scope. Dedicated AI programs at Anthropic, OpenAI, Google, Microsoft, xAI. But median AI payout is $500-$2,500, not the advertised $15-100K maximums.
+
+**Program payout intelligence for our targets:**
+
+| Program | Total Paid | Avg Bounty | Top Bounty | Response Time | Assessment |
+|---------|-----------|-----------|-----------|---------------|------------|
+| **Grab** | $1.02M | $200-500 | $2K-12.5K | 7h first, 2.5d triage | Good response, low avg payout. Worth scanning but low expected ROI per finding. |
+| **Wealthsimple** | $380K | $500 | $1K-20K | 11h first, 6.5d triage | Decent payouts. 46% of submissions are low severity. Staging locked down. |
+| **Quora** | Unknown | $100-7K | Unknown | Unknown | Low minimum ($100). AI endpoints behind auth. |
+| **Tinder** | Unknown | $250 min | Unknown | Unknown | Minimal public data. Staging well-secured. |
+| **GitHub** | Large | $250-10K (public) | $30K+ (VIP) | Unknown | Public payouts halved. Not worth targeting without VIP access. |
+
+**AI-specific program payouts (our specialty focus):**
+
+| Program | Low | Medium | High | Critical | Notes |
+|---------|-----|--------|------|----------|-------|
+| **Anthropic** | — | — | — | Up to $20K | Realistic: $1.5K-$5K. Two tracks: Model Safety + Product Security |
+| **OpenAI** | $200 | — | — | Up to $100K | Typical: $500-$3K. Safety + Security tracks |
+| **Google AI VRP** | $250 | — | — | Up to $31K | **Excludes prompt injection/jailbreaks** — common mistake |
+| **Microsoft Copilot** | $250 | $5K | — | Up to $30K | Now includes moderate-severity awards |
+| **0din (Mozilla)** | $500 | — | — | Up to $15K | Discretionary. Guardrail jailbreaks, training data leakage |
+
+**What gets accepted vs. rejected in AI bounties:**
+- **Paid:** Tool abuse reaching infrastructure (SSRF, RCE), cross-tenant data exfil, system prompt extraction revealing embedded secrets, indirect prompt injection against content readers
+- **Rejected:** Single-domain jailbreaks without broad applicability, direct prompt injection without further exploitation, hallucinations without attacker control
+- **Key insight:** "The reason reports close as informational is that the triager doesn't understand prompt injection's exploitation model." Report framing as a pentest report (root cause + repro + impact) substantially increases payout.
+
+### Strategic Implications for Wintermute
+
+1. **Don't chase headers/SSL.** Missing HSTS, cert issues, and info-level findings are pure noise. Programs increasingly reject or ignore these. Our scanner correctly filters them already, but we should stop counting them as "findings" in our pipeline summary.
+
+2. **AI bounties are real but modest.** The median $500-$2,500 payout for AI findings is honest money but the $15-100K headlines are exceptional cases. Our AI modules need to find findings with **demonstrable impact beyond the injection itself** — tool abuse, data exfil, SSRF through AI.
+
+3. **Authenticated scanning is the bottleneck.** Every promising target we've scanned (Quora, Notion, GitHub, Grab, Wealthsimple) has its real attack surface behind auth. We built the `--auth` infrastructure; now we need to actually obtain credentials and use it.
+
+4. **Quality > quantity.** GitHub's pivot to "submit better, not more" reflects the industry trend. One well-researched, well-documented critical finding is worth more than 100 low-confidence automated reports. We should invest time in manual verification and PoC development for any finding that crosses the 0.7 threshold.
+
+5. **Target selection matters.** Grab pays $200-500 average — low ROI. Wealthsimple pays $500-$20K with good response times — better ROI. Anthropic pays $1.5K-$5K for AI findings — best fit for our specialty. Consider adding Anthropic directly to our scan targets.
 
 ### AI Agent Hacking — Emerging Attack Surface
 

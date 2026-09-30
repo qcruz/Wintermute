@@ -4,6 +4,44 @@ Track what each session accomplished, what was found, and what's queued for next
 
 ---
 
+## Session 31 — 2026-09-30 (Research — Cycle 3)
+
+**Cycle step:** Research — Review bounty payout trends, program economics, AI bounty landscape
+
+**What was done:**
+
+### Bounty Payout Trends Research
+- HackerOne IBB payouts slashed 76-89% across all severity levels (critical $9,250→$2,257). IBB program paused.
+- GitHub split into public (payouts halved) and invite-only VIP tier ($30K+ for critical). Quality gate: 1 critical or 2 high or 4 medium findings to qualify.
+- AI-generated report flood is overwhelming triage teams — programs raising the bar for acceptance.
+- Coinbase removed low/medium from public bounty path.
+
+### Program Economics Analysis
+- Documented payout data for our scanned programs: Grab ($200-500 avg), Wealthsimple ($500 avg, up to $20K), Quora ($100-7K), GitHub ($250-10K public, $30K+ VIP).
+- Grab: high volume ($1M+ paid) but low per-finding ROI. Wealthsimple: better ROI. GitHub: not worth without VIP.
+
+### AI Bounty Landscape
+- 1,121 programs now include AI in scope.
+- Realistic AI payout median: $500-$2,500 (not the $15-100K headlines).
+- Anthropic: up to $20K, realistic $1.5K-$5K. OpenAI: up to $100K, typical $500-$3K.
+- **Google AI VRP excludes prompt injection** — common mistake to avoid.
+- What gets paid: tool abuse reaching infra, cross-tenant data exfil, system prompt extraction with secrets, indirect injection.
+- What gets rejected: jailbreaks without impact, direct injection without exploitation chain, hallucinations.
+
+### Strategic Implications
+1. Stop chasing headers/SSL — pure noise
+2. AI bounties are real but modest — need findings with impact beyond injection
+3. Authenticated scanning is THE bottleneck — all promising targets behind auth
+4. Quality > quantity — one well-documented critical > 100 automated reports
+5. Target selection: consider adding Anthropic directly; deprioritize low-ROI programs like Grab
+
+**Updated:** `docs/STRATEGY.md` with full payout intelligence, program comparison tables, AI bounty program details, and strategic recommendations.
+
+**Queued for next session:**
+- Cycle 4 (Docs) or Cycle 1 (Scanning): Consider adding Anthropic to scan targets; test auth scanning on a real target
+
+---
+
 ## Session 30 — 2026-09-30 (R&D — Cycle 2)
 
 **Cycle step:** Scanner R&D — Fix CORS, AI endpoint heuristic, MCP timeout (items 4-6 in queue)
