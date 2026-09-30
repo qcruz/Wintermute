@@ -118,10 +118,9 @@ Code quality, documentation, testing, infrastructure. Keeps the project maintain
 ### Queue
 
 1. Write case study doc for first accepted bounty (when it happens)
-2. Review and update all docs for accuracy after recent changes
-3. Add CLI dashboard showing pipeline status, program coverage, finding stats
-4. Implement submission outcome tracking — log accepted/rejected/duplicate results
-5. Document authenticated scanning workflow once built (setup, credentials, session management)
+2. Add CLI dashboard showing pipeline status, program coverage, finding stats
+3. Implement submission outcome tracking — log accepted/rejected/duplicate results
+4. Document authenticated scanning workflow — expand beyond current inline docs in operations.md (session management, credential rotation, multi-program auth)
 
 **Continuous items** (rotate to bottom after working):
 - Review and update all docs for accuracy after recent changes

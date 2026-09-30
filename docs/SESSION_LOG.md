@@ -4,6 +4,28 @@ Track what each session accomplished, what was found, and what's queued for next
 
 ---
 
+## Session 32 — 2026-09-30 (Docs — Cycle 4)
+
+**Cycle step:** Docs — Review and update all docs for accuracy after recent changes + document auth scanning workflow
+
+**What was done:**
+
+### Documentation Audit & Updates
+- **`docs/operations.md`**: Added authenticated scanning section (`--auth` flag, `.auth/<handle>.json` config format, which modules support auth). Expanded check table from 9 to 16 modules with descriptions and `--quick` eligibility. Updated date.
+- **`docs/vulnerability-detection.md`**: Fixed CORS wildcard+credentials section — was described as "a critical finding", now correctly states it's non-exploitable (browsers block credentials with wildcard origin). Added full Module 16 (AI Data Exfiltration) documentation: what it detects, 4 phases, valid examples, safety, OWASP/CWE references. Updated date.
+- **`docs/how-it-works.md`**: Updated Step 4 from "Phase 3 — Current" / "building now" to reflect 16 scanner modules are built, including AI-specific modules and authenticated scanning. Updated Step 5 from "Phase 4 — Future" to document the fully built reporting engine (35 templates, dedup, interactive review, API submission). Updated date.
+
+### Auth Scanning Workflow (partial)
+- Documented in operations.md: CLI flag, config file format, supported modules
+- Full standalone workflow doc deferred — current inline docs are sufficient
+
+**Files changed:** `docs/operations.md`, `docs/vulnerability-detection.md`, `docs/how-it-works.md`
+
+**Queued for next session:**
+- Cycle 1 (Scanning) — Quora/Poe revisit with auth scanning, or review submission candidates
+
+---
+
 ## Session 31 — 2026-09-30 (Research — Cycle 3)
 
 **Cycle step:** Research — Review bounty payout trends, program economics, AI bounty landscape

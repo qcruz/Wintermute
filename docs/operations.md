@@ -50,12 +50,38 @@ python -m scripts.wintermute <handle> --checks cors,injection,auth_checks
 python -m scripts.wintermute <handle> --scan-only --quick --limit 3 --filter api
 ```
 
-### Available Checks
+### Authenticated Scanning
+
+```bash
+# Scan with authentication (loads cookies/headers from .auth/<handle>.json)
+python -m scripts.wintermute <handle> --auth --scan-only --filter api
+
+# Set up auth config (copy template, fill in real values)
+cp .auth/example.json .auth/<handle>.json
+# Edit with real session cookies and/or API tokens
+```
+
+Auth config format (`.auth/<handle>.json`):
+```json
+{
+    "cookies": {
+        "session_id": "YOUR_SESSION_COOKIE",
+        "csrf_token": "YOUR_CSRF_TOKEN"
+    },
+    "headers": {
+        "Authorization": "Bearer YOUR_TOKEN"
+    }
+}
+```
+
+Auth is passed to: `content_discovery`, `ai_prompt_injection`, `ai_data_exfil`, `mcp_security`. The `.auth/` directory is gitignored.
+
+### Available Checks (16 modules)
 
 | Check | In `--quick` | Description |
 |-------|:---:|-------------|
 | `subdomain_takeover` | Yes | Dangling CNAME detection |
-| `cors` | Yes | CORS misconfiguration |
+| `cors` | Yes | CORS origin reflection, null origin |
 | `ssl_tls` | Yes | Certificate and protocol issues |
 | `security_headers` | Yes | Missing security headers |
 | `exposed_files` | | Sensitive files (.git, .env, backups) |
@@ -63,6 +89,13 @@ python -m scripts.wintermute <handle> --scan-only --quick --limit 3 --filter api
 | `injection` | | XSS, SQLi, open redirect, SSTI |
 | `auth_checks` | | Cookie flags, missing auth, JWT issues |
 | `business_logic` | | Error leaks, version disclosure, clickjacking |
+| `idor` | | Sequential ID enumeration, PII detection |
+| `path_traversal` | | Directory traversal with encoding bypasses |
+| `graphql` | | Introspection, schema analysis |
+| `js_analysis` | | Secret detection in JavaScript files |
+| `ai_prompt_injection` | | AI endpoint discovery, injection canaries, system prompt extraction |
+| `ai_data_exfil` | | AI context extraction, PII/backend leak detection |
+| `mcp_security` | | MCP server discovery, auth bypass, tool poisoning, path traversal |
 
 ### Individual Phases
 
@@ -206,4 +239,4 @@ rm wintermute.db
 
 ---
 
-*Last updated: 2026-09-27*
+*Last updated: 2026-09-30*

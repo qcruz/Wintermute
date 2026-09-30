@@ -172,20 +172,45 @@ changed. Changes often mean new attack surface.
 
 ---
 
-## Step 4: Check for Vulnerabilities (Phase 3 — Current)
+## Step 4: Check for Vulnerabilities
 
-**What happens:** We run specific checks against each discovered target
+**What happens:** We run 16 scanner modules against each discovered target,
 looking for known security issues.
 
-This is what we're building now. See `docs/vulnerability-detection.md`
-for details on each check type.
+**Modules include:** subdomain takeover, CORS misconfiguration, SSL/TLS
+issues, exposed files, content discovery, injection testing (XSS, SQLi,
+open redirect, SSTI), auth checks, business logic flaws, IDOR, path
+traversal, GraphQL introspection, JavaScript secret analysis, and three
+AI-specific modules (prompt injection, data exfiltration, MCP security).
+
+**Authenticated scanning:** With `--auth`, the scanner loads cookies and
+headers from `.auth/<handle>.json` and passes them to modules that test
+protected endpoints (content discovery, AI prompt injection, AI data
+exfiltration, MCP security).
+
+See `docs/vulnerability-detection.md` for details on each check type.
 
 ---
 
-## Step 5: Report Findings (Phase 4 — Future)
+## Step 5: Report Findings
 
-**What will happen:** For validated vulnerabilities, we generate
-professional reports and submit them through HackerOne's API.
+**What happens:** For validated vulnerabilities, the reporting engine
+generates professional reports and can submit them through HackerOne's API.
+
+**How it works:**
+1. **Template matching** — Each finding type maps to one of 35 report
+   templates with CWE references, severity ratings, and remediation advice
+2. **Duplicate detection** — Checks against our internal database AND
+   queries the HackerOne API to avoid submitting known issues
+3. **Interactive review** — Findings are queued for human review. You see
+   the full report, adjust severity if needed, and approve or skip
+4. **API submission** — Approved reports are submitted via HackerOne's API
+   with proper formatting, impact statements, and reproduction steps
+
+**Code:** `src/reporting/` — templates, dedup engine, reporting pipeline
+
+**Human review is mandatory.** Auto-submit is off. Every report gets a
+human decision before it goes to the program.
 
 ---
 
@@ -214,4 +239,4 @@ professional reports and submit them through HackerOne's API.
 
 ---
 
-*Last updated: 2026-09-27*
+*Last updated: 2026-09-30*
