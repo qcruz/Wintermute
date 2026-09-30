@@ -19,6 +19,8 @@ Living document tracking progress, successes, failures, trends, and research to 
 | Notion | 8 | Quick + AI-focused | 17 real endpoint discoveries on retool (all auth-gated), 24 prompt injection FPs (catch-all) | 0 | Retool admin panel is high-value but needs auth; Notion AI needs auth |
 | Quora/Poe | 205 | Targeted (7 hosts deep scanned) | 16 AI + 7 MCP endpoint discoveries on corp.quora.com (all auth-gated), 4 SSTI FPs, clickjacking on developer.poe.com | 0 | SSTI baseline fix needed; corp.quora.com has real AI/MCP endpoints behind 401 |
 | Wealthsimple | 81 | Targeted (6 hosts deep scanned) | Insecure cookie on work-staging, 9 content discovery (blanket-403 FPs), 1 AI endpoint (info), 18 catch-all redirect FPs on paymentcard | 0 | Mostly locked-down staging; needs auth scanning for real coverage |
+| Tinder | 59 | Quick + deep (API, staging) | 25 findings — all missing HSTS headers | 0 | crt.sh 502'd on all 6 domains; staging targets well-secured; needs better recon |
+| Grab | 52 | Quick + deep (8 targets deep scanned) | CORS (non-exploitable wildcard), SSL cert mismatches, HSTS, CSRF cookie on staging, server version disclosure | 0 | 18 interesting targets (APIs, staging, dev, GitLab OIDC) all returned only surface-level findings; hungrygowhere.com admin/staging subdomains mostly dead; needs auth scanning |
 
 ### Submissions: 0 sent, 0 accepted
 
@@ -42,7 +44,9 @@ Living document tracking progress, successes, failures, trends, and research to 
 | Catch-all routing (gist.github.com, mail.notion.so) | 110+ | Pipeline-level catch-all detection skips path-based checks |
 | Catch-all redirect (paymentcard.wealthsimple.com) | 18 | Catch-all redirect detection skips hosts where 404 baseline redirects to login |
 | Low-confidence content discovery (403, redirect, status-only) | 138+ | Granular confidence scoring: only fingerprint matches (0.85) exceed threshold; redirect/forbidden/status-only at 0.4–0.5 |
-| **Total FPs caught and fixed** | **~557+** | |
+| AI endpoint FP (CSS file flagged as "AI feature link") | 1 | chat_param heuristic too loose — triggers on CSS/JS files |
+| CORS wildcard + credentials (non-exploitable) | 2 | ACAO:* with ACAC:true — browsers block credentials; need origin reflection check |
+| **Total FPs caught and fixed** | **~560+** | |
 
 Our false positive detection is improving with each scan. The pattern: scan a new program, discover a new FP class, fix it, move on.
 
@@ -461,3 +465,6 @@ Update this document every 3-4 sessions or after significant events (first submi
 | 2026-09-29 | AI target scouting complete | GitHub (Copilot), Notion (AI_MODEL), Quora/Poe identified as Tier 1 AI targets |
 | 2026-09-29 | AI Data Exfiltration module built | 16th scanner, context/PII/backend/RAG leak detection, 145 tests |
 | 2026-09-29 | FP analysis complete (333 findings) | 72% of findings from 3 low-signal modules; SSTI 100% FP; content_discovery, headers, exposed_files need tuning |
+| 2026-09-29 | Auth scanning infrastructure built | `--auth` flag, shared HTTP client, `.auth/<handle>.json` config, 4 modules updated |
+| 2026-09-29 | Tinder + Grab scouted and scanned | 59 + 52 targets; all surface-level findings; crt.sh 502 issues limited recon |
+| 2026-09-30 | Grab deep scan (8 targets) | 0 submittable findings; CORS verified non-exploitable; most interesting targets behind auth |

@@ -4,6 +4,49 @@ Track what each session accomplished, what was found, and what's queued for next
 
 ---
 
+## Session 29 — 2026-09-30 (Scanning — Cycle 1)
+
+**Cycle step:** Scanning & Operations — Deep scan Grab and Tinder, review quick-scan results from Session 28
+
+**What was done:**
+
+### Tinder Review
+- Quick scan completed: 59 targets, 25 findings — all missing HSTS headers (95% dup probability)
+- CORS finding on `reports.gotinder.com`: `ACAO: *` + `ACAC: true` — verified non-exploitable (no origin reflection)
+- crt.sh returned 502 for all 6 Tinder domains — zero subdomains enumerated. The 59 targets were from prior recon.
+- **Assessment:** Tinder staging targets well-secured. Needs better recon (crt.sh unreliable) and auth scanning.
+
+### Grab Deep Scan (8 targets across 4 batches)
+- `gitlab-oidc.myteksi.net` — 16 checks, only HSTS
+- `dev-website.ovofinansial.com` — AI endpoint FP (CSS file flagged as "chat_param"), HSTS only
+- `auth-stg.ovofinansial.com` — insecure CSRF cookie (Django default, missing Secure/HttpOnly), HSTS. Scan took 90 min (mcp_security slow). Not bounty-worthy.
+- `api.ovo.id` — 16 checks, only HSTS
+- `hungrygowhere.com` / `www.hungrygowhere.com` / `go.hungrygowhere.com` — robots.txt, Apache 2.4.52 server version, crossdomain.xml, Bitly redirect cookie. Business logic flagged server version disclosure.
+- CORS on `img.geo.azure.myteksi.net`: `ACAO: *` + `ACAC: true` — verified non-exploitable (wildcard origin, no reflection)
+- Only 3 of 115 hungrygowhere.com subdomains alive (admin/staging/merchant targets all dead)
+
+### Results
+- **Grab total: 54 findings, 0 submittable.** All surface-level (HSTS, SSL, info disclosure)
+- **Tinder total: 25 findings, 0 submittable.** All HSTS headers
+- Both programs well-hardened at the unauthenticated surface level
+
+### FP patterns identified
+- AI `chat_param` heuristic too loose — flagged CSS file as AI endpoint
+- CORS `ACAO: *` + `ACAC: true` is NOT exploitable (browsers block credentials with wildcard) — our scanner should check for origin reflection instead
+
+### Analysis
+- 11 programs scanned total, 0 submissions. Unauthenticated scanning consistently finds only surface-level noise.
+- The real attack surface on every promising target (Quora, Notion, GitHub, Grab, Wealthsimple) is behind authentication.
+- Key capability gaps: (1) subdomain enumeration beyond crt.sh, (2) auth scanning on real targets, (3) CORS scanner should test origin reflection not just header presence
+- mcp_security module is too slow (90 min on auth-stg) — needs timeout or optimization
+
+**Queued for next session:**
+- Cycle 2 (R&D): Fix CORS scanner to test origin reflection; add timeout to mcp_security; improve AI endpoint discovery heuristic
+- Cycle 1 backlog: Test auth scanning on a real target (need session cookies)
+- Consider: subdomain enum expansion (crt.sh failing frequently), manual target injection
+
+---
+
 ## Session 28 — 2026-09-29 (R&D + Scanning — Cycles 2 & 1)
 
 **Cycle steps:** R&D — Build authenticated scanning infrastructure; Scanning — Scout and quick-scan fresh programs

@@ -37,9 +37,11 @@ Active scanning, program management, and operational improvements. This is the c
 6. GitHub — revisit with auth scanning when capability exists; deep scan education.github.com, npmjs.com, classroom.github.com
 7. Notion — revisit with auth scanning (retool admin panel has real `/api/chat`, `/api/mcp` behind 401; Notion AI asset needs auth)
 8. Wealthsimple — revisit with auth scanning; staging hosts are locked down, needs authenticated access for real coverage
-9. Deriv — fully scanned, 0 reportable findings; revisit if new modules added
-10. Scout for new programs — run `scout`, evaluate 2-3 new candidates, quick-scan the best
-11. Scan a fresh program from scout results — pick one never scanned, full pipeline
+9. Grab — revisit with auth scanning and better recon (crt.sh 502'd on 10/18 domains); 115 hungrygowhere.com subdomains enumerated but only 3 alive; API/staging targets need auth
+10. Tinder — needs recon re-run (crt.sh 502'd on all 6 domains); staging targets at *.tstaging.com well-secured
+11. Deriv — fully scanned, 0 reportable findings; revisit if new modules added
+12. Scout for new programs — run `scout`, evaluate 2-3 new candidates, quick-scan the best
+13. Scan a fresh program from scout results — pick one never scanned, full pipeline
 
 **Continuous items** (rotate to bottom after working):
 - Scout for new programs
@@ -59,24 +61,29 @@ Research, prototype, and integrate new vulnerability detection capabilities. Eac
 2. ~~**SSTI baseline comparison**~~ ✅ DONE (Session 24) — Changed canary from `{{7*7}}→49` to `{{91*71}}→6461` (49 too common in Cloudflare tokens). Added non-200 status code filter. Fixes 25 SSTI FPs across Deriv and Quora/Poe.
 3. ~~**Content discovery confidence tuning**~~ ✅ DONE (Session 26) — Granular confidence: fingerprint=0.85, redirect-to-login=0.5, forbidden=0.5, status-only=0.4. Only fingerprint-confirmed findings exceed 0.7 threshold. Added catch-all redirect detection (skips hosts where 404 baseline redirects to login). Fixes 18+ FPs on paymentcard.wealthsimple.com and similar hosts.
 
+**FP fixes & scanner quality (Session 29):**
+4. **CORS origin reflection check** — Current scanner flags `ACAO: *` + `ACAC: true` as misconfiguration, but it's not exploitable (browsers block). Should test if server reflects attacker origin instead.
+5. **AI endpoint discovery heuristic** — `chat_param` type too loose, flagged CSS file as AI endpoint. Tighten to require actual API-like response (JSON, HTML with chat widget).
+6. **MCP security timeout** — Module took 90 min on auth-stg.ovofinansial.com. Add per-module timeout (e.g., 5 min max).
+
 **Infrastructure & capability:**
-5. ~~**Authenticated scanning**~~ ✅ DONE (Session 28) — `--auth` flag loads cookies/headers from `.auth/<handle>.json`. Wired through pipeline to content_discovery, ai_prompt_injection, ai_data_exfil, mcp_security. Shared HTTP client in `src/core/http_client.py`.
-6. **Subdomain enumeration expansion** — Add sources beyond crt.sh (SecurityTrails, Subfinder, DNS brute-force); crt.sh found only 2 of GitHub's 27+ in-scope assets
-7. **Manual target injection** — CLI flag to add specific hostnames to a program's target list without relying on recon (workaround until enum is expanded)
+7. ~~**Authenticated scanning**~~ ✅ DONE (Session 28) — `--auth` flag loads cookies/headers from `.auth/<handle>.json`. Wired through pipeline to content_discovery, ai_prompt_injection, ai_data_exfil, mcp_security. Shared HTTP client in `src/core/http_client.py`.
+8. **Subdomain enumeration expansion** — Add sources beyond crt.sh (SecurityTrails, Subfinder, DNS brute-force); crt.sh found only 2 of GitHub's 27+ in-scope assets; crt.sh had 502 errors on 16+ domains in Sessions 28-29
+9. **Manual target injection** — CLI flag to add specific hostnames to a program's target list without relying on recon (workaround until enum is expanded)
 
 **AI Agent Security (priority track):**
-8. **Insecure AI Integration** — Test for AI endpoints lacking auth, rate limiting, or input validation; LLM-powered APIs that pass unsanitized user input to backend systems
+10. **Insecure AI Integration** — Test for AI endpoints lacking auth, rate limiting, or input validation; LLM-powered APIs that pass unsanitized user input to backend systems
 
 **General web security:**
-9. **SSRF Detection** — Test URL/webhook parameters for internal network access (requires callback server setup)
-10. **Host Header Injection** — Test for password reset poisoning and cache poisoning via Host header manipulation
-11. **Broken Rate Limiting** — Detect missing rate limits on login, password reset, and API endpoints
-12. **API Versioning Gaps** — Test older API versions (v1 when v2 exists) for deprecated, unpatched endpoints
-13. **WebSocket Testing** — Check for unauthenticated WebSocket connections and missing origin validation
-14. **Prototype Pollution** — Detect JavaScript prototype pollution via `__proto__` in JSON APIs
-15. **Cloud Metadata SSRF** — Test for AWS/GCP/Azure metadata endpoint access (169.254.169.254)
-16. **Race Conditions** — Detect TOCTOU issues on coupon/discount/balance endpoints
-17. **Cache Poisoning** — Test for web cache deception via path confusion and unkeyed headers
+11. **SSRF Detection** — Test URL/webhook parameters for internal network access (requires callback server setup)
+12. **Host Header Injection** — Test for password reset poisoning and cache poisoning via Host header manipulation
+13. **Broken Rate Limiting** — Detect missing rate limits on login, password reset, and API endpoints
+14. **API Versioning Gaps** — Test older API versions (v1 when v2 exists) for deprecated, unpatched endpoints
+15. **WebSocket Testing** — Check for unauthenticated WebSocket connections and missing origin validation
+16. **Prototype Pollution** — Detect JavaScript prototype pollution via `__proto__` in JSON APIs
+17. **Cloud Metadata SSRF** — Test for AWS/GCP/Azure metadata endpoint access (169.254.169.254)
+18. **Race Conditions** — Detect TOCTOU issues on coupon/discount/balance endpoints
+19. **Cache Poisoning** — Test for web cache deception via path confusion and unkeyed headers
 
 **Continuous items** (rotate to bottom after working):
 - Review HackerOne Hacktivity for new bug patterns to add
