@@ -22,13 +22,28 @@ Living document tracking progress, successes, failures, trends, and research to 
 | Tinder | 59 | Quick + deep (API, staging) | 25 findings — all missing HSTS headers | 0 | crt.sh 502'd on all 6 domains; staging targets well-secured; needs better recon |
 | Grab | 52 | Quick + deep (8 targets deep scanned) | CORS (non-exploitable wildcard), SSL cert mismatches, HSTS, CSRF cookie on staging, server version disclosure | 0 | 18 interesting targets (APIs, staging, dev, GitLab OIDC) all returned only surface-level findings; hungrygowhere.com admin/staging subdomains mostly dead; needs auth scanning |
 
-### Submissions: 0 sent, 0 accepted
+### Submissions: 1 sent, 0 accepted
 
-**Why zero submissions so far:**
-- Most findings are low-severity (missing headers, SSL cert expiry) — known to be heavily duplicated
-- CORS finding on Kiwi.com was strong but became unreproducible before submission
-- JWT finding on CLEAR needs deeper investigation
-- We're still calibrating — better to hold than submit weak reports and damage Signal score
+| # | Program | Finding | Severity | Report ID | Outcome | Lesson |
+|---|---------|---------|----------|-----------|---------|--------|
+| 1 | Kiwi.com | CORS origin reflection on tequila.kiwi.com | Medium | #4077213 | **Duplicate** of #2697751 | CORS misconfigs are over-hunted; common vuln types on established programs will almost always be duped |
+
+**Why no accepted submissions yet:**
+- Our first real finding (CORS) was a duplicate — common vuln types are heavily competed
+- Most other findings are low-severity (missing headers, SSL cert expiry) — programs reject these
+- High-value targets (AI/MCP endpoints) are behind authentication walls
+- We're still calibrating — but the pipeline works end-to-end (find → verify → report → submit)
+
+### Lessons from First Submission
+
+1. **Common vuln types on established programs = duplicate.** CORS, subdomain takeover, missing headers — if a basic scanner can find it, someone already reported it. Need to focus on vuln types that require deeper analysis.
+2. **Speed matters.** The Kiwi.com CORS was a known issue (#2697751 was reported much earlier). For common vulns, the only edge is scanning new programs within hours of launch.
+3. **Differentiation is the path forward.** To avoid duplicates, we need findings that automated scanners miss:
+   - **AI/MCP vulnerabilities** — our specialty, very few hunters have tooling for this
+   - **IDOR/access control** — requires understanding app logic, not just probing paths
+   - **JS secret exposure** — high-entropy secrets that actually work
+   - **Authenticated scanning** — testing behind login walls where fewer hunters go
+4. **The pipeline works.** Discovery → verification → report generation → API submission all functioned correctly. The bottleneck is finding quality, not tooling.
 
 ### False Positive Rate
 
@@ -120,11 +135,17 @@ Result: 86 FPs on gist.github.com alone (72 prompt injection, 9 content discover
 - **FP feedback loop** — each scan teaches us a new FP pattern to fix
 
 ### What's Not Working Yet
-- **No submissions** — we haven't proven the pipeline can produce reportable findings
+- **Common vuln types are all duplicates** — first submission (CORS) was duplicate. Surface-level findings on established programs are already reported.
 - **Finding quality** — most findings are informational (missing headers, cert expiry) that programs reject
-- **Deep vulns now building** — IDOR, path traversal, and GraphQL modules built; need live findings to validate them
-- **Timing gap** — CORS on Kiwi.com was real but went stale before we could submit. Findings need faster turnaround.
+- **Auth wall** — every promising target has its real attack surface behind authentication. Without auth cookies, we only see the front door.
 - **Large program handling** — Hyatt (291 targets) needs multi-session strategy
+
+### What Needs to Change
+- **Stop investing time in CORS, headers, SSL** — these will always be duplicates on established programs
+- **Prioritize uncommon vuln types** — AI/MCP exploits, IDOR, JS secrets, GraphQL introspection
+- **Scan new programs fast** — use `scout` to find newly launched programs and scan within hours
+- **Get auth scanning working** — obtain real session cookies for high-value targets (Quora/Poe, Notion, GitHub)
+- **Invest in manual verification** — automated finding + manual PoC development = accepted report
 
 ### Key Insight
 > The bugs that pay bounties (IDOR, access control bypass, SSRF, stored XSS) require understanding application logic, not just probing headers and common paths. Our current checks are "layer 1" — surface-level. We need "layer 2" checks that understand API patterns, auth flows, and data exposure.
@@ -338,22 +359,21 @@ Based on research, these programs have AI features in scope:
 ## Strategic Priorities
 
 ### Immediate (Next 2-3 Sessions)
-1. **Get first submission** — run new deep checks (IDOR, path traversal, GraphQL, JS analysis) against all programs; verify and submit any strong findings immediately
-2. **Faster turnaround** — when a strong finding appears, verify and submit in the same session before it goes stale
-3. **Scan fresh programs** — scout and scan new programs where competition may be lower
+1. **Get first accepted submission** — common vuln types are duplicates on established programs. Focus on: (a) AI/MCP vulns on AI-integrated targets, (b) scanning brand-new programs within hours of launch, (c) auth scanning behind login walls where fewer hunters go
+2. **Scout aggressively** — new programs have the lowest duplicate rates. Run `scout` weekly and scan new programs same-day.
+3. **Auth scanning on Quora/Poe** — corp.quora.com has 22 AI/MCP endpoints behind 401. Getting auth cookies could produce multiple original findings.
 
 ### Short-term (Next 5-10 Sessions)
-4. **MCP security testing** — probe MCP server endpoints for auth bypass, path traversal, command injection, tool poisoning
-5. **Scan AI-integrated targets** — run the new AI prompt injection module against programs with AI features
+4. **Re-run recon with expanded enum** — GitHub, Tinder, Grab all had poor crt.sh results. New HackerTarget + OTX sources should find many more targets.
+5. **Scan AI-integrated targets with auth** — Notion AI, GitHub Copilot endpoints need authenticated access
 6. **SSRF detection** — test URL parameters with callback canaries (requires callback server setup)
 7. **Hyatt sliced scanning** — large attack surface, slice recon by domain subsets
 8. ~~**Scout AI-focused programs**~~ — **DONE (Session 15)**: GitHub (Copilot), Notion (AI_MODEL asset), Quora/Poe identified as Tier 1 AI targets
 
 ### Medium-term (10-20 Sessions)
-9. **AI Data Exfiltration module** — detect AI agents leaking data through crafted inputs
-10. **Insecure AI Integration module** — test for AI endpoints lacking auth, rate limiting, input validation
-11. **Stored XSS** — requires POST request capability (careful: violates current GET-only safety rule, needs ethics review)
-12. **Bugcrowd integration** — expand to second platform for more program coverage
+9. **Insecure AI Integration module** — test for AI endpoints lacking auth, rate limiting, input validation
+10. **Stored XSS** — requires POST request capability (careful: violates current GET-only safety rule, needs ethics review)
+11. **Bugcrowd integration** — expand to second platform for more program coverage
 
 ### Long-term Vision
 - Become a recognized specialist in AI agent security testing
@@ -517,3 +537,8 @@ Update this document every 3-4 sessions or after significant events (first submi
 | 2026-09-29 | Auth scanning infrastructure built | `--auth` flag, shared HTTP client, `.auth/<handle>.json` config, 4 modules updated |
 | 2026-09-29 | Tinder + Grab scouted and scanned | 59 + 52 targets; all surface-level findings; crt.sh 502 issues limited recon |
 | 2026-09-30 | Grab deep scan (8 targets) | 0 submittable findings; CORS verified non-exploitable; most interesting targets behind auth |
+| 2026-09-30 | 3 R&D fixes: CORS wildcard, AI endpoint heuristic, MCP timeout | 560+ FPs caught total; scan quality improving |
+| 2026-09-30 | Bounty payout research | HackerOne IBB slashed 76-89%; AI median $500-2500; Grab low ROI; Anthropic best fit |
+| 2026-10-01 | **First submission: Report #4077213** | Kiwi.com CORS on tequila.kiwi.com — **DUPLICATE** of #2697751. Common vulns = always duped. |
+| 2026-10-01 | Subdomain enum expansion | Added HackerTarget + OTX sources; 51 github.com subs vs crt.sh's 2; 168 tests |
+| 2026-10-01 | Post-duplicate strategy update | Pivot: stop common vulns, focus AI/MCP + new programs + auth scanning |
