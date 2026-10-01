@@ -4,6 +4,47 @@ Track what each session accomplished, what was found, and what's queued for next
 
 ---
 
+## Session 36 — 2026-10-01 (Research — Cycle 3 + Strategy Update)
+
+**Cycle step:** Research — Hacktivity analysis + post-duplicate strategy update
+
+**What was done:**
+
+### Post-Duplicate Strategy Update
+- Updated STRATEGY.md with submission tracker, lessons learned, and revised priorities
+- Key pivot: stop investing in common vuln types (CORS, headers, SSL) — always duplicates on established programs
+- New focus: AI/MCP exploits, brand-new program scanning, authenticated scanning behind login walls
+
+### Hacktivity Analysis (200 recent items)
+- **Anthropic** paying $250 bounties recently — program is active
+- **Notion** also paying $250 — our Tier 1 targets are viable
+- **Vercel** paying $750 — interesting sandbox escape program
+- **s-pankki** has 30 reports — likely new program launch
+- **Stripe, Coinbase** still paying $1K-2K
+
+### Anthropic Scope Analysis
+- 15 in-scope assets, all bounty-eligible:
+  - `claude.ai`, `api.anthropic.com`, `console.anthropic.com` — core AI platform
+  - **Claude Code** — permission prompt bypass explicitly in scope
+  - **Claude Desktop Extensions + MCP servers** — our MCP module directly applicable
+  - `anthropic.atlassian.com` — Jira instance
+  - `github.com/anthropics` — source code
+  - **Leaked Employee API Keys** — JS secret module applicable
+- **This is the ideal target for our AI security specialty.**
+
+### Competitive Analysis (brief)
+- Nuclei: 9,000+ templates but zero AI/MCP detection
+- Burp Suite: no native AI testing
+- Garak (NVIDIA): prompt injection only, no recon/scope/reporting
+- **Our edge: integrated pipeline with AI-specific detection that no other tool has**
+
+**Files changed:** `docs/STRATEGY.md`, `docs/ROADMAP.md`, `docs/SESSION_LOG.md`
+
+**Queued for next session:**
+- Cycle 1 (Scanning) — **Scan Anthropic**: recon + full pipeline with AI/MCP modules
+
+---
+
 ## Session 35 — 2026-10-01 (R&D — Cycle 2)
 
 **Cycle step:** R&D — Subdomain enumeration expansion

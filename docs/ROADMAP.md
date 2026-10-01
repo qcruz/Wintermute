@@ -29,9 +29,9 @@ Active scanning, program management, and operational improvements. This is the c
 
 ### Queue
 
-1. **SUBMIT: Kiwi.com CORS on tequila.kiwi.com** — verified origin reflection with credentials on B2B partner portal. Review report, submit if confident.
+1. **Anthropic** — scan claude.ai, api.anthropic.com, console.anthropic.com, docs.anthropic.com, support.anthropic.com with AI/MCP modules. MCP servers + Claude Code permission bypass are explicitly in scope. Program actively paying ($250 recent).
 2. Investigate CLEAR corpsupport.clearme.com JS secret exposure — verify JWT tokens in JS files
-3. Multi-program batch run — scan 3 programs in sequence with `--quick`
+3. Multi-program batch run — re-run recon on GitHub, Tinder, Grab with new subdomain sources, then scan new targets
 4. Hyatt — slice recon by domain subsets across sessions (61 base domains, 805 subdomains), then scan with `--limit 5 --filter`
 5. CLEAR — rescan with AI modules (prompt injection, data exfil, MCP) now that they exist
 6. GitHub — revisit with auth scanning when capability exists; deep scan education.github.com, npmjs.com, classroom.github.com
