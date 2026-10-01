@@ -4,6 +4,43 @@ Track what each session accomplished, what was found, and what's queued for next
 
 ---
 
+## Session 33 — 2026-10-01 (Scanning — Cycle 1)
+
+**Cycle step:** Scanning — Quora/Poe batch scanning + review submission candidates
+
+**What was done:**
+
+### Quora/Poe Scanning
+- Scanned 15 of 205 targets (up from 6). Covered all high-value non-dev targets: poe.com, hackathon.poe.com, proddebug.quora.com, phabricator.net.quora.com, help.poe.com, help.quora.com, tch.*.quora.com
+- **hackathon.poe.com**: JWT weak config (HS256) + Adminer (403) — interesting but not submittable alone
+- **corp.quora.com**: 15 AI + 7 MCP endpoints all behind 401 — needs auth cookies
+- Remaining 190 targets are `*.main.quora.com` dev instances and `ww*.poe.com` parking domains — spot-checked, all produce only HSTS noise
+- Killed a hung deep scan on proddebug.quora.com (40 min, likely MCP module on slow host)
+
+### FP Cleanup (136 total)
+- Deleted 4 old SSTI FPs on Quora (old `{{7*7}}` canary)
+- Deleted 21 old SSTI FPs on Deriv (same old canary)
+- Deleted 81 gist.github.com catch-all FPs (prompt injection + content discovery on user gist URLs)
+- Deleted 24 mail.notion.so prompt injection FPs (catch-all routing)
+- Deleted 10 HackerOne FPs (mta-sts takeover — owned by hacker0x01 org; leaderboards.hackerone.live SPA catch-all; hackerone.com /debug SPA route)
+
+### Submission Candidate Review
+- **Kiwi.com CORS on tequila.kiwi.com** — CONFIRMED REAL. Server reflects any arbitrary `Origin` with `Access-Control-Allow-Credentials: true`. Verified manually with curl. tequila.kiwi.com is Kiwi.com's B2B partner API portal (login, API keys, bookings). In-scope with bounty. **This is our #1 submission candidate.**
+- HackerOne `.env` on leaderboards.hackerone.live — FP (SPA catch-all)
+- HackerOne subdomain takeovers — FP (CNAMEs to hacker0x01.github.io, owned org)
+- CLEAR JS secrets on corpsupport.clearme.com — needs investigation
+
+**Key insight:** After 33 sessions and 11 programs, **Kiwi.com CORS is our first real submission candidate.** Origin reflection with credentials on a B2B portal is a medium-to-high severity finding.
+
+**Files changed:** `docs/STRATEGY.md`, `docs/SESSION_LOG.md`, `docs/ROADMAP.md`
+
+**Queued for next session:**
+- Review Kiwi.com CORS report draft and potentially submit
+- Investigate CLEAR corpsupport.clearme.com JS secrets
+- Continue Cycle 1 scanning (next programs in queue)
+
+---
+
 ## Session 32 — 2026-09-30 (Docs — Cycle 4)
 
 **Cycle step:** Docs — Review and update all docs for accuracy after recent changes + document auth scanning workflow

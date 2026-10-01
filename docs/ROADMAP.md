@@ -29,8 +29,8 @@ Active scanning, program management, and operational improvements. This is the c
 
 ### Queue
 
-1. Quora/Poe — revisit corp.quora.com with auth scanning (has real AI/MCP endpoints behind 401); scan remaining 198 targets in batches
-2. Review submission candidates — verify any high-confidence findings, submit if reproducible
+1. **SUBMIT: Kiwi.com CORS on tequila.kiwi.com** — verified origin reflection with credentials on B2B partner portal. Review report, submit if confident.
+2. Investigate CLEAR corpsupport.clearme.com JS secret exposure — verify JWT tokens in JS files
 3. Multi-program batch run — scan 3 programs in sequence with `--quick`
 4. Hyatt — slice recon by domain subsets across sessions (61 base domains, 805 subdomains), then scan with `--limit 5 --filter`
 5. CLEAR — rescan with AI modules (prompt injection, data exfil, MCP) now that they exist

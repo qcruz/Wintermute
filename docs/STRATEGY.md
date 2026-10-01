@@ -13,11 +13,11 @@ Living document tracking progress, successes, failures, trends, and research to 
 | CLEAR | 46 | Quick + deep | CORS, SSL, JWT exposure, missing headers | 0 | Most low-value / likely dups |
 | Deriv | 13 | Quick + deep | Clickjacking (2), no HTTPS redirect | 0 | Low value |
 | Algolia | 4 | Quick + deep | HTTP methods (PUT/DELETE/TRACE) | 0 | SSTI was FP (Cloudflare tokens) |
-| Kiwi.com | 6 | Quick + deep | CORS on tequila.kiwi.com | 0 | Not reproducible on re-verify |
+| Kiwi.com | 6 | Quick + deep | **CORS origin reflection on tequila.kiwi.com** (verified, 0.95 conf) | 0 | **SUBMISSION CANDIDATE** — reflects any origin with credentials on B2B partner API portal |
 | Hyatt | 291 (recon only) | Recon only | N/A | 0 | Too large, needs sliced scanning |
 | GitHub | 6 | Deep (4 targets) | GraphQL console (403), 86 FPs from catch-all routing | 0 | Needs auth scanning for Copilot; catch-all routing FP class discovered |
 | Notion | 8 | Quick + AI-focused | 17 real endpoint discoveries on retool (all auth-gated), 24 prompt injection FPs (catch-all) | 0 | Retool admin panel is high-value but needs auth; Notion AI needs auth |
-| Quora/Poe | 205 | Targeted (7 hosts deep scanned) | 16 AI + 7 MCP endpoint discoveries on corp.quora.com (all auth-gated), 4 SSTI FPs, clickjacking on developer.poe.com | 0 | SSTI baseline fix needed; corp.quora.com has real AI/MCP endpoints behind 401 |
+| Quora/Poe | 205 | Targeted (15 hosts scanned) | 16 AI + 7 MCP endpoint discoveries on corp.quora.com (all auth-gated), JWT weak config on hackathon.poe.com, clickjacking on developer.poe.com | 0 | SSTI FPs cleaned (old canary); corp.quora.com needs auth; remaining 190 targets are dev instances/parking domains (noise) |
 | Wealthsimple | 81 | Targeted (6 hosts deep scanned) | Insecure cookie on work-staging, 9 content discovery (blanket-403 FPs), 1 AI endpoint (info), 18 catch-all redirect FPs on paymentcard | 0 | Mostly locked-down staging; needs auth scanning for real coverage |
 | Tinder | 59 | Quick + deep (API, staging) | 25 findings — all missing HSTS headers | 0 | crt.sh 502'd on all 6 domains; staging targets well-secured; needs better recon |
 | Grab | 52 | Quick + deep (8 targets deep scanned) | CORS (non-exploitable wildcard), SSL cert mismatches, HSTS, CSRF cookie on staging, server version disclosure | 0 | 18 interesting targets (APIs, staging, dev, GitLab OIDC) all returned only surface-level findings; hungrygowhere.com admin/staging subdomains mostly dead; needs auth scanning |
