@@ -13,7 +13,7 @@ Living document tracking progress, successes, failures, trends, and research to 
 | CLEAR | 46 | Quick + deep | CORS, SSL, JWT exposure, missing headers | 0 | Most low-value / likely dups |
 | Deriv | 13 | Quick + deep | Clickjacking (2), no HTTPS redirect | 0 | Low value |
 | Algolia | 4 | Quick + deep | HTTP methods (PUT/DELETE/TRACE) | 0 | SSTI was FP (Cloudflare tokens) |
-| Kiwi.com | 6 | Quick + deep | **CORS origin reflection on tequila.kiwi.com** (verified, 0.95 conf) | 0 | **SUBMISSION CANDIDATE** — reflects any origin with credentials on B2B partner API portal |
+| Kiwi.com | 6 | Quick + deep | CORS origin reflection on tequila.kiwi.com (verified, 0.95 conf) | 1 (dup) | Report #4077213 — **duplicate** of #2697751. CORS misconfigs are heavily hunted. |
 | Hyatt | 291 (recon only) | Recon only | N/A | 0 | Too large, needs sliced scanning |
 | GitHub | 6 | Deep (4 targets) | GraphQL console (403), 86 FPs from catch-all routing | 0 | Needs auth scanning for Copilot; catch-all routing FP class discovered |
 | Notion | 8 | Quick + AI-focused | 17 real endpoint discoveries on retool (all auth-gated), 24 prompt injection FPs (catch-all) | 0 | Retool admin panel is high-value but needs auth; Notion AI needs auth |
