@@ -102,7 +102,8 @@ def cors_misconfiguration_report(
     acao = details.get("access-control-allow-origin", "")
     acac = details.get("access-control-allow-credentials", "")
 
-    severity = "high" if acac == "true" else "medium"
+    # CORS is typically Medium on HackerOne unless specific data theft is demonstrated
+    severity = "medium"
 
     return Report(
         title=f"CORS misconfiguration on {hostname} — {issue}",

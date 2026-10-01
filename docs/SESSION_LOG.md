@@ -4,6 +4,32 @@ Track what each session accomplished, what was found, and what's queued for next
 
 ---
 
+## Session 34 — 2026-10-01 (Scanning — Submission)
+
+**Cycle step:** Submission — Kiwi.com CORS report (takes priority over cycle rotation)
+
+**What was done:**
+
+### Report Preparation
+- Fixed CORS report pipeline: evidence dict was not being parsed from DB string → template rendered with empty ACAO/ACAC values. Fixed `pipeline.py` to use `ast.literal_eval()` on evidence string.
+- Adjusted CORS template severity from auto-"high" (when credentials present) to always "medium" — CORS without proven data theft is Medium per HackerOne norms.
+- Verified report renders correctly with actual reflected values.
+
+### Submission Attempt
+- API auth works (200 on /me/reports, 0 existing reports)
+- Submission returned **400: Identity verification required** — Kiwi.com requires HackerOne ID verification before accepting reports
+- **BLOCKER:** User needs to complete identity verification at hackerone.com/settings/identity
+
+### Code Changes
+- `src/reporting/pipeline.py`: Parse CORS evidence string back to dict for template
+- `src/reporting/templates.py`: CORS severity always "medium" (was conditional on credentials)
+
+**Queued for next session:**
+- Re-submit Kiwi.com CORS after identity verification
+- Continue Cycle 2 (R&D) — subdomain enumeration expansion
+
+---
+
 ## Session 33 — 2026-10-01 (Scanning — Cycle 1)
 
 **Cycle step:** Scanning — Quora/Poe batch scanning + review submission candidates

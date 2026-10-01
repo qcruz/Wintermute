@@ -278,10 +278,18 @@ def _generate_report(finding: Finding, target: Target) -> Report | None:
             )
 
         elif finding.vuln_type == "cors_misconfiguration":
+            details = {}
+            evidence = finding.evidence or ""
+            if evidence.startswith("{"):
+                try:
+                    import ast
+                    details = ast.literal_eval(evidence)
+                except (ValueError, SyntaxError):
+                    pass
             return cors_misconfiguration_report(
                 hostname=target.hostname,
                 issue=finding.description or "",
-                details={},  # Details not stored in DB currently
+                details=details,
             )
 
         elif finding.vuln_type == "exposed_file":
