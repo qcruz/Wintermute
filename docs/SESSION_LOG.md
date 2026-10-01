@@ -4,6 +4,34 @@ Track what each session accomplished, what was found, and what's queued for next
 
 ---
 
+## Session 35 — 2026-10-01 (R&D — Cycle 2)
+
+**Cycle step:** R&D — Subdomain enumeration expansion
+
+**What was done:**
+
+### First Submission Confirmed
+- Kiwi.com CORS report submitted successfully: **Report #4077213**, state: new
+- Verified via API: `/hackers/me/reports` returns 1 report
+
+### Subdomain Enumeration Expansion
+- Added two new passive sources to `src/recon/subdomain.py`:
+  - **HackerTarget API** — free, no auth, CSV format (hostname,ip)
+  - **AlienVault OTX** — free, no auth, passive DNS JSON
+- Results merge and deduplicate across all 3 sources
+- Test results: HackerTarget found 51 github.com subdomains vs crt.sh's 2 (crt.sh was 502 again). 50 kiwi.com subdomains when crt.sh was down.
+- Added 8 unit tests in `tests/test_recon.py` (parsing, filtering, error handling, dedup)
+- Fixed test_reporting.py: CORS severity now always medium
+- Full suite: 168 tests passing
+
+**Files changed:** `src/recon/subdomain.py`, `tests/test_recon.py`, `tests/test_reporting.py`, `src/reporting/pipeline.py`, `src/reporting/templates.py`, `docs/ROADMAP.md`, `docs/SESSION_LOG.md`
+
+**Queued for next session:**
+- Cycle 3 (Research) or Cycle 1 (Scanning) — re-run recon on programs with poor enum (GitHub, Tinder, Grab) using new sources
+- Monitor Kiwi.com report #4077213 for triage response
+
+---
+
 ## Session 34 — 2026-10-01 (Scanning — Submission)
 
 **Cycle step:** Submission — Kiwi.com CORS report (takes priority over cycle rotation)

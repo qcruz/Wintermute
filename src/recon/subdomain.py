@@ -28,16 +28,26 @@ def enumerate_subdomains(domain: str) -> list[SubdomainResult]:
 
     Sources:
         - crt.sh (Certificate Transparency logs)
+        - HackerTarget (free subdomain finder API)
+        - AlienVault OTX (passive DNS)
 
     Each discovered subdomain is validated via DNS resolution.
     """
     discovered: dict[str, SubdomainResult] = {}
 
+    def _add_results(hostnames: set[str], source: str) -> None:
+        for hostname in hostnames:
+            if hostname not in discovered:
+                discovered[hostname] = SubdomainResult(hostname=hostname, source=source)
+
     # Source 1: Certificate Transparency via crt.sh
-    crt_results = _query_crtsh(domain)
-    for hostname in crt_results:
-        if hostname not in discovered:
-            discovered[hostname] = SubdomainResult(hostname=hostname, source="crt.sh")
+    _add_results(_query_crtsh(domain), "crt.sh")
+
+    # Source 2: HackerTarget free API
+    _add_results(_query_hackertarget(domain), "hackertarget")
+
+    # Source 3: AlienVault OTX passive DNS
+    _add_results(_query_otx(domain), "otx")
 
     # Validate via DNS
     for result in discovered.values():
@@ -79,6 +89,69 @@ def _query_crtsh(domain: str) -> set[str]:
     except Exception as e:
         logger.warning("crt.sh query failed for %s: %s", domain, e)
 
+    return subdomains
+
+
+def _query_hackertarget(domain: str) -> set[str]:
+    """Query HackerTarget free API for subdomains."""
+    subdomains: set[str] = set()
+    url = "https://api.hackertarget.com/hostsearch/"
+
+    try:
+        response = httpx.get(
+            url,
+            params={"q": domain},
+            timeout=30.0,
+            headers={"User-Agent": "Wintermute/0.1 (Security Research)"},
+        )
+        if response.status_code != 200:
+            logger.warning("HackerTarget query failed for %s: HTTP %d", domain, response.status_code)
+            return subdomains
+
+        text = response.text.strip()
+        if text.startswith("error") or not text:
+            logger.debug("HackerTarget returned no results for %s", domain)
+            return subdomains
+
+        for line in text.split("\n"):
+            parts = line.split(",")
+            if parts:
+                hostname = parts[0].strip().lower()
+                if hostname.endswith(f".{domain}") or hostname == domain:
+                    subdomains.add(hostname)
+
+    except Exception as e:
+        logger.warning("HackerTarget query failed for %s: %s", domain, e)
+
+    logger.debug("HackerTarget found %d subdomains for %s", len(subdomains), domain)
+    return subdomains
+
+
+def _query_otx(domain: str) -> set[str]:
+    """Query AlienVault OTX for subdomains via passive DNS."""
+    subdomains: set[str] = set()
+    url = f"https://otx.alienvault.com/api/v1/indicators/domain/{domain}/passive_dns"
+
+    try:
+        response = httpx.get(
+            url,
+            timeout=60.0,
+            headers={"User-Agent": "Wintermute/0.1 (Security Research)"},
+        )
+        if response.status_code != 200:
+            logger.warning("OTX query failed for %s: HTTP %d", domain, response.status_code)
+            return subdomains
+
+        data = response.json()
+        for record in data.get("passive_dns", []):
+            hostname = record.get("hostname", "").strip().lower()
+            if hostname.endswith(f".{domain}") or hostname == domain:
+                subdomains.add(hostname)
+
+    except Exception as e:
+        logger.warning("OTX query failed for %s: %s", domain, e)
+
+    logger.debug("OTX found %d subdomains for %s", len(subdomains), domain)
     return subdomains
 
 

@@ -43,7 +43,7 @@ def test_cors_report_with_credentials():
             "access-control-allow-credentials": "true",
         },
     )
-    assert report.severity_rating == "high"
+    assert report.severity_rating == "medium"
     assert "api.example.com" in report.title
     assert "Origin" in report.vulnerability_information
 
