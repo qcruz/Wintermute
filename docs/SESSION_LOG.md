@@ -4,6 +4,40 @@ Track what each session accomplished, what was found, and what's queued for next
 
 ---
 
+## Session 37 — 2026-10-01 (Scanning — Cycle 1: Anthropic + R&D Fix)
+
+**Cycle step:** Scanning — Anthropic scan with AI/MCP modules
+
+**What was done:**
+
+### Anthropic Scanning
+- Recon: 53 subdomains discovered (3 sources), 20 alive, 4 base domains manually injected
+- Quick scan (3 targets): only HSTS missing on internal.api.anthropic.com
+- AI deep scan on console.anthropic.com: 0 findings
+- claude.ai targets: pivot.claude.ai `/api/admin` and `/api/internal` are SPA catch-all (same 7066-byte shell)
+- support.anthropic.com: redirects to support.claude.com, has search feature
+- docs.anthropic.com: 97 Stripe publishable key hits — all FPs (pk_ keys are intentionally public)
+- staging targets: scanned but timed out on MCP module
+- **Result: 0 reportable findings.** Anthropic's public surface is well-hardened. Real value is behind auth.
+
+### Prompt Injection Reflection FP Fix (R&D)
+- **Discovered scanner bug:** support.anthropic.com search reflects input in `<title>`, `<option>`, and analytics JS. Scanner saw canary string in response and flagged it as prompt injection, but it was just input reflection.
+- **Root cause:** reflection check only compared raw prompt string. Missed HTML-encoded (`&quot;`) and URL-encoded (`%2B`, `%253A`) versions.
+- **Fix:** new `_is_input_reflected()` function in `ai_prompt_injection.py`:
+  - Checks raw, HTML-decoded, single/double URL-decoded versions
+  - Falls back to contextual word proximity check (if significant prompt words appear near canary, it's reflection)
+- **4 new tests** covering raw, HTML-encoded, URL-encoded reflection, and real injection pass-through
+- Cleaned 112 FPs from DB (97 Stripe + 15 prompt injection)
+- **This fix prevents FPs on any site with search functionality** — a class of false positive, not just one host
+
+**Findings:** 0 reportable (5 informational: 1 HSTS, 1 robots.txt, 2 SPA catch-all, 1 AI endpoint discovery)
+**Tests:** 172 (was 168, +4 new reflection detection tests)
+**FPs cleaned:** 112
+
+**Next:** Cycle 2 (R&D) is due. Prompt injection reflection fix was found during scanning — add to ROADMAP completed items. Continue with next R&D queue item (manual target injection or insecure AI integration).
+
+---
+
 ## Session 36 — 2026-10-01 (Research — Cycle 3 + Strategy Update)
 
 **Cycle step:** Research — Hacktivity analysis + post-duplicate strategy update

@@ -27,10 +27,12 @@ Safety:
 
 from __future__ import annotations
 
+import html
 import json
 import logging
 import re
 from dataclasses import dataclass, field
+from urllib.parse import unquote
 
 import httpx
 
@@ -579,6 +581,39 @@ def _test_api_endpoint(
             )
 
 
+def _is_input_reflected(body: str, prompt: str, canary: str) -> bool:
+    """Check if the canary appears only because the input prompt was reflected.
+
+    Tests multiple encodings: raw, HTML-encoded, URL-encoded (single and double).
+    Returns True if reflection is detected (i.e., this is a false positive).
+    """
+    # Direct reflection check across encodings
+    for decoded in (body, html.unescape(body), unquote(body), unquote(unquote(body))):
+        if prompt in decoded:
+            return True
+
+    # Check if canary appears only inside URL-encoded versions of the prompt
+    # (e.g., prompt words joined by %2B or + in analytics/tracking JS)
+    prompt_words = re.split(r'[^a-zA-Z0-9_]+', prompt)
+    significant_words = [w for w in prompt_words if len(w) > 3 and w != canary]
+    if significant_words:
+        # If multiple significant words from the prompt appear near the canary,
+        # this is input reflection, not AI execution
+        nearby_count = 0
+        for idx in [m.start() for m in re.finditer(re.escape(canary), body)]:
+            context = body[max(0, idx - 500):idx + len(canary) + 500]
+            context_lower = unquote(unquote(context)).lower()
+            matched = sum(1 for w in significant_words if w.lower() in context_lower)
+            if matched >= min(3, len(significant_words)):
+                nearby_count += 1
+        # If ALL canary occurrences are near the prompt text, it's reflection
+        total_occurrences = body.count(canary)
+        if total_occurrences > 0 and nearby_count == total_occurrences:
+            return True
+
+    return False
+
+
 def _test_chat_param_endpoint(
     base_url: str, path: str, result: AIPromptInjectionResult
 ) -> None:
@@ -610,12 +645,15 @@ def _test_chat_param_endpoint(
 
                 body = resp.text
                 if canary["canary"] in body:
-                    # Verify it's not just reflecting our input in a search results page
-                    # by checking if the canary appears outside of obvious reflection contexts
-                    canary_count = body.count(canary["canary"])
-                    prompt_reflected = canary["prompt"] in body
+                    # Verify it's not just reflecting our input in a search results page.
+                    # The prompt may appear HTML-encoded, URL-encoded, or both.
+                    # Strategy: check if canary survives after removing all forms
+                    # of the reflected input from the response.
+                    prompt_reflected = _is_input_reflected(
+                        body, canary["prompt"], canary["canary"]
+                    )
 
-                    if canary_count > 0 and not prompt_reflected:
+                    if not prompt_reflected:
                         # Canary present but full prompt not reflected — likely injection
                         result.findings.append(AIFinding(
                             hostname=hostname,

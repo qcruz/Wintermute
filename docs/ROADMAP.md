@@ -29,7 +29,7 @@ Active scanning, program management, and operational improvements. This is the c
 
 ### Queue
 
-1. **Anthropic** — scan claude.ai, api.anthropic.com, console.anthropic.com, docs.anthropic.com, support.anthropic.com with AI/MCP modules. MCP servers + Claude Code permission bypass are explicitly in scope. Program actively paying ($250 recent).
+1. **Anthropic** — unauthenticated scan complete (Session 37): 24 targets, 0 reportable findings. Public surface well-hardened. Needs authenticated scanning for real coverage. Also: Claude Code permission bypass and MCP servers explicitly in scope — requires local testing, not remote scanning.
 2. Investigate CLEAR corpsupport.clearme.com JS secret exposure — verify JWT tokens in JS files
 3. Multi-program batch run — re-run recon on GitHub, Tinder, Grab with new subdomain sources, then scan new targets
 4. Hyatt — slice recon by domain subsets across sessions (61 base domains, 805 subdomains), then scan with `--limit 5 --filter`
@@ -65,6 +65,7 @@ Research, prototype, and integrate new vulnerability detection capabilities. Eac
 4. ~~**CORS wildcard+credentials fix**~~ ✅ DONE (Session 30) — `ACAO: *` with `ACAC: true` no longer flagged as vulnerable (browsers block credentials with wildcard origin). Only origin reflection is a real finding.
 5. ~~**AI endpoint discovery heuristic**~~ ✅ DONE (Session 30) — Static assets (.css, .js, .png, etc.) and static directories (/static/, /assets/, /dist/) filtered from AI endpoint link discovery. Fixes CSS-file-as-AI-endpoint FP.
 6. ~~**MCP security timeout**~~ ✅ DONE (Session 30) — Added 5-minute module timeout and 2-minute discovery timeout. Prevents 90+ minute scans on slow/unresponsive hosts.
+6b. ~~**Prompt injection reflection FP fix**~~ ✅ DONE (Session 37) — Canary detection now checks raw, HTML-decoded, and URL-decoded (single+double) body for input reflection. Contextual word proximity fallback catches encoded reflections in analytics JS. Fixes FPs on any site with search functionality (support.anthropic.com had 8 FPs from this).
 
 **Infrastructure & capability:**
 7. ~~**Authenticated scanning**~~ ✅ DONE (Session 28) — `--auth` flag loads cookies/headers from `.auth/<handle>.json`. Wired through pipeline to content_discovery, ai_prompt_injection, ai_data_exfil, mcp_security. Shared HTTP client in `src/core/http_client.py`.
