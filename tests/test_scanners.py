@@ -1230,6 +1230,12 @@ def test_ai_infra_pipeline_integration():
     assert "ai_infra" in PATH_DISCOVERY_CHECKS
 
 
+def test_ai_infra_report_template_exists():
+    """ai_infra_exposed should have a report template."""
+    from src.reporting.templates import TEMPLATE_MAP
+    assert "ai_infra_exposed" in TEMPLATE_MAP
+
+
 def test_ai_infra_fingerprint_gradio():
     """Gradio fingerprinter should match /config response."""
     from unittest.mock import MagicMock

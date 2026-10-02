@@ -871,6 +871,46 @@ def ai_data_exfil_report(finding) -> Report:
     )
 
 
+def ai_infra_report(finding) -> Report:
+    """Generate a report for an exposed AI infrastructure finding."""
+    return Report(
+        title=finding.title,
+        severity_rating="high",
+        weakness_id=284,  # CWE-284: Improper Access Control
+        vulnerability_information=f"""## Summary
+
+{finding.description}
+
+## Steps to Reproduce
+
+1. Navigate to the endpoint identified below
+2. Observe that the AI/ML service responds with operational data without requiring authentication
+
+**Evidence:**
+{finding.evidence}
+
+## Remediation
+
+- Implement authentication on all AI/ML service endpoints
+- Place AI infrastructure behind a reverse proxy with access controls
+- Restrict network access to trusted IPs only
+- Never expose AI infrastructure (model servers, experiment trackers, vector databases) directly to the internet
+- Most AI services ship without authentication by default — this must be configured explicitly
+
+## References
+
+- [CWE-284: Improper Access Control](https://cwe.mitre.org/data/definitions/284.html)
+- [OWASP LLM06: Unbounded Consumption](https://genai.owasp.org/llmrisk/llm06/)""",
+        impact=(
+            "An attacker can access the AI/ML service without authentication. "
+            "Depending on the service, this may allow: unauthorized model inference "
+            "(resource consumption/cost attacks), access to training data and model "
+            "artifacts, modification of experiments or model configurations, and "
+            "use as a pivot point for further attacks on internal infrastructure."
+        ),
+    )
+
+
 # ── Template dispatcher ─────────────────────────────────────────────
 
 TEMPLATE_MAP = {
@@ -909,4 +949,5 @@ TEMPLATE_MAP = {
     "ai_context_exposure": ai_data_exfil_report,
     "ai_backend_leak": ai_data_exfil_report,
     "ai_rag_leak": ai_data_exfil_report,
+    "ai_infra_exposed": ai_infra_report,
 }

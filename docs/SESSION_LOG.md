@@ -4,6 +4,39 @@ Track what each session accomplished, what was found, and what's queued for next
 
 ---
 
+## Session 44 — 2026-10-02 (Docs — Cycle 4: Submission Outcome Tracking)
+
+**Cycle step:** Docs — Implement submission outcome tracking (ROADMAP Cycle 4, item 3)
+
+**What was done:**
+
+### Submission Tracking System
+- Added `Submission` DB model (`src/core/db.py`) with fields: report_id, outcome, bounty_amount, lesson, program_handle, resolved_at
+- Valid outcomes: pending, triaged, duplicate, accepted, rejected, informative, na
+- Linked to Finding model via foreign key + relationship
+
+### CLI Commands
+- `submissions` — shows full submission history with outcomes, bounties, and lessons
+- `outcome <report_id> <outcome>` — record/update submission outcome with optional `--bounty` and `--lesson`
+- Supports backfilling pre-existing submissions
+- Dashboard now shows submissions summary line
+
+### Reporting Pipeline Integration
+- `_submit_report()` now creates a Submission record with report_id on successful HackerOne submit
+- AI infra exposure report template added (was missing from Session 42)
+
+### Backfill
+- Backfilled Report #4077213 (Kiwi.com CORS duplicate) with outcome and lesson
+
+### Tests & Docs
+- 5 new tests (188 total): Submission model, fields, outcomes, ai_infra report template
+- Updated operations.md with submission tracking commands and 17th scanner module
+
+**Tests:** 188 (+5)
+**Next:** Cycle 1 (Scanning) — multi-program batch re-run or deploy AI infra module
+
+---
+
 ## Session 43 — 2026-10-02 (Research — Cycle 3: AI Agent Attack Patterns)
 
 **Cycle step:** Research — AI agent attack patterns (ROADMAP Cycle 3, item 1)

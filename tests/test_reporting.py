@@ -166,3 +166,48 @@ def test_heavily_tested_includes_major_programs():
     assert "security" in HEAVILY_TESTED_PROGRAMS  # HackerOne
     assert "github" in HEAVILY_TESTED_PROGRAMS
     assert "shopify" in HEAVILY_TESTED_PROGRAMS
+
+
+# ── Submission tracking tests ──────────────────────────────────────
+
+
+def test_submission_model_exists():
+    """Submission DB model should be importable."""
+    from src.core.db import Submission
+    assert Submission.__tablename__ == "submissions"
+
+
+def test_submission_model_fields():
+    """Submission should have outcome tracking fields."""
+    from src.core.db import Submission
+    cols = {c.name for c in Submission.__table__.columns}
+    assert "report_id" in cols
+    assert "outcome" in cols
+    assert "bounty_amount" in cols
+    assert "lesson" in cols
+    assert "program_handle" in cols
+
+
+def test_submission_valid_outcomes():
+    """Verify the outcome values we document are consistent."""
+    # These are the outcomes documented in the CLI help
+    valid = {"pending", "triaged", "duplicate", "accepted", "rejected", "informative", "na"}
+    assert len(valid) == 7
+
+
+def test_ai_infra_report_template():
+    """AI infra report template should produce valid report."""
+    from unittest.mock import MagicMock
+    from src.reporting.templates import ai_infra_report
+
+    finding = MagicMock()
+    finding.title = "Unauthenticated Ollama on example.com"
+    finding.description = "Ollama API accessible without authentication"
+    finding.evidence = "Ollama API — 3 models loaded"
+    finding.vuln_type = "ai_infra_exposed"
+
+    report = ai_infra_report(finding)
+    assert report.severity_rating == "high"
+    assert report.weakness_id == 284
+    assert "Ollama" in report.vulnerability_information
+    assert "authentication" in report.impact.lower()

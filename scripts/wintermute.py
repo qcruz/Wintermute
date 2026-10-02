@@ -19,6 +19,7 @@ Usage:
 
 import logging
 import sys
+from datetime import datetime, timezone
 
 from src.core.runner import print_summary, run_full_pipeline
 from src.scanner.pipeline import ALL_CHECKS, QUICK_CHECKS
@@ -34,7 +35,7 @@ def show_status() -> None:
     """Show pipeline dashboard with program coverage and finding stats."""
     from collections import Counter
 
-    from src.core.db import Finding, Program, Target, get_session
+    from src.core.db import Finding, Program, Submission, Target, get_session
 
     session = get_session()
     programs = session.query(Program).all()
@@ -97,6 +98,14 @@ def show_status() -> None:
     prog_data.sort(key=lambda x: x[3], reverse=True)
     for handle, tgt, alv, fnd, hc, syn in prog_data:
         print(f"  {handle:<22s} {tgt:>7d} {alv:>5d} {fnd:>5d} {hc:>4d} {syn:<12s}")
+
+    # ── Submissions ──────────────────────────────────────────────
+    subs = session.query(Submission).all()
+    if subs:
+        accepted = sum(1 for s in subs if s.outcome == "accepted")
+        duped = sum(1 for s in subs if s.outcome == "duplicate")
+        total_bounty = sum(s.bounty_amount or 0 for s in subs)
+        print(f"\n  SUBMISSIONS: {len(subs)} sent, {accepted} accepted, {duped} duplicate, ${total_bounty:.0f} earned")
 
     # ── Actionable findings (exclude noise: HSTS, SSL cert, info-level) ─
     noise_types = {"missing_security_header", "ssl_tls", "cache_issue"}
@@ -298,6 +307,120 @@ def add_targets(handle: str, hostnames: list[str]) -> None:
     print(f"\nDone: {added} added, {skipped} out-of-scope")
 
 
+def record_outcome(report_id: str, outcome: str, bounty: str = "", lesson: str = "") -> None:
+    """Record or update the outcome of a HackerOne submission.
+
+    Usage:
+      python -m scripts.wintermute outcome 4077213 duplicate --lesson "CORS misconfigs are over-hunted"
+      python -m scripts.wintermute outcome 4077213 accepted --bounty 500 --lesson "First bounty!"
+    """
+    from src.core.db import Submission, Finding, get_session
+
+    valid_outcomes = {"pending", "triaged", "duplicate", "accepted", "rejected", "informative", "na"}
+    if outcome not in valid_outcomes:
+        print(f"Invalid outcome: {outcome}")
+        print(f"Valid outcomes: {', '.join(sorted(valid_outcomes))}")
+        return
+
+    session = get_session()
+
+    # Find submission by report ID
+    sub = session.query(Submission).filter_by(report_id=report_id).first()
+
+    if not sub:
+        # Maybe user wants to backfill a submission that predates this feature
+        print(f"No submission found with report ID {report_id}.")
+        print("Creating a backfill entry. Enter the finding details:")
+
+        # Try to find by report_id in finding evidence or let user specify
+        handle = input("  Program handle: ").strip()
+        finding_title = input("  Finding title (for reference): ").strip()
+
+        # Create a submission record without linking to a finding
+        sub = Submission(
+            finding_id=0,  # Will be updated if we find the finding
+            program_handle=handle,
+            report_id=report_id,
+        )
+
+        # Try to find a matching finding
+        findings = (
+            session.query(Finding)
+            .filter(Finding.status == "reported")
+            .all()
+        )
+        for f in findings:
+            if finding_title.lower() in (f.title or "").lower():
+                sub.finding_id = f.id
+                print(f"  Linked to finding #{f.id}: {f.title}")
+                break
+
+        if sub.finding_id == 0:
+            print("  No matching finding found — recording without link")
+
+        session.add(sub)
+
+    # Update outcome
+    old_outcome = sub.outcome
+    sub.outcome = outcome
+    if bounty:
+        sub.bounty_amount = float(bounty)
+    if lesson:
+        sub.lesson = lesson
+    if outcome not in ("pending", "triaged"):
+        sub.resolved_at = datetime.now(timezone.utc)
+
+    session.commit()
+
+    print(f"\nSubmission #{report_id} updated:")
+    print(f"  Outcome: {old_outcome} → {outcome}")
+    if bounty:
+        print(f"  Bounty: ${float(bounty):.0f}")
+    if lesson:
+        print(f"  Lesson: {lesson}")
+
+    session.close()
+
+
+def show_submissions() -> None:
+    """Show all submission outcomes."""
+    from src.core.db import Finding, Submission, get_session
+
+    session = get_session()
+    subs = session.query(Submission).order_by(Submission.submitted_at.desc()).all()
+
+    if not subs:
+        print("No submissions recorded yet.")
+        session.close()
+        return
+
+    print("=" * 70)
+    print("  SUBMISSION HISTORY")
+    print("=" * 70)
+    print(f"\n  {'Report ID':<12s} {'Program':<16s} {'Outcome':<12s} {'Bounty':>8s} {'Date':<12s}")
+    print("  " + "-" * 66)
+
+    total_bounty = 0
+    for sub in subs:
+        bounty_str = f"${sub.bounty_amount:.0f}" if sub.bounty_amount else "—"
+        date_str = str(sub.submitted_at)[:10] if sub.submitted_at else "?"
+        total_bounty += sub.bounty_amount or 0
+        print(f"  {sub.report_id:<12s} {sub.program_handle:<16s} {sub.outcome:<12s} {bounty_str:>8s} {date_str:<12s}")
+        if sub.lesson:
+            print(f"    Lesson: {sub.lesson}")
+
+    print(f"\n  Total: {len(subs)} submissions, ${total_bounty:.0f} earned")
+
+    # Outcome breakdown
+    from collections import Counter
+    outcomes = Counter(s.outcome for s in subs)
+    parts = [f"{o}: {c}" for o, c in outcomes.most_common()]
+    print(f"  Outcomes: {', '.join(parts)}")
+
+    session.close()
+    print()
+
+
 def _parse_arg(args: list[str], flag: str, default: str = "") -> str:
     """Extract a flag value like --limit 5 from args."""
     if flag in args:
@@ -323,6 +446,8 @@ def main() -> None:
         print("  python -m scripts.wintermute status                      DB status")
         print("  python -m scripts.wintermute programs                    List programs")
         print("  python -m scripts.wintermute scout                       Find new programs")
+        print("  python -m scripts.wintermute submissions                  View submission history")
+        print("  python -m scripts.wintermute outcome <id> <result>        Record submission outcome")
         print()
         print("Available checks:")
         for check in sorted(ALL_CHECKS):
@@ -343,6 +468,23 @@ def main() -> None:
 
     if cmd == "scout":
         scout_programs()
+        return
+
+    if cmd == "submissions":
+        show_submissions()
+        return
+
+    if cmd == "outcome":
+        if len(sys.argv) < 4:
+            print("Usage: python -m scripts.wintermute outcome <report_id> <outcome> [--bounty N] [--lesson 'text']")
+            print("Outcomes: pending, triaged, duplicate, accepted, rejected, informative, na")
+            sys.exit(1)
+        report_id = sys.argv[2]
+        outcome = sys.argv[3]
+        args = sys.argv[4:]
+        bounty = _parse_arg(args, "--bounty")
+        lesson = _parse_arg(args, "--lesson")
+        record_outcome(report_id, outcome, bounty, lesson)
         return
 
     # Full pipeline

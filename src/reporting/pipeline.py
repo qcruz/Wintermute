@@ -19,12 +19,13 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 
-from src.core.db import Finding, Program, Target, get_session
+from src.core.db import Finding, Program, Submission, Target, get_session
 from src.platforms.hackerone import HackerOneClient
 from src.reporting.dedup import DedupResult, full_dedup_check
 from src.reporting.templates import (
     Report,
     ai_data_exfil_report,
+    ai_infra_report,
     auth_finding_report,
     business_logic_report,
     content_discovery_report,
@@ -229,12 +230,21 @@ def _submit_report(
 
         # Update finding status in database
         finding = session.query(Finding).get(candidate.finding_id)
+        report_id = response.get("data", {}).get("id", "unknown")
+
         if finding:
             finding.status = "reported"
             finding.reported_at = datetime.now(timezone.utc)
 
+            # Create submission record for outcome tracking
+            submission = Submission(
+                finding_id=finding.id,
+                program_handle=program_handle,
+                report_id=str(report_id),
+            )
+            session.add(submission)
+
         candidate.status = "submitted"
-        report_id = response.get("data", {}).get("id", "unknown")
         logger.info(
             "Submitted report for %s on %s (report ID: %s)",
             candidate.vuln_type, candidate.hostname, report_id,
@@ -395,6 +405,9 @@ def _generate_report(finding: Finding, target: Target) -> Report | None:
 
         elif finding.vuln_type in ("mcp_auth_bypass", "mcp_dangerous_tools", "mcp_tool_poisoning", "mcp_path_traversal", "mcp_exposed"):
             return mcp_security_report(finding)
+
+        elif finding.vuln_type == "ai_infra_exposed":
+            return ai_infra_report(finding)
 
         elif finding.vuln_type in ("info_disclosure", "error_leak", "method_allowed", "clickjack", "cache_issue"):
             return business_logic_report(

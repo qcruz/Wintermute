@@ -79,7 +79,25 @@ Auth config format (`.auth/<handle>.json`):
 
 Auth is passed to: `content_discovery`, `ai_prompt_injection`, `ai_data_exfil`, `mcp_security`. The `.auth/` directory is gitignored.
 
-### Available Checks (16 modules)
+### Submission Tracking
+
+```bash
+# View all submission history and outcomes
+python -m scripts.wintermute submissions
+
+# Record an outcome for a HackerOne report
+python -m scripts.wintermute outcome <report_id> <outcome>
+
+# With bounty amount and lesson learned
+python -m scripts.wintermute outcome 4077213 duplicate --lesson "CORS misconfigs are over-hunted"
+python -m scripts.wintermute outcome 5001234 accepted --bounty 500 --lesson "First accepted finding!"
+
+# Valid outcomes: pending, triaged, duplicate, accepted, rejected, informative, na
+```
+
+Submission data appears in the `status` dashboard automatically.
+
+### Available Checks (17 modules)
 
 | Check | In `--quick` | Description |
 |-------|:---:|-------------|
@@ -99,6 +117,7 @@ Auth is passed to: `content_discovery`, `ai_prompt_injection`, `ai_data_exfil`, 
 | `ai_prompt_injection` | | AI endpoint discovery, injection canaries, system prompt extraction |
 | `ai_data_exfil` | | AI context extraction, PII/backend leak detection |
 | `mcp_security` | | MCP server discovery, auth bypass, tool poisoning, path traversal |
+| `ai_infra` | | AI infrastructure exposure (Ollama, vLLM, MLflow, ChromaDB, etc.) |
 
 ### Individual Phases
 

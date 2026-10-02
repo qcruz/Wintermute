@@ -98,6 +98,26 @@ class Finding(Base):
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     target = relationship("Target")
+    submission = relationship("Submission", back_populates="finding", uselist=False)
+
+
+class Submission(Base):
+    """Tracks HackerOne report submissions and their outcomes."""
+
+    __tablename__ = "submissions"
+
+    id = Column(Integer, primary_key=True)
+    finding_id = Column(Integer, ForeignKey("findings.id"), nullable=False)
+    program_handle = Column(String, nullable=False)
+    report_id = Column(String, nullable=False)  # HackerOne report ID (e.g. "4077213")
+    submitted_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    # Outcome tracking
+    outcome = Column(String, default="pending")  # pending, triaged, duplicate, accepted, rejected, informative, na
+    bounty_amount = Column(Float, nullable=True)  # USD if paid
+    resolved_at = Column(DateTime, nullable=True)
+    lesson = Column(Text, default="")  # What we learned from this submission
+
+    finding = relationship("Finding", back_populates="submission")
 
 
 def get_engine(db_path: str | Path | None = None):
