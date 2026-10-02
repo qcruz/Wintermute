@@ -30,8 +30,7 @@ Active scanning, program management, and operational improvements. This is the c
 ### Queue
 
 1. **Anthropic** — unauthenticated scan complete (Session 37): 24 targets, 0 reportable findings. Public surface well-hardened. Needs authenticated scanning for real coverage. Also: Claude Code permission bypass and MCP servers explicitly in scope — requires local testing, not remote scanning.
-2. Multi-program batch run — re-run recon on GitHub, Tinder, Grab with new subdomain sources, then scan new targets
-4. Hyatt — slice recon by domain subsets across sessions (61 base domains, 805 subdomains), then scan with `--limit 5 --filter`
+2. Hyatt — slice recon by domain subsets across sessions (61 base domains, 805 subdomains), then scan with `--limit 5 --filter`
 5. CLEAR — rescan with AI modules (prompt injection, data exfil, MCP) now that they exist
 6. GitHub — revisit with auth scanning when capability exists; deep scan education.github.com, npmjs.com, classroom.github.com
 7. Notion — revisit with auth scanning (retool admin panel has real `/api/chat`, `/api/mcp` behind 401; Notion AI asset needs auth)
