@@ -26,6 +26,7 @@ from src.core.scope import ScopeChecker
 from src.platforms.hackerone import HackerOneClient, parse_scope
 from src.recon.headers import analyze_headers
 from src.scanner.ai_data_exfil import check_ai_data_exfil
+from src.scanner.ai_infra_exposure import check_ai_infra
 from src.scanner.ai_prompt_injection import check_ai_prompt_injection
 from src.scanner.auth_checks import check_auth
 from src.scanner.business_logic import analyze_business_logic
@@ -83,13 +84,15 @@ ALL_CHECKS = [
     "subdomain_takeover", "cors", "ssl_tls", "exposed_files",
     "security_headers", "content_discovery", "injection",
     "auth_checks", "business_logic", "idor", "path_traversal",
-    "graphql", "js_analysis", "ai_prompt_injection", "ai_data_exfil", "mcp_security",
+    "graphql", "js_analysis", "ai_prompt_injection", "ai_data_exfil",
+    "mcp_security", "ai_infra",
 ]
 
 # Checks that rely on path-based discovery and produce false positives
 # on catch-all routing hosts (hosts that return 200 for any path).
 PATH_DISCOVERY_CHECKS = {
     "content_discovery", "ai_prompt_injection", "ai_data_exfil", "mcp_security",
+    "ai_infra",
 }
 
 # Lighter check set for quick scans (fast, low request count per target)
@@ -518,6 +521,23 @@ def run_scan(
                     remediation=_mcp_remediation(finding.vuln_type),
                 ))
 
+        # ── AI Infrastructure Exposure ──
+        if "ai_infra" in active_checks:
+            _prog("ai_infra")
+            infra_result = check_ai_infra(hostname, auth=auth)
+            result.checks_run["ai_infra"] = result.checks_run.get("ai_infra", 0) + 1
+            for finding in infra_result.findings:
+                result.findings.append(ScanFinding(
+                    hostname=hostname,
+                    vuln_type=finding.vuln_type,
+                    title=finding.title,
+                    severity=finding.severity,
+                    confidence=finding.confidence,
+                    description=finding.description,
+                    evidence=finding.evidence,
+                    remediation=_ai_infra_remediation(finding.vuln_type),
+                ))
+
     # Step 4: Store findings in database
     _store_findings(session, target_map, result.findings)
     session.close()
@@ -736,6 +756,17 @@ def _ai_exfil_remediation(vuln_type: str) -> str:
         ),
     }
     return remediations.get(vuln_type, "Review AI data access controls and output filtering.")
+
+
+def _ai_infra_remediation(vuln_type: str) -> str:
+    """Generate remediation advice for AI infrastructure exposure findings."""
+    return (
+        "Implement authentication on all AI/ML service endpoints. Most AI "
+        "infrastructure (Ollama, vLLM, MLflow, ChromaDB, etc.) ships without "
+        "authentication by default. Place these services behind a reverse proxy "
+        "with authentication, restrict network access to trusted IPs, and never "
+        "expose AI infrastructure directly to the internet."
+    )
 
 
 def _store_findings(

@@ -4,6 +4,35 @@ Track what each session accomplished, what was found, and what's queued for next
 
 ---
 
+## Session 42 — 2026-10-01 (R&D — Cycle 2: AI Infrastructure Exposure Scanner)
+
+**Cycle step:** R&D — Build AI Infrastructure Exposure scanner module (ROADMAP item #10)
+
+**What was done:**
+
+### New Scanner Module: AI Infrastructure Exposure (`src/scanner/ai_infra_exposure.py`)
+- Detects unauthenticated access to 10 AI/ML products that ship without auth by default
+- Products covered: Ollama, vLLM, LangServe, ComfyUI, MLflow, ChromaDB, Ray Serve, Gradio, LiteLLM, text-generation-webui
+- **Fingerprint-based detection** — not just "path returns 200", but verifies response matches product-specific JSON signatures (model lists, experiment data, system stats, etc.)
+- Goes beyond Nuclei's ai-infra-nuclei project: we confirm the API is usable, not just exposed
+- Skips HTML responses (same pattern as JS analysis fix from Session 41)
+- GET-only, read-only probes — no model modifications or inference calls
+
+### Pipeline Integration
+- Added `ai_infra` to `ALL_CHECKS` and `PATH_DISCOVERY_CHECKS` in pipeline.py
+- Wired through with auth support and remediation function
+- 17th scanner module in the pipeline
+
+### Tests
+- 10 new tests covering: fingerprinters for Ollama, vLLM, ChromaDB, MLflow, Gradio; HTML skip; pipeline integration; product/probe/fingerprinter consistency
+- 183 total tests passing
+
+**Findings:** N/A (R&D session — module built, not yet deployed in scans)
+**Tests:** 183 (+10)
+**Next:** Cycle 3 (Research) — research AI agent attack patterns, or Cycle 1 (Scanning) to deploy the new module against targets with AI infrastructure
+
+---
+
 ## Session 41 — 2026-10-01 (Scanning — Cycle 1: CLEAR JWT + New Programs)
 
 **Cycle step:** Scanning — CLEAR JWT investigation + Flipkart + Starbucks

@@ -1107,3 +1107,140 @@ def test_mcp_module_timeout_value():
     from src.scanner.mcp_security import MCP_MODULE_TIMEOUT
     assert MCP_MODULE_TIMEOUT <= 600  # max 10 minutes
     assert MCP_MODULE_TIMEOUT >= 60   # at least 1 minute
+
+
+# ── AI Infrastructure Exposure Tests ──────────────────────────────────
+
+
+def test_ai_infra_products_have_fingerprinters():
+    """Every product must have a corresponding fingerprint function."""
+    from src.scanner.ai_infra_exposure import FINGERPRINTERS, PRODUCTS
+    for product in PRODUCTS:
+        assert product.name in FINGERPRINTERS, (
+            f"Product '{product.name}' missing fingerprinter"
+        )
+
+
+def test_ai_infra_products_have_probes():
+    """Every product must have at least one probe."""
+    from src.scanner.ai_infra_exposure import PRODUCTS
+    for product in PRODUCTS:
+        assert len(product.probes) >= 1, (
+            f"Product '{product.name}' has no probes"
+        )
+
+
+def test_ai_infra_fingerprint_ollama():
+    """Ollama fingerprinter should match /api/tags response."""
+    from unittest.mock import MagicMock
+    from src.scanner.ai_infra_exposure import _fingerprint_ollama
+
+    resp = MagicMock()
+    resp.json.return_value = {"models": [{"name": "llama3:latest"}]}
+    result = _fingerprint_ollama("/api/tags", resp)
+    assert result is not None
+    assert "1 models" in result
+    assert "llama3:latest" in result
+
+
+def test_ai_infra_fingerprint_ollama_rejects_non_match():
+    """Ollama fingerprinter should reject non-Ollama JSON."""
+    from unittest.mock import MagicMock
+    from src.scanner.ai_infra_exposure import _fingerprint_ollama
+
+    resp = MagicMock()
+    resp.json.return_value = {"status": "ok"}
+    result = _fingerprint_ollama("/api/tags", resp)
+    assert result is None
+
+
+def test_ai_infra_fingerprint_chromadb():
+    """ChromaDB fingerprinter should match /api/v1/collections."""
+    from unittest.mock import MagicMock
+    from src.scanner.ai_infra_exposure import _fingerprint_chromadb
+
+    resp = MagicMock()
+    resp.json.return_value = [
+        {"name": "my_collection", "id": "abc123"}
+    ]
+    result = _fingerprint_chromadb("/api/v1/collections", resp)
+    assert result is not None
+    assert "1 collections" in result
+
+
+def test_ai_infra_fingerprint_mlflow():
+    """MLflow fingerprinter should match experiment listing."""
+    from unittest.mock import MagicMock
+    from src.scanner.ai_infra_exposure import _fingerprint_mlflow
+
+    resp = MagicMock()
+    resp.json.return_value = {
+        "experiments": [
+            {"experiment_id": "0", "name": "Default"},
+            {"experiment_id": "1", "name": "My Experiment"},
+        ]
+    }
+    result = _fingerprint_mlflow(
+        "/api/2.0/mlflow/experiments/list", resp
+    )
+    assert result is not None
+    assert "2 experiments" in result
+
+
+def test_ai_infra_fingerprint_vllm():
+    """vLLM fingerprinter should match OpenAI-compatible model listing."""
+    from unittest.mock import MagicMock
+    from src.scanner.ai_infra_exposure import _fingerprint_vllm
+
+    resp = MagicMock()
+    resp.json.return_value = {
+        "object": "list",
+        "data": [{"id": "meta-llama/Llama-3-8B", "object": "model"}],
+    }
+    result = _fingerprint_vllm("/v1/models", resp)
+    assert result is not None
+    assert "meta-llama" in result
+
+
+def test_ai_infra_skips_html_responses():
+    """AI infra probes should skip HTML responses (not APIs)."""
+    from unittest.mock import MagicMock, patch
+    from src.scanner.ai_infra_exposure import check_ai_infra
+
+    resp = MagicMock()
+    resp.status_code = 200
+    resp.headers = {"content-type": "text/html; charset=utf-8"}
+    resp.text = "<html><body>Login</body></html>"
+
+    mock_client = MagicMock()
+    mock_client.get.return_value = resp
+    mock_client.__enter__ = MagicMock(return_value=mock_client)
+    mock_client.__exit__ = MagicMock(return_value=False)
+
+    with patch("src.scanner.ai_infra_exposure.httpx.Client", return_value=mock_client):
+        result = check_ai_infra("example.com")
+
+    assert result.findings == [], "HTML responses should not produce findings"
+
+
+def test_ai_infra_pipeline_integration():
+    """ai_infra should be in ALL_CHECKS and PATH_DISCOVERY_CHECKS."""
+    from src.scanner.pipeline import ALL_CHECKS, PATH_DISCOVERY_CHECKS
+    assert "ai_infra" in ALL_CHECKS
+    assert "ai_infra" in PATH_DISCOVERY_CHECKS
+
+
+def test_ai_infra_fingerprint_gradio():
+    """Gradio fingerprinter should match /config response."""
+    from unittest.mock import MagicMock
+    from src.scanner.ai_infra_exposure import _fingerprint_gradio
+
+    resp = MagicMock()
+    resp.json.return_value = {
+        "components": [{"type": "textbox"}],
+        "dependencies": [],
+        "title": "My ML Demo",
+    }
+    result = _fingerprint_gradio("/config", resp)
+    assert result is not None
+    assert "My ML Demo" in result

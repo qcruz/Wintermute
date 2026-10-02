@@ -72,7 +72,7 @@ Research, prototype, and integrate new vulnerability detection capabilities. Eac
 9. ~~**Manual target injection**~~ ✅ DONE (Session 38) — `--add-targets host1,host2` CLI flag. Checks scope, resolves DNS, stores in DB. Bypasses recon entirely.
 
 **AI Agent Security (priority track):**
-10. **AI Infrastructure Exposure** — Detect unauthenticated access to AI services (Ollama, vLLM, LangServe, ComfyUI, MLflow, ChromaDB, Ray). Based on competitive analysis: 81 products ship without auth by default. Goes beyond Nuclei's exposure-only detection by testing discovered APIs.
+10. ~~**AI Infrastructure Exposure**~~ ✅ DONE (Session 42) — Detects unauthenticated access to 10 AI/ML products (Ollama, vLLM, LangServe, ComfyUI, MLflow, ChromaDB, Ray Serve, Gradio, LiteLLM, text-generation-webui). Fingerprint-based detection confirms APIs are usable, not just exposed.
 11. **Insecure AI Integration** — Test for AI endpoints lacking auth, rate limiting, or input validation; LLM-powered APIs that pass unsanitized user input to backend systems
 
 **General web security (prioritized by bounty value):**
@@ -167,7 +167,7 @@ Session flow:
 - HTTP header fingerprinting and technology detection
 - Scope-gated orchestration pipeline
 
-### Scanner Modules (16 Built)
+### Scanner Modules (17 Built)
 1. Subdomain takeover (20+ services, CNAME chain, HTTP fingerprint)
 2. CORS misconfiguration (origin reflection, null origin, credentials)
 3. SSL/TLS analysis (expiry, weak protocols, hostname mismatch)
@@ -184,6 +184,7 @@ Session flow:
 14. AI prompt injection (endpoint discovery, canary injection, system prompt extraction)
 15. MCP security (server discovery, auth bypass, dangerous tool detection, tool poisoning, path traversal)
 16. AI data exfiltration (context extraction, PII detection, backend leak detection, RAG source exposure)
+17. AI infrastructure exposure (10 products: Ollama, vLLM, LangServe, ComfyUI, MLflow, ChromaDB, Ray, Gradio, LiteLLM, text-generation-webui)
 
 ### Reporting Engine (Built)
 - 35 report templates with CWE references
