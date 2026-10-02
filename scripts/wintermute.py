@@ -31,7 +31,9 @@ logging.getLogger("httpx").setLevel(logging.WARNING)
 
 
 def show_status() -> None:
-    """Show current database status."""
+    """Show pipeline dashboard with program coverage and finding stats."""
+    from collections import Counter
+
     from src.core.db import Finding, Program, Target, get_session
 
     session = get_session()
@@ -42,41 +44,88 @@ def show_status() -> None:
         session.close()
         return
 
-    print("=" * 60)
-    print("WINTERMUTE STATUS")
-    print("=" * 60)
+    all_findings = session.query(Finding).all()
+    all_targets = session.query(Target).all()
 
+    # ── Summary ────────────────────────────────────────────────
+    total_targets = len(all_targets)
+    total_alive = sum(1 for t in all_targets if t.alive)
+    total_findings = len(all_findings)
+    high_conf = sum(1 for f in all_findings if f.confidence >= 0.7)
+    by_severity = Counter(f.severity for f in all_findings)
+    by_type = Counter(f.vuln_type for f in all_findings)
+
+    print("=" * 64)
+    print("  WINTERMUTE DASHBOARD")
+    print("=" * 64)
+    print(f"\n  Programs: {len(programs):>4d}     Targets: {total_targets:>4d} ({total_alive} alive)")
+    print(f"  Findings: {total_findings:>4d}     High-confidence (≥0.7): {high_conf}")
+    print()
+
+    # ── Severity breakdown ─────────────────────────────────────
+    sev_order = ["critical", "high", "medium", "low", "info"]
+    sev_parts = []
+    for s in sev_order:
+        if by_severity.get(s):
+            sev_parts.append(f"{s}: {by_severity[s]}")
+    if sev_parts:
+        print(f"  Severity: {', '.join(sev_parts)}")
+
+    # ── Top finding types ──────────────────────────────────────
+    print(f"\n  {'Finding Type':<28s} {'Count':>5s}  {'High-Conf':>9s}")
+    print("  " + "-" * 46)
+    for vtype, count in by_type.most_common(10):
+        hc = sum(1 for f in all_findings if f.vuln_type == vtype and f.confidence >= 0.7)
+        print(f"  {vtype:<28s} {count:>5d}  {hc:>9d}")
+
+    # ── Per-program table ──────────────────────────────────────
+    print(f"\n  {'Program':<22s} {'Targets':>7s} {'Alive':>5s} {'Finds':>5s} {'Hi-C':>4s} {'Last Scan':<12s}")
+    print("  " + "-" * 60)
+
+    prog_data = []
     for prog in programs:
-        targets = session.query(Target).filter_by(program_id=prog.id).all()
+        targets = [t for t in all_targets if t.program_id == prog.id]
         alive = sum(1 for t in targets if t.alive)
-        findings = (
-            session.query(Finding)
-            .join(Finding.target)
-            .filter(Target.program_id == prog.id)
-            .all()
-        )
+        findings = [f for f in all_findings if any(
+            t.id == f.target_id and t.program_id == prog.id for t in targets
+        )]
+        hc = sum(1 for f in findings if f.confidence >= 0.7)
+        synced = str(prog.last_synced)[:10] if prog.last_synced else "never"
+        prog_data.append((prog.handle, len(targets), alive, len(findings), hc, synced))
 
-        by_status = {}
-        by_severity = {}
-        for f in findings:
-            by_status[f.status] = by_status.get(f.status, 0) + 1
-            by_severity[f.severity] = by_severity.get(f.severity, 0) + 1
+    # Sort by findings count descending
+    prog_data.sort(key=lambda x: x[3], reverse=True)
+    for handle, tgt, alv, fnd, hc, syn in prog_data:
+        print(f"  {handle:<22s} {tgt:>7d} {alv:>5d} {fnd:>5d} {hc:>4d} {syn:<12s}")
 
-        print(f"\n  Program: {prog.name} ({prog.handle})")
-        print(f"  Platform: {prog.platform}")
-        print(f"  Last synced: {prog.last_synced}")
-        print(f"  Targets: {len(targets)} total, {alive} alive")
-        print(f"  Findings: {len(findings)} total")
-        if by_severity:
-            severity_str = ", ".join(
-                f"{k}: {v}" for k, v in sorted(by_severity.items())
-            )
-            print(f"    By severity: {severity_str}")
-        if by_status:
-            status_str = ", ".join(
-                f"{k}: {v}" for k, v in sorted(by_status.items())
-            )
-            print(f"    By status: {status_str}")
+    # ── Actionable findings (exclude noise: HSTS, SSL cert, info-level) ─
+    noise_types = {"missing_security_header", "ssl_tls", "cache_issue"}
+    actionable = [
+        f for f in all_findings
+        if f.confidence >= 0.7
+        and f.severity in ("critical", "high", "medium")
+        and f.vuln_type not in noise_types
+    ]
+    noise_count = sum(
+        1 for f in all_findings
+        if f.confidence >= 0.7
+        and f.severity in ("critical", "high", "medium")
+        and f.vuln_type in noise_types
+    )
+    if actionable:
+        print(f"\n  ACTIONABLE FINDINGS ({len(actionable)}):")
+        if noise_count:
+            print(f"  ({noise_count} noise findings hidden: HSTS, SSL, cache)")
+        print("  " + "-" * 60)
+        for f in actionable[:20]:
+            target = next((t for t in all_targets if t.id == f.target_id), None)
+            host = target.hostname if target else "?"
+            title = (f.title or f.description or "")[:50]
+            print(f"  [{f.severity.upper():<8s}] {host}: {title}")
+        if len(actionable) > 20:
+            print(f"  ... and {len(actionable) - 20} more")
+    else:
+        print(f"\n  No actionable findings ({noise_count} noise findings hidden)")
 
     session.close()
     print()

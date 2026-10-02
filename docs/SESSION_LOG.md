@@ -4,6 +4,27 @@ Track what each session accomplished, what was found, and what's queued for next
 
 ---
 
+## Session 40 — 2026-10-01 (Docs — Cycle 4: CLI Dashboard)
+
+**Cycle step:** Docs — CLI dashboard for pipeline status
+
+**What was done:**
+
+### CLI Dashboard (`status` command)
+- Rewrote `show_status()` with full dashboard layout:
+  - Summary line: programs, targets, findings, high-confidence count
+  - Severity breakdown across all findings
+  - Finding type table with counts and high-confidence counts (top 10)
+  - Per-program table: handle, targets, alive, findings, high-conf, last scan date (sorted by findings desc)
+  - **Actionable findings list** — filters out noise (HSTS, SSL, cache) to show only interesting findings
+- 157 noise findings hidden, 25 actionable shown — much clearer signal
+- Notable: CLEAR corpsupport.clearme.com JWT tokens prominent in actionable list (8 HIGH findings)
+
+**Tests:** 172 (no change)
+**Next:** Cycle 1 (Scanning) — full rotation complete (1→2→3→4). CLEAR JWT investigation or fresh program scout.
+
+---
+
 ## Session 39 — 2026-10-01 (Research — Cycle 3: Competitive Analysis)
 
 **Cycle step:** Research — Competitive analysis vs Nuclei, Burp Suite, community methodologies

@@ -120,7 +120,7 @@ Code quality, documentation, testing, infrastructure. Keeps the project maintain
 ### Queue
 
 1. Write case study doc for first accepted bounty (when it happens)
-2. Add CLI dashboard showing pipeline status, program coverage, finding stats
+2. ~~**CLI dashboard**~~ ✅ DONE (Session 40) — `status` command shows summary stats, per-program table (targets/alive/findings/high-conf/last scan), finding type breakdown, and actionable findings (noise filtered).
 3. Implement submission outcome tracking — log accepted/rejected/duplicate results
 4. Document authenticated scanning workflow — expand beyond current inline docs in operations.md (session management, credential rotation, multi-program auth)
 
