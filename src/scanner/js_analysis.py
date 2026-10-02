@@ -387,6 +387,12 @@ def _analyze_js_file(js_url: str, hostname: str) -> list[SecretFinding]:
         return findings
 
     content_type = resp.headers.get("content-type", "").lower()
+
+    # HTML pages are never JS files — skip even if URL ends in .js
+    # (common when servers redirect /foo.js to a login page)
+    if "text/html" in content_type:
+        return findings
+
     if not any(ct in content_type for ct in (
         "javascript", "application/json", "text/plain", "application/x-javascript",
     )):

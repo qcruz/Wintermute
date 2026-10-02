@@ -4,6 +4,35 @@ Track what each session accomplished, what was found, and what's queued for next
 
 ---
 
+## Session 41 — 2026-10-01 (Scanning — Cycle 1: CLEAR JWT + New Programs)
+
+**Cycle step:** Scanning — CLEAR JWT investigation + Flipkart + Starbucks
+
+**What was done:**
+
+### CLEAR corpsupport.clearme.com JWT Investigation
+- All 8 HIGH JWT findings are **Filestack CDN tokens** — public, short-lived, read-only file access
+- `corpsupport.clearme.com` redirects to `clearme.atlassian.net` (Jira Service Management)
+- All "JS files" (env.js, config.js, etc.) return the same HTML login page (155KB)
+- Same FP class as staging.claude.ai — **JS module follows redirect to auth page, finds JWT in HTML**
+- **Fix applied:** `_analyze_js_file()` now skips responses with `text/html` content-type
+- 1 new test, 173 total passing
+- 8 FPs cleaned from DB
+
+### New Program Scanning
+- **Flipkart** (quick + deep): 44 targets, 26 findings, 1 non-noise (AI Search API at `/api/search/ai` — auth-gated). Insecure cookie on myntra.com. Most targets are Apple/Google app store subdomains.
+- **Starbucks** (quick + deep): 24 targets, 20 findings, 5 non-noise. `/ai` endpoint on www.starbucks.com and www.starbucks.ca (auth-gated). Lots of openapi.starbucks.com test/staging endpoints. All HSTS noise.
+- **Both programs well-hardened** without authenticated access
+
+**Findings:** 0 reportable. Both programs need auth scanning.
+**FPs cleaned:** 8 (CLEAR Filestack JWT)
+**Tests:** 173 (+1 JS HTML skip test)
+**Programs scanned:** 14 total (added Flipkart, Starbucks)
+
+**Next:** Continue Cycle 1 — multi-program recon re-run with expanded sources (item 3), or scout more programs.
+
+---
+
 ## Session 40 — 2026-10-01 (Docs — Cycle 4: CLI Dashboard)
 
 **Cycle step:** Docs — CLI dashboard for pipeline status

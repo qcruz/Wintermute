@@ -21,6 +21,8 @@ Living document tracking progress, successes, failures, trends, and research to 
 | Wealthsimple | 81 | Targeted (6 hosts deep scanned) | Insecure cookie on work-staging, 9 content discovery (blanket-403 FPs), 1 AI endpoint (info), 18 catch-all redirect FPs on paymentcard | 0 | Mostly locked-down staging; needs auth scanning for real coverage |
 | Tinder | 59 | Quick + deep (API, staging) | 25 findings — all missing HSTS headers | 0 | crt.sh 502'd on all 6 domains; staging targets well-secured; needs better recon |
 | Grab | 52 | Quick + deep (8 targets deep scanned) | CORS (non-exploitable wildcard), SSL cert mismatches, HSTS, CSRF cookie on staging, server version disclosure | 0 | 18 interesting targets (APIs, staging, dev, GitLab OIDC) all returned only surface-level findings; hungrygowhere.com admin/staging subdomains mostly dead; needs auth scanning |
+| Flipkart | 44 | Quick + targeted | AI Search API (auth-gated), insecure cookie on myntra.com | 0 | Well-hardened; AI search at flipkart.com/sherlock/search needs auth |
+| Starbucks | 24 | Quick + targeted | Missing HSTS (11 hosts), robots.txt, `/ai` endpoint (auth-gated) | 0 | openapi.starbucks.com subdomains lack HSTS but 95% dup probability; AI endpoint needs auth |
 
 ### Submissions: 1 sent, 0 accepted
 
@@ -61,7 +63,9 @@ Living document tracking progress, successes, failures, trends, and research to 
 | Low-confidence content discovery (403, redirect, status-only) | 138+ | Granular confidence scoring: only fingerprint matches (0.85) exceed threshold; redirect/forbidden/status-only at 0.4–0.5 |
 | AI endpoint FP (CSS file flagged as "AI feature link") | 1 | chat_param heuristic too loose — triggers on CSS/JS files |
 | CORS wildcard + credentials (non-exploitable) | 2 | ACAO:* with ACAC:true — browsers block credentials; need origin reflection check |
-| **Total FPs caught and fixed** | **~560+** | |
+| Prompt injection input reflection (HTML/URL-encoded) | 8+ | Check raw, HTML-decoded, URL-decoded (single+double) body; contextual word proximity fallback |
+| JS analysis scanning HTML login pages | 8+ | Skip responses with `text/html` content-type (server redirects .js to login pages) |
+| **Total FPs caught and fixed** | **~580+** | |
 
 Our false positive detection is improving with each scan. The pattern: scan a new program, discover a new FP class, fix it, move on.
 

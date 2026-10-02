@@ -1044,6 +1044,29 @@ def test_ai_endpoint_keeps_real_paths():
         assert not is_static and not has_static_dir, f"{link} should NOT be filtered"
 
 
+# ── JS Analysis: HTML Content-Type Skip ────────────────────────────
+
+
+def test_js_analysis_skips_html_responses():
+    """JS analysis should skip responses with text/html content-type.
+
+    When a server redirects /env.js to a login page (HTML), the JWT tokens
+    in that page are not exposed secrets — they're part of the login page.
+    """
+    from unittest.mock import MagicMock, patch
+    from src.scanner.js_analysis import _analyze_js_file
+
+    resp = MagicMock()
+    resp.status_code = 200
+    resp.headers = {"content-type": "text/html;charset=utf-8"}
+    resp.text = 'eyJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJ0ZXN0In0.sig'  # JWT in HTML
+
+    with patch("src.scanner.js_analysis.httpx.get", return_value=resp):
+        findings = _analyze_js_file("https://example.com/env.js", "example.com")
+
+    assert findings == [], "HTML responses should not be analyzed for JS secrets"
+
+
 # ── Prompt Injection Reflection Detection ──────────────────────────
 
 def test_reflection_detects_raw_prompt():
