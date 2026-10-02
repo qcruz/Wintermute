@@ -4,6 +4,32 @@ Track what each session accomplished, what was found, and what's queued for next
 
 ---
 
+## Session 38 — 2026-10-01 (R&D — Cycle 2: Manual Target Injection)
+
+**Cycle step:** R&D — Manual target injection CLI feature
+
+**What was done:**
+
+### Manual Target Injection (`--add-targets`)
+- New CLI flag: `python -m scripts.wintermute <handle> --add-targets host1,host2,host3`
+- Scope-gated: checks each hostname against program scope before adding
+- DNS resolution: resolves IPs and marks alive/dead
+- Deduplication: skips hostnames already in DB
+- Auto-creates program if not in DB (fetches from HackerOne API)
+- Source tracked as `"manual"` for audit trail
+- Replaces the raw Python workaround used in Session 37 for Anthropic base domains
+
+### Also from background tasks (Session 37)
+- Reviewed staging.claude.ai scan results: 7 JWT findings are all Cloudflare Access metadata tokens on the login redirect page, not real secrets. Cleaned 7 FPs.
+- API scan (bpa0scomy) completed: only 1 AI endpoint found on internal.api.anthropic.com, 0 reportable
+
+**Tests:** 172 (no change — feature tested manually against live program)
+**FPs cleaned:** 7 (Cloudflare Access JWT on staging.claude.ai)
+
+**Next:** Cycle 3 (Research) or Cycle 4 (Docs) — Cycle 1 and 2 done recently.
+
+---
+
 ## Session 37 — 2026-10-01 (Scanning — Cycle 1: Anthropic + R&D Fix)
 
 **Cycle step:** Scanning — Anthropic scan with AI/MCP modules

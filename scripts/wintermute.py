@@ -11,6 +11,7 @@ Usage:
   python -m scripts.wintermute <handle> --filter api           # Only targets containing "api"
   python -m scripts.wintermute <handle> --checks cors,injection  # Only specific checks
   python -m scripts.wintermute <handle> --auth                   # Authenticated scan (.auth/<handle>.json)
+  python -m scripts.wintermute <handle> --add-targets h1,h2,h3  # Inject specific hostnames
   python -m scripts.wintermute status                          # Show database status
   python -m scripts.wintermute programs                        # List available programs
   python -m scripts.wintermute scout                           # Discover new programs to work
@@ -168,6 +169,86 @@ def scout_programs() -> None:
     print()
 
 
+def add_targets(handle: str, hostnames: list[str]) -> None:
+    """Manually inject specific hostnames into a program's target list.
+
+    Checks scope, resolves DNS, and stores in DB. Skips subdomain enumeration.
+    The program must already exist in the DB (run recon first, or it will be
+    created with minimal info from HackerOne).
+    """
+    from datetime import datetime, timezone
+
+    from src.core.db import Program, Target, get_session
+    from src.core.scope import ScopeChecker
+    from src.platforms.hackerone import HackerOneClient, parse_scope
+    from src.recon.subdomain import _resolve_hostname
+
+    session = get_session()
+
+    # Ensure program exists
+    program = session.query(Program).filter_by(handle=handle).first()
+    if not program:
+        print(f"Program '{handle}' not in DB. Fetching from HackerOne...")
+        with HackerOneClient() as client:
+            program_data = client.get_program(handle)
+        attrs = program_data.get("attributes", {})
+        program = Program(
+            handle=handle,
+            name=attrs.get("name", handle),
+            platform="hackerone",
+            submission_state=attrs.get("submission_state", "open"),
+        )
+        session.add(program)
+        session.flush()
+
+    # Build scope checker
+    with HackerOneClient() as client:
+        raw_scopes = client.get_structured_scopes(handle)
+    parsed = parse_scope(raw_scopes)
+    checker = ScopeChecker.from_parsed_scope(handle, parsed)
+
+    added = 0
+    skipped = 0
+    for hostname in hostnames:
+        hostname = hostname.strip().lower()
+        if not hostname:
+            continue
+
+        # Check scope
+        check = checker.check(hostname)
+        if not check.allowed:
+            print(f"  SKIP {hostname} — out of scope ({check.reason})")
+            skipped += 1
+            continue
+
+        # Check if already in DB
+        existing = session.query(Target).filter_by(
+            program_id=program.id, hostname=hostname
+        ).first()
+        if existing:
+            print(f"  EXISTS {hostname} (alive={existing.alive})")
+            continue
+
+        # Resolve DNS
+        ips, alive = _resolve_hostname(hostname)
+
+        target = Target(
+            program_id=program.id,
+            hostname=hostname,
+            source="manual",
+            ip_address=", ".join(ips),
+            alive=alive,
+        )
+        session.add(target)
+        status = "ALIVE" if alive else "NO DNS"
+        print(f"  ADDED {hostname} — {status} ({', '.join(ips) if ips else 'no IPs'})")
+        added += 1
+
+    session.commit()
+    session.close()
+    print(f"\nDone: {added} added, {skipped} out-of-scope")
+
+
 def _parse_arg(args: list[str], flag: str, default: str = "") -> str:
     """Extract a flag value like --limit 5 from args."""
     if flag in args:
@@ -189,6 +270,7 @@ def main() -> None:
         print("  python -m scripts.wintermute <handle> --filter TERM      Only matching hostnames")
         print("  python -m scripts.wintermute <handle> --checks a,b,c     Only specific checks")
         print("  python -m scripts.wintermute <handle> --auth              Authenticated scanning")
+        print("  python -m scripts.wintermute <handle> --add-targets a,b   Inject specific hostnames")
         print("  python -m scripts.wintermute status                      DB status")
         print("  python -m scripts.wintermute programs                    List programs")
         print("  python -m scripts.wintermute scout                       Find new programs")
@@ -217,6 +299,17 @@ def main() -> None:
     # Full pipeline
     handle = cmd
     args = sys.argv[2:]
+
+    # Handle --add-targets before anything else
+    targets_str = _parse_arg(args, "--add-targets")
+    if targets_str:
+        hostnames = [h.strip() for h in targets_str.split(",") if h.strip()]
+        if not hostnames:
+            print("Usage: --add-targets host1,host2,host3")
+            sys.exit(1)
+        print(f"Adding {len(hostnames)} targets to {handle}...")
+        add_targets(handle, hostnames)
+        return
 
     scan_only = "--scan-only" in args
     quick = "--quick" in args

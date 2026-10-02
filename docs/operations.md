@@ -53,6 +53,9 @@ python -m scripts.wintermute <handle> --scan-only --quick --limit 3 --filter api
 ### Authenticated Scanning
 
 ```bash
+# Add specific targets without running recon (scope-checked, DNS-resolved)
+python -m scripts.wintermute <handle> --add-targets host1.example.com,host2.example.com
+
 # Scan with authentication (loads cookies/headers from .auth/<handle>.json)
 python -m scripts.wintermute <handle> --auth --scan-only --filter api
 

@@ -70,7 +70,7 @@ Research, prototype, and integrate new vulnerability detection capabilities. Eac
 **Infrastructure & capability:**
 7. ~~**Authenticated scanning**~~ ✅ DONE (Session 28) — `--auth` flag loads cookies/headers from `.auth/<handle>.json`. Wired through pipeline to content_discovery, ai_prompt_injection, ai_data_exfil, mcp_security. Shared HTTP client in `src/core/http_client.py`.
 8. ~~**Subdomain enumeration expansion**~~ ✅ DONE (Session 35) — Added HackerTarget API and AlienVault OTX as passive sources. HackerTarget found 51 github.com subdomains vs crt.sh's 2. Falls back gracefully when sources are down (crt.sh 502 no longer blocks recon).
-9. **Manual target injection** — CLI flag to add specific hostnames to a program's target list without relying on recon (workaround until enum is expanded)
+9. ~~**Manual target injection**~~ ✅ DONE (Session 38) — `--add-targets host1,host2` CLI flag. Checks scope, resolves DNS, stores in DB. Bypasses recon entirely.
 
 **AI Agent Security (priority track):**
 10. **Insecure AI Integration** — Test for AI endpoints lacking auth, rate limiting, or input validation; LLM-powered APIs that pass unsanitized user input to backend systems
