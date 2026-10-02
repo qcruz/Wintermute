@@ -293,6 +293,12 @@ AI agents and LLM-integrated applications are a rapidly growing attack surface. 
 - AI vulnerability research: OWASP, NIST AI RMF, Anthropic's responsible disclosure work
 - NSA/CISA MCP Security Design Guidance (June 2026)
 - OX Security MCP SDK vulnerability research
+- Microsoft "When prompts become shells" — RCE in AI agent frameworks (May 2026)
+- CSA "Indirect Prompt Injection Goes Operational" — real-world IPI incidents
+- MCP-38 threat taxonomy — comprehensive MCP threat classification
+- VIPER-MCP — taint-style MCP vulnerability detection research
+- Anthropic CVD dashboard — red.anthropic.com/2026/cvd/
+- Check Point Research — Claude Code CVE chain analysis
 
 ---
 
@@ -374,20 +380,102 @@ MCP is the emerging standard for AI agent tool use. Its security posture is poor
 - Auth bypass on MCP servers is detectable with our existing auth check patterns
 - We should build an MCP-specific scanner that probes MCP server endpoints for these patterns
 
+### AI Agent Attack Patterns — Updated Research (Session 43)
+
+Research update on real-world AI agent attack patterns, informed by 2026 CVE data, HackerOne trends, and academic/industry publications.
+
+#### The Shift: From Prompt Injection to Agent Exploitation
+
+The attack landscape has evolved from "trick the chatbot" to "compromise the agent's tools and credentials." Key data points:
+
+- **Indirect prompt injection is now dominant** — 55% of observed attacks in 2026. Payloads sit in content the agent retrieves (emails, code comments, web pages, documents), not in direct user input.
+- **Confused deputy is the new CSRF** — AI agents with delegated credentials (API keys, OAuth tokens, file access) are tricked into misusing their authority. This is the classical confused deputy problem applied to LLM agents.
+- **Tool-use abuse is the highest-impact vector** — documented payloads include forced PayPal transfers ($5K), Stripe subscription fraud, recursive file deletion, and API key exfiltration. The agent has the permissions; the attacker just needs to redirect them.
+
+#### Claude Code Specifically: 28 CVEs in 2026
+
+Claude Code is our #1 target (Anthropic's program). Key CVEs and patterns:
+
+| CVE | Type | Impact | Detection Approach |
+|-----|------|--------|-------------------|
+| CVE-2025-59536 | Malicious CLAUDE.md | RCE + API key theft via crafted project files | Check for instruction injection in project config files |
+| CVE-2026-24887 | Command injection | Bypass confirmation prompt via `find` command | Test subcommand escape sequences |
+| CVE-2026-39861 | Sandbox escape | Arbitrary file writes outside workspace | Test path traversal in file operations |
+| CVE-2026-35020/21/22 | Command injection chain | Credential exfiltration | Three-step chain: inject → escalate → exfil |
+| CVE-2026-21852 | Prompt injection | API key theft when cloning untrusted repos | Inject instructions in repo content |
+| (subcommand limit) | Prompt injection | Ignore deny rules via long subcommand chains | Overwhelm context to bypass safety |
+
+**Wintermute implication:** These are **local** attacks requiring the researcher to run Claude Code against crafted content. Our remote scanner can't test these directly — but we should document these patterns and consider building a local testing harness.
+
+#### MCP Vulnerability Wave: 30+ CVEs, 43% Shell Injection
+
+Updated MCP landscape from 2026 research:
+
+- **43% of MCP CVEs are shell/command injection** — `os.system()`, `subprocess(shell=True)`, `child_process.exec()` with unsanitized input
+- **20% are client-side bugs** — inspectors, proxy tools, and MCP clients themselves
+- **CVE-2026-13341** — Kong Konnect MCP server confused deputy: indirect prompt injection causes unintended API requests
+- **CVE-2026-33032** — CVSS 9.8, nginx-ui MCP endpoint lacks auth for command execution
+- **Unicode TAG-Block concealment** — tool metadata payloads hidden using Unicode tags, exploiting approval-view fidelity gap across 3 server implementations
+- **OX Security disclosure** — Anthropic's MCP SDK (Python, TypeScript, Java, Rust) has design-level RCE via STDIO interface, ~200K vulnerable instances
+
+**New MCP attack class: Unicode tag concealment** — attackers hide instructions in MCP tool descriptions using Unicode tag characters that render as invisible in approval UIs but are processed by the LLM. This is a rug-pull variant that exploits the gap between what the human sees and what the model processes.
+
+#### Emerging Detection Tools We Should Watch
+
+- **SkillSecurer** — automated detection and patching of prompt injection in AI agent skills
+- **VIPER-MCP** — taint-style vulnerability detection for MCP servers (command injection, path traversal, SSRF)
+- **MCPGuard** — automated MCP server vulnerability detection
+- **MCP-38 taxonomy** — comprehensive threat classification for MCP systems
+- **IPI-proxy** — intercepting proxy for red-teaming web-browsing AI agents against indirect prompt injection
+- **Kaggle competition** (OpenAI/Google/IEEE) — multi-step tool attack benchmarking
+
+#### What Gets Paid vs. What Gets Rejected (Updated)
+
+Based on 2026 bounty data and program policies:
+
+**Paid (high confidence):**
+- Tool abuse reaching infrastructure: SSRF via AI, RCE via agent tools, unauthorized API calls
+- Cross-tenant data exfiltration via AI responses
+- System prompt extraction revealing embedded secrets (API keys, internal URLs)
+- Indirect prompt injection against content readers with demonstrable impact
+- MCP auth bypass allowing unauthorized tool invocation
+- Credential exfiltration via CI/CD agent workflows
+- Sandbox escape in coding agents (Claude Code, Copilot, Cursor)
+
+**Rejected (avoid submitting):**
+- Single-domain jailbreaks without broad applicability
+- Direct prompt injection without further exploitation (just "say X" is not enough)
+- Hallucinations without attacker control
+- System prompt extraction with no secrets in the prompt
+- "I got the AI to say something bad" without demonstrating real security impact
+
+**Key framing insight:** Reports framed as pentest reports (root cause → reproduction → impact chain) get 2-3x higher payouts than those framed as "I found a bug." The triager needs to understand the exploitation model, not just the injection.
+
+#### Strategic R&D Implications
+
+1. **Local Claude Code testing harness** — the 28 CVEs in Claude Code are all local attacks. Building a safe test harness to reproduce known patterns (malicious CLAUDE.md, crafted repos, subcommand chains) could find variants. This is Anthropic's explicit scope.
+2. **Indirect prompt injection via web content** — if we can identify AI agents that consume web pages (AI search, RAG, content summarizers), we can test whether content within our scope influences agent behavior.
+3. **MCP Unicode tag detection** — enhance our MCP module to check tool descriptions for Unicode tag blocks and other concealment techniques.
+4. **Confused deputy detection** — test whether MCP tools with delegated auth can be tricked into acting on behalf of an attacker.
+5. **AI infra + auth combo** — use our new AI infra exposure module to find exposed services, then test whether they accept arbitrary inference requests (cost attacks, data extraction).
+
 ### AI Attack Taxonomy for Scanner Development
 
 Based on research, these are the attack classes we should build detection for, ordered by feasibility and bounty value:
 
 | Priority | Attack Class | Bounty Range | Detection Feasibility | Module Status |
 |----------|-------------|-------------|----------------------|---------------|
-| 1 | **Direct Prompt Injection** | $500-$15K | High — send canary prompts, check responses | **Built** (14th module) |
-| 2 | **System Prompt Extraction** | $500-$5K | High — well-known extraction phrases | **Built** (part of Prompt Injection module) |
-| 3 | **MCP Auth Bypass** | $500-$10K | High — probe MCP endpoints without auth | **Built** (15th module) |
-| 4 | **MCP Path Traversal** | $500-$10K | High — reuse existing traversal patterns | **Built** (15th module) |
-| 5 | **Indirect Prompt Injection** | $1K-$15K | Medium — requires understanding what content the AI consumes | Planned (Cycle 2 queue #1) |
-| 6 | **AI Data Exfiltration** | $1K-$10K | Medium — need to detect information leakage in AI responses | Planned (Cycle 2 queue #3) |
-| 7 | **Excessive Agency Testing** | $500-$5K | Medium — need to map agent capabilities first | Planned (Cycle 2 queue #4) |
-| 8 | **Tool Poisoning Detection** | $1K-$15K | Low — requires access to tool schemas, may be out of scope for external testing | Research phase |
+| 1 | **Direct Prompt Injection** | $500-$15K | High — send canary prompts, check responses | **Built** (ai_prompt_injection) |
+| 2 | **System Prompt Extraction** | $500-$5K | High — well-known extraction phrases | **Built** (part of ai_prompt_injection) |
+| 3 | **MCP Auth Bypass** | $500-$10K | High — probe MCP endpoints without auth | **Built** (mcp_security) |
+| 4 | **MCP Path Traversal** | $500-$10K | High — reuse existing traversal patterns | **Built** (mcp_security) |
+| 5 | **AI Data Exfiltration** | $1K-$10K | Medium — detect information leakage in AI responses | **Built** (ai_data_exfil) |
+| 6 | **AI Infrastructure Exposure** | $500-$5K | High — fingerprint-based detection of 10 products | **Built** (ai_infra_exposure) |
+| 7 | **Indirect Prompt Injection** | $1K-$15K | Medium — requires understanding what content the AI consumes | Planned — highest-value gap |
+| 8 | **Confused Deputy / Tool Abuse** | $1K-$15K | Medium — test MCP tools with delegated auth for unauthorized actions | Planned |
+| 9 | **Excessive Agency Testing** | $500-$5K | Medium — map agent capabilities, test boundary conditions | Planned |
+| 10 | **MCP Unicode Tag Concealment** | $1K-$10K | High — scan tool descriptions for invisible Unicode tags | Planned |
+| 11 | **Tool Poisoning Detection** | $1K-$15K | Low — requires access to tool schemas, may be out of scope | Research phase |
 
 ### Programs to Target for AI Security Testing
 
@@ -498,7 +586,7 @@ Existing security scanners (Nuclei, Burp Suite, ZAP, Semgrep) are excellent at t
 | OWASP ZAP | Good | None | None |
 | Semgrep | Source code rules | Some LLM rules (static only) | None |
 | Garak (NVIDIA) | None | Prompt injection probes | None |
-| **Wintermute** | Good (14 modules) | **Prompt injection, endpoint discovery, system prompt extraction** | **Planned** |
+| **Wintermute** | Good (17 modules) | **Prompt injection, data exfil, AI infra exposure, endpoint discovery** | **Built** (auth bypass, path traversal, tool poisoning, dangerous tools) |
 
 Wintermute's general web scanning will never match Nuclei's 9,000 templates — and it doesn't need to. The differentiation is in the AI security layer that sits on top of the recon pipeline. No existing tool combines subdomain enumeration, scope-gated scanning, AI endpoint discovery, prompt injection testing, AND automated HackerOne report generation in a single pipeline.
 
@@ -594,3 +682,6 @@ Update this document every 3-4 sessions or after significant events (first submi
 | 2026-10-01 | Prompt injection reflection FP fix | New `_is_input_reflected()` — checks raw/HTML/URL-decoded body; fixes FPs on search sites; 172 tests |
 | 2026-10-01 | Manual target injection built | `--add-targets` CLI flag; scope-checked, DNS-resolved |
 | 2026-10-01 | Competitive analysis | Nuclei has 12K+ templates; ai-infra-nuclei covers 81 AI products; our moat is MCP security + AI depth + integrated pipeline |
+| 2026-10-01 | AI infra exposure module built | 17th scanner — 10 AI products, fingerprint-based detection |
+| 2026-10-01 | JS analysis HTML FP fix | Skip text/html responses in JS module; Flipkart + Starbucks scanned |
+| 2026-10-02 | AI agent attack pattern research | Claude Code 28 CVEs; MCP 30+ CVEs (43% shell injection); indirect PI now 55% of attacks; confused deputy emerging; Unicode tag concealment new MCP attack class |

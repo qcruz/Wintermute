@@ -73,7 +73,8 @@ Research, prototype, and integrate new vulnerability detection capabilities. Eac
 
 **AI Agent Security (priority track):**
 10. ~~**AI Infrastructure Exposure**~~ ✅ DONE (Session 42) — Detects unauthenticated access to 10 AI/ML products (Ollama, vLLM, LangServe, ComfyUI, MLflow, ChromaDB, Ray Serve, Gradio, LiteLLM, text-generation-webui). Fingerprint-based detection confirms APIs are usable, not just exposed.
-11. **Insecure AI Integration** — Test for AI endpoints lacking auth, rate limiting, or input validation; LLM-powered APIs that pass unsanitized user input to backend systems
+11. **MCP Unicode Tag Detection** — Enhance MCP module to detect Unicode tag-block concealment in tool descriptions (invisible characters that hide instructions from approval UIs but are processed by LLMs). Based on Session 43 research.
+12. **Insecure AI Integration** — Test for AI endpoints lacking auth, rate limiting, or input validation; LLM-powered APIs that pass unsanitized user input to backend systems
 
 **General web security (prioritized by bounty value):**
 12. **SSRF Detection** — Test URL/webhook parameters for internal network access (requires callback server setup). Highest-value gap: $1K-$10K bounties.
@@ -98,14 +99,14 @@ Market research, competitive analysis, and strategic direction. Feeds into R&D p
 
 ### Queue
 
-1. Research AI agent attack patterns — tool-use abuse, indirect prompt injection via stored content, data exfiltration through AI responses
-2. Update `docs/STRATEGY.md` with findings, adjust cycle priorities
-3. Research current HackerOne Hacktivity — what bug types are getting accepted and paid this month?
-4. Study AI/LLM attack surface landscape — OWASP Top 10 for LLMs, prompt injection taxonomy, AI agent authorization models, MCP security gaps
-5. Review bounty payout trends — which programs pay well, which are responsive, which to avoid
-6. Scout HackerOne programs with AI features — identify targets with chatbots, AI assistants, LLM APIs, AI-powered search
-7. Analyze our false positive rate — which modules generate the most noise? Prioritize fixes
-8. Competitive analysis — what are other automated scanners (Nuclei, Burp, etc.) detecting that we're not? (Last run: Session 39)
+1. Research current HackerOne Hacktivity — what bug types are getting accepted and paid this month?
+2. Study AI/LLM attack surface landscape — OWASP Top 10 for LLMs, prompt injection taxonomy, AI agent authorization models, MCP security gaps
+3. Review bounty payout trends — which programs pay well, which are responsive, which to avoid
+4. Scout HackerOne programs with AI features — identify targets with chatbots, AI assistants, LLM APIs, AI-powered search
+5. Analyze our false positive rate — which modules generate the most noise? Prioritize fixes
+6. Competitive analysis — what are other automated scanners (Nuclei, Burp, etc.) detecting that we're not? (Last run: Session 39)
+7. Research AI agent attack patterns — tool-use abuse, indirect prompt injection via stored content, confused deputy attacks (Last run: Session 43)
+8. Update `docs/STRATEGY.md` with findings, adjust cycle priorities
 
 **Continuous items** (all — rotate after working):
 - All items in this cycle are continuous research tasks

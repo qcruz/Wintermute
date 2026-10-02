@@ -4,6 +4,37 @@ Track what each session accomplished, what was found, and what's queued for next
 
 ---
 
+## Session 43 — 2026-10-02 (Research — Cycle 3: AI Agent Attack Patterns)
+
+**Cycle step:** Research — AI agent attack patterns (ROADMAP Cycle 3, item 1)
+
+**What was done:**
+
+### AI Agent Attack Pattern Research
+- Researched current real-world AI agent attack patterns via web search (6 queries across multiple domains)
+- **Indirect prompt injection is now dominant** — 55% of observed attacks in 2026. Payloads in content agents retrieve (emails, code comments, web pages), not direct user input.
+- **Confused deputy is the new CSRF** — agents with delegated credentials tricked into misusing authority. Documented: forced PayPal transfers, Stripe fraud, credential exfiltration.
+- **Claude Code has 28 CVEs in 2026** — our #1 target. Key patterns: malicious CLAUDE.md (CVE-2025-59536), sandbox escape (CVE-2026-39861), subcommand chain bypass, command injection chains (CVE-2026-35020/21/22). All are local attacks.
+- **MCP vulnerability wave** — 30+ CVEs, 43% shell injection, 20% client-side. New attack class: Unicode TAG-block concealment hides instructions in tool descriptions using invisible Unicode characters.
+- **Anthropic went public on HackerOne** (May 2026) — up to $15K per finding, two tracks (Model Safety + Product Security). Claude Code scope explicitly includes: unauthorized command execution, permission bypasses, sandbox escapes.
+
+### STRATEGY.md Updated
+- Added "AI Agent Attack Patterns — Updated Research (Session 43)" section with Claude Code CVE table, MCP wave analysis, emerging detection tools, paid vs. rejected guidance
+- Updated attack taxonomy: 11 prioritized attack classes (was 8), added confused deputy, MCP Unicode concealment, AI infra exposure
+- Updated differentiation framework table: 17 modules, MCP security now "Built"
+- Added 6 new research resources
+- Added review cadence entries for Sessions 41-43
+
+### ROADMAP Updated
+- Added "MCP Unicode Tag Detection" as new R&D item
+- Rotated Cycle 3 queue (AI agent attack patterns moved to bottom)
+
+**Key strategic insight:** Claude Code's 28 CVEs are ALL local attacks (crafted repos, malicious project files, subcommand chains). Our remote scanner can't find these — we need a **local testing harness** that runs Claude Code against crafted content in a safe sandbox. This is Anthropic's highest-value attack surface and explicitly in scope.
+
+**Next:** Cycle 4 (Docs) or Cycle 1 (Scanning) — deploy the new AI infra module against targets
+
+---
+
 ## Session 42 — 2026-10-01 (R&D — Cycle 2: AI Infrastructure Exposure Scanner)
 
 **Cycle step:** R&D — Build AI Infrastructure Exposure scanner module (ROADMAP item #10)
