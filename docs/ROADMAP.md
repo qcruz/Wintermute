@@ -73,10 +73,11 @@ Research, prototype, and integrate new vulnerability detection capabilities. Eac
 9. ~~**Manual target injection**~~ ✅ DONE (Session 38) — `--add-targets host1,host2` CLI flag. Checks scope, resolves DNS, stores in DB. Bypasses recon entirely.
 
 **AI Agent Security (priority track):**
-10. **Insecure AI Integration** — Test for AI endpoints lacking auth, rate limiting, or input validation; LLM-powered APIs that pass unsanitized user input to backend systems
+10. **AI Infrastructure Exposure** — Detect unauthenticated access to AI services (Ollama, vLLM, LangServe, ComfyUI, MLflow, ChromaDB, Ray). Based on competitive analysis: 81 products ship without auth by default. Goes beyond Nuclei's exposure-only detection by testing discovered APIs.
+11. **Insecure AI Integration** — Test for AI endpoints lacking auth, rate limiting, or input validation; LLM-powered APIs that pass unsanitized user input to backend systems
 
-**General web security:**
-11. **SSRF Detection** — Test URL/webhook parameters for internal network access (requires callback server setup)
+**General web security (prioritized by bounty value):**
+12. **SSRF Detection** — Test URL/webhook parameters for internal network access (requires callback server setup). Highest-value gap: $1K-$10K bounties.
 12. **Host Header Injection** — Test for password reset poisoning and cache poisoning via Host header manipulation
 13. **Broken Rate Limiting** — Detect missing rate limits on login, password reset, and API endpoints
 14. **API Versioning Gaps** — Test older API versions (v1 when v2 exists) for deprecated, unpatched endpoints
@@ -98,14 +99,14 @@ Market research, competitive analysis, and strategic direction. Feeds into R&D p
 
 ### Queue
 
-1. Competitive analysis — what are other automated scanners (Nuclei, Burp, etc.) detecting that we're not?
-2. Research AI agent attack patterns — tool-use abuse, indirect prompt injection via stored content, data exfiltration through AI responses
-3. Update `docs/STRATEGY.md` with findings, adjust cycle priorities
-4. Research current HackerOne Hacktivity — what bug types are getting accepted and paid this month?
-5. Study AI/LLM attack surface landscape — OWASP Top 10 for LLMs, prompt injection taxonomy, AI agent authorization models, MCP security gaps
-6. Review bounty payout trends — which programs pay well, which are responsive, which to avoid
-7. Scout HackerOne programs with AI features — identify targets with chatbots, AI assistants, LLM APIs, AI-powered search
-8. Analyze our false positive rate — which modules generate the most noise? Prioritize fixes
+1. Research AI agent attack patterns — tool-use abuse, indirect prompt injection via stored content, data exfiltration through AI responses
+2. Update `docs/STRATEGY.md` with findings, adjust cycle priorities
+3. Research current HackerOne Hacktivity — what bug types are getting accepted and paid this month?
+4. Study AI/LLM attack surface landscape — OWASP Top 10 for LLMs, prompt injection taxonomy, AI agent authorization models, MCP security gaps
+5. Review bounty payout trends — which programs pay well, which are responsive, which to avoid
+6. Scout HackerOne programs with AI features — identify targets with chatbots, AI assistants, LLM APIs, AI-powered search
+7. Analyze our false positive rate — which modules generate the most noise? Prioritize fixes
+8. Competitive analysis — what are other automated scanners (Nuclei, Burp, etc.) detecting that we're not? (Last run: Session 39)
 
 **Continuous items** (all — rotate after working):
 - All items in this cycle are continuous research tasks

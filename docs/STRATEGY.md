@@ -237,6 +237,50 @@ AI agents and LLM-integrated applications are a rapidly growing attack surface. 
 
 **Opportunity:** Most automated scanners don't test for AI-specific vulnerabilities. This is a low-competition, high-value niche.
 
+### Competitive Analysis — What Others Detect That We Don't (Session 39)
+
+**Methodology:** Compared Wintermute's 16 scanner modules against Nuclei (12,000+ templates), Burp Suite, and community methodologies (XSS-Rat 2026 guide, su6osec methodology).
+
+#### Coverage Comparison
+
+| Detection Category | Nuclei | Burp Suite | Wintermute | Gap Assessment |
+|-------------------|--------|------------|------------|----------------|
+| **Known CVEs** | 9,000+ templates, hours after disclosure | Active scan + BApp extensions | None | **Major gap** — but not our niche. CVE scanning is commodity work and rarely pays bounties on established programs. |
+| **Exposed panels/logins** | 151 templates (admin, CMS, DB, CI panels) | Via crawl + active scan | Partial (content_discovery: 80+ paths) | **Moderate gap** — we check common paths but lack fingerprinting for specific products (phpMyAdmin, Grafana, Jenkins, etc.) |
+| **Default credentials** | 31 templates | Intruder brute-force | None | **Low priority** — useful but rarely bounty-eligible on established programs |
+| **Technology fingerprinting** | 105 templates | Passive detection | Basic (header analysis) | **Moderate gap** — knowing the tech stack enables targeted testing |
+| **SSRF** | Templates for known SSRF CVEs | Scanner + Collaborator callbacks | None | **High priority gap** — $1K-$10K bounties, requires callback server |
+| **Stored XSS** | CVE-specific only | Active scan (POST requests) | Reflected only | **High priority gap** — requires POST capability (ethics review needed) |
+| **Race conditions** | None | Turbo Intruder extension | None | **Medium priority** — hard to automate reliably |
+| **WebSocket testing** | Some templates | Full proxy support | None | **Low-medium priority** — growing attack surface |
+| **AI/LLM infrastructure** | 84 templates (ai-infra-nuclei project) | None | **3 modules + endpoint discovery** | **Our advantage** — but Nuclei's ai-infra-nuclei project is catching up with exposure detection for 81 AI products |
+| **MCP security** | None | None | **Built** (auth bypass, path traversal, tool poisoning) | **Unique advantage** — no competitor has this |
+| **OAuth/SSO flaws** | Some CVE templates | Partial via proxy | None | **Medium priority gap** — common in bounties |
+
+#### What Nuclei Does That We Should Consider
+
+1. **Technology-specific scanning** — Nuclei runs WordPress templates only against WordPress, Spring templates against Java apps. We scan everything with everything. Adding tech detection → targeted checks would reduce noise and increase finding density.
+
+2. **AI infrastructure exposure** — The [ai-infra-nuclei](https://github.com/Popy21/ai-infra-nuclei) project has 84 templates covering unauthenticated access to Ollama, vLLM, ComfyUI, LangServe, Ray, MLflow, ChromaDB, Qdrant. Key insight from that project: "the dominant risk on AI infrastructure is not a software flaw, but that these services have no authentication by default." We should add detection for exposed AI infrastructure (Ollama API, vLLM, LangServe) — this aligns perfectly with our AI specialty.
+
+3. **Proof-based matching** — Nuclei requires matchers that prove the exposure, not just test for HTTP 200. Our content_discovery module has the same philosophy (fingerprint matching at 0.85 confidence), but some checks are still status-code-only.
+
+#### What We Have That Nuclei/Burp Don't
+
+1. **Integrated pipeline** — Recon → scope gate → scan → dedup → report → HackerOne submit. No other tool does this end-to-end.
+2. **MCP security testing** — No competitor has MCP-specific detection (auth bypass, path traversal, tool poisoning, dangerous tools).
+3. **AI endpoint discovery + injection testing** — Our prompt injection module discovers AI endpoints AND tests them. Nuclei's ai-infra templates only detect unauthenticated exposure.
+4. **Scope-gated safety** — Hard scope enforcement with audit logging. Most scanners rely on the user to stay in scope.
+5. **Automated report generation** — 35 templates with CWE references, ready for HackerOne submission.
+
+#### Strategic Takeaways
+
+1. **Don't compete on CVE coverage.** Nuclei has 9,000+ templates and community velocity we can't match. Focus on logic-based detection (AI, access control, business logic).
+2. **Add AI infrastructure exposure detection.** Nuclei's ai-infra-nuclei project is a template — we should detect the same 81 products but go deeper (test the APIs, not just confirm they're exposed).
+3. **SSRF is the highest-value gap.** $1K-$10K bounties, requires callback server. This is the #1 R&D priority after AI modules.
+4. **Technology fingerprinting enables smarter scanning.** If we know a target runs Express.js vs. Django, we can skip irrelevant checks and focus on framework-specific patterns.
+5. **Our real moat is the AI security layer.** The combination of endpoint discovery + injection testing + MCP analysis + data exfil detection is unique. Double down here.
+
 ### Research Resources
 - HackerOne Hacktivity — filter by bounty amount and recency
 - OWASP Top 10 for LLM Applications 2026 (updated from 2025)
@@ -542,3 +586,7 @@ Update this document every 3-4 sessions or after significant events (first submi
 | 2026-10-01 | **First submission: Report #4077213** | Kiwi.com CORS on tequila.kiwi.com — **DUPLICATE** of #2697751. Common vulns = always duped. |
 | 2026-10-01 | Subdomain enum expansion | Added HackerTarget + OTX sources; 51 github.com subs vs crt.sh's 2; 168 tests |
 | 2026-10-01 | Post-duplicate strategy update | Pivot: stop common vulns, focus AI/MCP + new programs + auth scanning |
+| 2026-10-01 | Anthropic scan complete | 24 targets, 0 reportable; public surface well-hardened; needs auth + Claude Code/MCP local testing |
+| 2026-10-01 | Prompt injection reflection FP fix | New `_is_input_reflected()` — checks raw/HTML/URL-decoded body; fixes FPs on search sites; 172 tests |
+| 2026-10-01 | Manual target injection built | `--add-targets` CLI flag; scope-checked, DNS-resolved |
+| 2026-10-01 | Competitive analysis | Nuclei has 12K+ templates; ai-infra-nuclei covers 81 AI products; our moat is MCP security + AI depth + integrated pipeline |

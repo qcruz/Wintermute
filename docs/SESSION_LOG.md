@@ -4,6 +4,32 @@ Track what each session accomplished, what was found, and what's queued for next
 
 ---
 
+## Session 39 — 2026-10-01 (Research — Cycle 3: Competitive Analysis)
+
+**Cycle step:** Research — Competitive analysis vs Nuclei, Burp Suite, community methodologies
+
+**What was done:**
+
+### Competitive Analysis
+- Researched Nuclei (12,000+ templates), Burp Suite, ai-infra-nuclei project (84 AI templates), XSS-Rat 2026 guide, su6osec methodology
+- Created detailed coverage comparison table in STRATEGY.md (11 detection categories)
+- Identified key gaps and advantages
+
+### Key Findings
+- **Our advantage:** MCP security (unique — no competitor), integrated pipeline (recon→report→submit), AI endpoint discovery+testing (deeper than Nuclei's exposure-only detection)
+- **Biggest gaps:** SSRF ($1K-$10K bounties, needs callback server), CVE scanning (commodity — don't compete), AI infrastructure exposure (81 products ship without auth, Nuclei's ai-infra project covers this)
+- **New R&D item added:** AI Infrastructure Exposure detection — detect unauthenticated Ollama, vLLM, LangServe, MLflow, ChromaDB, Ray services. Natural extension of our AI specialty.
+- **Strategic takeaway:** Don't compete on breadth (Nuclei wins). Double down on AI security depth — it's our moat.
+
+### ROADMAP Updates
+- Added "AI Infrastructure Exposure" as R&D item #10 (priority track)
+- Bumped SSRF as highest-value general web gap
+- Rotated competitive analysis to bottom of Cycle 3 queue
+
+**Next:** Cycle 4 (Docs) is due — or Cycle 1 (Scanning) if prioritizing core activity.
+
+---
+
 ## Session 38 — 2026-10-01 (R&D — Cycle 2: Manual Target Injection)
 
 **Cycle step:** R&D — Manual target injection CLI feature
